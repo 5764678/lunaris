@@ -164,6 +164,16 @@ OFFSET (1 737 400 m), and **PLANETARY_RADIUS = DN × SCALING_FACTOR + OFFSET**. 
 therefore yields a radius, not a height. These heights are relative to the sphere, not to
 a geoid (the label's "planetopotential topography").
 
+Implemented by `lunaris_data.pds3` (ODL label parser) and
+`lunaris_data.readers.ldem.read_ldem_polar` (T-11), which return a
+`lunaris_science.terrain.dem.PolarDem`: float32 heights in metres above the sphere, NaN
+where the label's `MISSING_CONSTANT` applies (LDEM_75S_240M declares none), never zero.
+The reader refuses a product unless it is polar stereographic, centred on −90°/0°,
+planetocentric, east-positive, unrotated, on a sphere whose radius equals `OFFSET`, in
+"MEAN EARTH/POLAR AXIS OF DE421", with a file size matching the label and DNs within
+`DERIVED_MINIMUM`/`DERIVED_MAXIMUM`. Bilinear sampling returns NaN outside the grid or
+next to a missing cell.
+
 **Projection.** Polar stereographic on a sphere of radius R (Snyder 1987). For the south
 pole, the radial distance of latitude φ from the pole in the projection plane is
 
@@ -171,13 +181,27 @@ pole, the radial distance of latitude φ from the pole in the projection plane i
 ρ(φ) = 2R · tan(45° + φ/2)          (φ ≤ 0)
 ```
 
-with point scale factor k(φ) = 2 / (1 − sin φ), equal to 1 at the pole. Axis orientation
-follows the label's map-projection definition and is pinned by tests against known
-pixels.
+with point scale factor k(φ) = 2 / (1 − sin φ), equal to 1 at the pole (k(75° S) ≈ 1.0173).
+Implemented in `lunaris_science.terrain.polar_stereographic` (T-10).
 
-*Consistency check (computed here, to be asserted in M02 tests):* for LDEM_75S_240M,
-ρ(−75°) = 2 · 1737.4 km · tan 7.5° ≈ 457.5 km ≈ 1906 px × 240 m, consistent with the
-3812 × 3812 grid and the 1905.5 px projection offsets in its label.
+*Axis orientation.* Map x = ρ sin λ, y = ρ cos λ: longitude 0° straight up, 90° E to the
+right, which is the south pole seen from outside the Moon (map x ∥ +Y_ME, map y ∥ +X_ME).
+For a polar LOLA image the centre of the pixel with **0-based** (line, sample) is at
+x = (sample − SAMPLE_PROJECTION_OFFSET) · MAP_SCALE, y = −(line − LINE_PROJECTION_OFFSET) ·
+MAP_SCALE. This follows the prose and the inverse equations of the GDR projection
+description `DSMAP_POLAR.CAT` and PROJ's `+proj=stere +lat_0=-90 +lon_0=0`. The same
+catalogue file's forward equation multiplies R by SIGN(LAT), which for the south would
+mirror the sample axis; LUNARIS does not follow it. The choice is pinned by
+`tests/science/test_polar_stereographic.py::test_orientation_against_independent_pgda_geotiff`:
+at 8 points, LDEM_75S_240M heights at the pixels this convention selects agree with the
+co-located 240 m footprint of the independently georeferenced PGDA 20 m GeoTIFF to < 5 m,
+while the mirrored-sample and flipped-line conventions are off by 300 m (median) to 8 km
+(fixture `tests/fixtures/terrain/ldem-75s-240m-orientation.json`, captured 2026-11-04).
+
+*Consistency with the label grid (asserted in tests):* for LDEM_75S_240M,
+ρ(−75°) = 2 · 1737.4 km · tan 7.5° = 457.47 km, within one pixel of the grid half-width
+1906 px × 240 m = 457.44 km; the pole falls exactly at the grid centre (0-based pixel
+1905.5, 1905.5), and the edge midpoints lie at 75.00° S.
 
 **Slope.** Horn (1981) 3 × 3 finite differences on the projected grid, with the ground
 sample distance corrected by the scale factor (240 m / k at the pixel). Slope =
@@ -293,14 +317,54 @@ vectors, not a flat-Earth approximation). The DEM extent bounds the farthest obs
 considered — a stated limitation, important at the poles where distant ridges set the
 horizon.
 
-**Visible solar-disk fraction.** With d = (e☉ − H(az☉)) / α☉, clamp d to [−1, 1]:
+**Visible disk fraction (implemented: T-23).** `lunaris_science.illumination.disk_fraction`.
+For a disk of apparent angular radius α centred at (A, e) and a horizon profile H(az),
+the visible fraction f is the share of the disk's area above H. It is computed for the
+Sun (α☉) and the Earth (α⊕), against the terrain horizon (C1 mask) or the flat
+astronomical horizon H ≡ 0°.
+
+For a straight horizon this is the circular segment
 
 ```
+d = clamp((e − H) / α, −1, 1)
 f = 1 − (acos(d) − d·√(1 − d²)) / π
 ```
 
-(f = 0 below, 0.5 when the centre is on the horizon, 1 fully above). Assumptions: the
-horizon is locally straight across the disk; limb darkening is neglected.
+(f = 0 below, 0.5 when the centre is on the horizon, 1 fully above). Polar horizons are
+not straight across a disk of 0.5°–1.9°: crater rims step and slope within that width.
+LUNARIS therefore does not assume a straight horizon. In the tangent plane at the disk
+centre (x = ΔA·cos e, y = Δel), the disk is cut into chords at x = α·sin θ. Each chord
+has half-height h = α·cos θ and visible length clamp(e + h − H(A + x/cos e), 0, 2h). A
+midpoint rule over θ with 128 chords gives
+
+```
+f = Σ visible(θ_m)·cos θ_m / Σ 2α·cos²θ_m
+```
+
+The denominator is the same rule over the whole disk, so f is exactly 0 or 1 when the
+disk is fully hidden or fully visible. H is interpolated linearly and periodically in
+azimuth (C1).
+
+*Accuracy, all tested (`tests/science/illumination/test_disk_fraction.py`, synthetic
+horizons):*
+
+| Case | Reference | Max error |
+| --- | --- | ---: |
+| Flat horizon, centre on it | 0.5 | < 1e-12 |
+| Centre at +α / −α | 1 / 0 | exact |
+| Straight horizon (H = 0°, 1.7°, −2.3°), d ∈ [−1.2, 1.2], Sun and Earth | segment formula | < 2e-5 (criterion 1e-3) |
+| Horizon sloping 0.4°/° in azimuth | segment at the line distance (e − H₀)/√(1 + s²) | < 1e-3 |
+| Step of 0.2° at the disk centre | mean of the two half-disk segments | < 1e-3 |
+| Steps at −0.7α … 0.9α, Sun and Earth, 512 chords | brute-force 1201² tangent-plane grid | < 3e-3 (grid resolution) |
+| Disk straddling azimuth 0°/360° | brute-force grid | < 3e-3 |
+
+*Approximations.* The tangent-plane description has a relative error of order α²
+(≈ 3e-4 for the Earth, 2e-5 for the Sun). Disks reaching beyond ±89° elevation are
+rejected. Limb darkening is neglected, so f is a fraction of area, not of flux.
+
+*Truncation (C1, D3).* If any horizon sample that the disk's azimuth span depends on
+(through interpolation) is truncated, the result is flagged. The mask elevation there is
+only a lower bound, so f is an upper bound and is never reported as exact.
 
 **Outputs.** Time series of f; illuminated fraction; longest continuous darkness and
 illumination; each with the window, step, ephemeris and DEM provenance. The astronomical
