@@ -20,10 +20,12 @@ import type { SurfaceSource } from "./surface-source";
 export default function MoonCanvas({
   surface,
   onSurfaceError,
+  onSurfaceLoaded,
   labelRegistry,
 }: {
   surface: SurfaceSource;
   onSurfaceError: (reason: string) => void;
+  onSurfaceLoaded: () => void;
   labelRegistry: LabelRegistry;
 }) {
   const layers = useMissionStore((s) => s.layers);
@@ -39,7 +41,7 @@ export default function MoonCanvas({
       data-testid="moon-canvas"
     >
       {surface.kind === "texture" ? (
-        <TexturedSurface url={surface.url} onError={onSurfaceError} />
+        <TexturedSurface url={surface.url} onError={onSurfaceError} onLoaded={onSurfaceLoaded} />
       ) : (
         <ProceduralSurface />
       )}
