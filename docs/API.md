@@ -156,6 +156,64 @@ Response **201** (`CandidateSite`):
 
 Get one site, or delete it (**204**). **404** for unknown ids.
 
+### `GET /api/v1/sites/{site_id}/ephemeris`
+
+Apparent Sun and Earth geometry from a registered site (contract C2, `docs/SCIENCE.md`
+§5.2). Computed locally with NAIF SPICE from the checksum-verified
+`naif-generic-kernels-lunar` set (DE440, corrections `CN+S`). JPL Horizons is never called.
+
+| Query | Rule |
+| --- | --- |
+| `start_utc`, `end_utc` | ISO 8601 with an explicit UTC offset (`Z` or `+00:00`); `end_utc ≥ start_utc` |
+| `step_s` | 1 s … 2 592 000 s (30 days) |
+
+Samples are `start_utc + k·step_s` for every k with that epoch ≤ `end_utc`. **Cap: 10 000
+samples per request** (one year hourly = 8 760); more gives 422 `sample_cap_exceeded`.
+
+Response **200** (`SiteEphemeris`, abridged):
+
+```json
+{
+  "site_id": "…", "site_name": "…",
+  "observer": { "latitude_deg": -89.5, "longitude_deg": 0.0, "frame": "MOON_ME",
+                "reference_radius_m": 1737400.0, "surface_height_m": null,
+                "observer_height_m": 0.0, "radius_m": 1737400.0 },
+  "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T00:00:00Z", "step_s": 3600.0,
+  "sample_count": 25, "max_samples": 10000, "frame": "MOON_ME", "aberration_correction": "CN+S",
+  "bodies": [
+    { "body": "sun", "body_radius_m": 695700000.0, "body_radii_m": [695700000.0, 695700000.0, 695700000.0],
+      "samples": [ { "epoch_utc": "2026-11-04T00:00:00Z", "azimuth_deg": 248.586138,
+                     "elevation_deg": 1.304694, "range_m": 148218419000.0,
+                     "angular_radius_deg": 0.268933, "direction_moon_me": [-0.364795, -0.930726, -0.025954] } ],
+      "evidence": { "kind": "model", "method": "CSPICE spkcpo(… 'CN+S' …) …",
+                    "sources": [ { "source_id": "naif-generic-kernels-lunar/de440s.bsp", "sha256": "c1c7…", "…": "…" } ],
+                    "assumptions": [ "Surface height not sampled: … (h = 0 m).", "…" ] } },
+    { "body": "earth", "…": "…" }
+  ],
+  "limitations": [ "Elevations are relative to the astronomical horizon …",
+                   "Earth geometry is geometric line of sight … does not imply a radio link.", "…" ]
+}
+```
+
+- `azimuth_deg`: clockwise from local north, [0, 360). `elevation_deg`: above the local
+  horizontal plane of the reference sphere (astronomical horizon; terrain is not
+  considered here). `direction_moon_me`: apparent unit vector in `MOON_ME`, for scene
+  lighting (D5).
+- Earth `angular_radius_deg` uses the PCK equatorial radius (6378.1366 km); the evidence
+  says so.
+- Site heights are not sampled yet, so the observer sits on the 1737.4 km sphere
+  (`surface_height_m: null`, stated in each body's evidence).
+
+| Status | `code` / `details[].type` | When |
+| --- | --- | --- |
+| 404 | `not_found` | Unknown site |
+| 422 | `validation_error` / `sample_cap_exceeded` | More than 10 000 samples |
+| 422 | `validation_error` / `window_order`, `utc_required` | `end_utc < start_utc`; non-UTC offset |
+| 422 | `validation_error` / `outside_kernel_coverage` | Outside 1849-12-26 … 2150-01-21 (DE440s) |
+| 422 | `validation_error` / `topocentric_frame_undefined` | Site at latitude exactly ±90° (C0) |
+| 422 | `validation_error` | Malformed query (missing field, naive timestamp, `step_s` out of range) |
+| 503 | `kernels_unavailable` | Kernels not acquired or failing SHA-256 verification; run `uv run lunaris-data acquire naif-generic-kernels-lunar` |
+
 ## Changing the contract
 
 1. Edit the Pydantic schemas in `apps/api/src/lunaris_api/schemas/`.
