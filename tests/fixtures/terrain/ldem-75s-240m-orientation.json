@@ -1,0 +1,170 @@
+{
+  "description": "Pins the LDEM_75S_240M pixel-axis orientation (0-based line/sample, x = (sample - 1905.5)*240, y = -(line - 1905.5)*240, x = rho sin(lon), y = rho cos(lon)) against an independently georeferenced PGDA GeoTIFF.",
+  "captured_utc": "2026-11-04T11:25:39+00:00",
+  "ldem": {
+    "dataset_id": "lola-ldem-75s-240m",
+    "file": "LDEM_75S_240M.IMG",
+    "sha256": "d031efe2611b17dfbf3c158f5e15dc04cd5719349dcbf6384bb21fd97697c490",
+    "height_rule": "HEIGHT = DN * 0.5 m above the 1737400 m sphere"
+  },
+  "pgda": {
+    "url": "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+    "crs_wkt": "PROJCS[\"Moon (2015) - Sphere / Ocentric / South Polar\",GEOGCS[\"Moon (2015) - Sphere / Ocentric\",DATUM[\"Moon (2015) - Sphere\",SPHEROID[\"Moon (2015) - Sphere\",1737400,0,AUTHORITY[\"IAU\",\"30100\"]],AUTHORITY[\"IAU\",\"30100\"]],PRIMEM[\"Reference Meridian\",0,AUTHORITY[\"IAU\",\"30100\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"IAU\",\"30100\"]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH],AUTHORITY[\"IAU\",\"30135\"]]",
+    "geotransform_affine": [
+      20.0,
+      0.0,
+      -304000.0,
+      0.0,
+      -20.0,
+      304000.0
+    ],
+    "footprint": "mean of the 12 x 12 20 m pixels covering the 240 m LDEM pixel",
+    "citation": "Barker et al. (2023), PSJ 4, 183, doi:10.3847/PSJ/acf3e1"
+  },
+  "points": [
+    {
+      "latitude_deg": -89.67,
+      "longitude_deg": 129.2,
+      "ldem_line": 1932,
+      "ldem_sample": 1938,
+      "ldem_dn": -5572,
+      "ldem_mirrored_sample": 1873,
+      "ldem_mirrored_dn": 1369,
+      "ldem_flipped_line": 1879,
+      "ldem_flipped_dn": 1500,
+      "pgda_window_col_row": [
+        15584,
+        15512,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": -2783.05
+    },
+    {
+      "latitude_deg": -88.0,
+      "longitude_deg": 300.0,
+      "ldem_line": 1779,
+      "ldem_sample": 1687,
+      "ldem_dn": -2282,
+      "ldem_mirrored_sample": 2124,
+      "ldem_mirrored_dn": -6921,
+      "ldem_flipped_line": 2032,
+      "ldem_flipped_dn": -1801,
+      "pgda_window_col_row": [
+        12572,
+        13676,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": -1144.196
+    },
+    {
+      "latitude_deg": -86.0,
+      "longitude_deg": 250.0,
+      "ldem_line": 2078,
+      "ldem_sample": 1430,
+      "ldem_dn": 388,
+      "ldem_mirrored_sample": 2381,
+      "ldem_mirrored_dn": -4641,
+      "ldem_flipped_line": 1733,
+      "ldem_flipped_dn": -1681,
+      "pgda_window_col_row": [
+        9488,
+        17264,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": 192.696
+    },
+    {
+      "latitude_deg": -85.0,
+      "longitude_deg": 40.0,
+      "ldem_line": 1421,
+      "ldem_sample": 2312,
+      "ldem_dn": 9807,
+      "ldem_mirrored_sample": 1499,
+      "ldem_mirrored_dn": -6739,
+      "ldem_flipped_line": 2390,
+      "ldem_flipped_dn": -5911,
+      "pgda_window_col_row": [
+        20072,
+        9380,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": 4907.915
+    },
+    {
+      "latitude_deg": -84.0,
+      "longitude_deg": 200.0,
+      "ldem_line": 2619,
+      "ldem_sample": 1646,
+      "ldem_dn": -5650,
+      "ldem_mirrored_sample": 2165,
+      "ldem_mirrored_dn": -6271,
+      "ldem_flipped_line": 1192,
+      "ldem_flipped_dn": -4931,
+      "pgda_window_col_row": [
+        12080,
+        23756,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": -2826.765
+    },
+    {
+      "latitude_deg": -82.0,
+      "longitude_deg": 100.0,
+      "ldem_line": 2081,
+      "ldem_sample": 2903,
+      "ldem_dn": -3948,
+      "ldem_mirrored_sample": 908,
+      "ldem_mirrored_dn": -2384,
+      "ldem_flipped_line": 1730,
+      "ldem_flipped_dn": -342,
+      "pgda_window_col_row": [
+        27164,
+        17300,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": -1974.696
+    },
+    {
+      "latitude_deg": -81.0,
+      "longitude_deg": 330.0,
+      "ldem_line": 919,
+      "ldem_sample": 1336,
+      "ldem_dn": -3023,
+      "ldem_mirrored_sample": 2475,
+      "ldem_mirrored_dn": 4215,
+      "ldem_flipped_line": 2892,
+      "ldem_flipped_dn": -4576,
+      "pgda_window_col_row": [
+        8360,
+        3356,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": -1509.278
+    },
+    {
+      "latitude_deg": -87.0,
+      "longitude_deg": 160.0,
+      "ldem_line": 2262,
+      "ldem_sample": 2035,
+      "ldem_dn": -2015,
+      "ldem_mirrored_sample": 1776,
+      "ldem_mirrored_dn": -490,
+      "ldem_flipped_line": 1549,
+      "ldem_flipped_dn": -2869,
+      "pgda_window_col_row": [
+        16748,
+        19472,
+        12,
+        12
+      ],
+      "pgda_mean_height_m": -1008.205
+    }
+  ]
+}

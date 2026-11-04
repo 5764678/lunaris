@@ -21,7 +21,8 @@ The scientific core of LUNARIS. Pure, deterministic, unit-explicit code.
 | `coordinates` | implemented | Selenographic coordinate validation, normalization, spherical ↔ Cartesian |
 | `provenance` | implemented | Evidence / source-reference model |
 | `runtime` | implemented | Scientific toolchain version report (reproducibility) |
-| `terrain` | planned (M02) | Elevation, slope, roughness from LOLA DEMs |
+| `horizon_mask` | implemented (T-10) | `HorizonMask` type, contract C1 (computation: T-15) |
+| `terrain` | in progress (M02) | `polar_stereographic` implemented (T-10); elevation, slope, roughness from LOLA DEMs planned |
 | `geometry` | planned (M03) | Sun/Earth positions and local az/el via SPICE |
 | `illumination` | planned (M04) | Geometric and terrain-aware illumination |
 | `visibility` | planned (M04) | Geometric and terrain-aware Earth line of sight |
