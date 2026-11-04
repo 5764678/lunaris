@@ -66,18 +66,19 @@ its **first** PR as task T-10).
 ```python
 @dataclass(frozen=True, slots=True)
 class HorizonMask:
-    site: SelenographicCoordinate     # MOON_ME, planetocentric
-    observer_height_m: float          # height of the eye point above the DEM surface at the site
-    surface_height_m: float           # DEM height at the site above the 1 737 400 m sphere
+    site: SelenographicCoordinate  # MOON_ME, planetocentric
+    observer_height_m: float  # height of the eye point above the DEM surface at the site
+    surface_height_m: float  # DEM height at the site above the 1 737 400 m sphere
     azimuth_deg: NDArray[np.float64]  # shape (N,), uniform step, starts at 0.0, C0 convention
     elevation_deg: NDArray[np.float64]  # shape (N,), horizon elevation angle, C0 plane
-    truncated: NDArray[np.bool_]      # shape (N,), True where the ray left DEM coverage
-                                      # before max_range_m; elevation is then a lower bound
+    # truncated: shape (N,); True where the ray left DEM coverage before max_range_m,
+    # in which case elevation_deg there is only a lower bound.
+    truncated: NDArray[np.bool_]
     max_range_m: float
-    dem_source_id: str                # dataset manifest id
-    dem_sha256: str                   # checksum of the DEM file the mask came from
+    dem_source_id: str  # dataset manifest id
+    dem_sha256: str  # checksum of the DEM file the mask came from
     dem_resolution_m: float
-    method: str                       # e.g. "ray-march, curvature-corrected, ..."
+    method: str  # e.g. "ray-march, curvature-corrected, ..."
 ```
 
 - Validation in `__post_init__`: equal lengths, uniform step, finite values, N ≥ 360.
