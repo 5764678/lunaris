@@ -1,17 +1,34 @@
-"""Illumination analysis — planned for Milestone 04. Not implemented.
+"""Illumination analysis (Milestone 04).
 
-Responsibility (when implemented):
-    Geometric solar illumination (Sun above the local horizontal plane) and
-    terrain-aware illumination (Sun above the terrain horizon derived from a
-    DEM), including the finite angular size of the solar disk, as time series
-    and summary statistics over an analysis window.
+Implemented:
 
-Planned method notes (see docs/SCIENCE.md § Illumination):
-    * Horizon-elevation profiles per azimuth computed from the DEM around the
-      site, with the DEM extent and resolution recorded as limitations.
-    * Illuminated solar-disk fraction from the solar elevation relative to the
-      horizon and the solar angular radius at the epoch.
+* :mod:`~lunaris_science.illumination.disk_fraction` — visible fraction of a body's
+  disk (Sun or Earth) above a horizon profile: the terrain horizon from a horizon mask
+  (C1) or the flat astronomical horizon (D4, T-23). Resolves horizons that slope or step
+  within the disk's width.
 
-This module deliberately exposes no functions until those computations are
-implemented and validated.
+Planned (T-24): illumination and Earth-visibility timelines and summaries built on these
+fractions, with the astronomical and terrain horizons reported separately.
 """
+
+from lunaris_science.illumination.disk_fraction import (
+    ASTRONOMICAL_HORIZON,
+    DEFAULT_NODES,
+    DiskFractionError,
+    DiskFractionResult,
+    FlatHorizon,
+    HorizonLike,
+    straight_horizon_fraction,
+    visible_disk_fraction,
+)
+
+__all__ = [
+    "ASTRONOMICAL_HORIZON",
+    "DEFAULT_NODES",
+    "DiskFractionError",
+    "DiskFractionResult",
+    "FlatHorizon",
+    "HorizonLike",
+    "straight_horizon_fraction",
+    "visible_disk_fraction",
+]
