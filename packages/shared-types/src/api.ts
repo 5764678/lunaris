@@ -44,3 +44,6 @@ export type SelenographicCoordinate = Schemas["SelenographicCoordinateSchema"];
 
 /** Major version of the HTTP contract this package was generated against. */
 export const API_CONTRACT_VERSION = "v1" as const;
+
+// ── Ephemeris (C2) ──────────────────────────────────────────────────────────
+export type SiteEphemeris = Schemas["SiteEphemeris"];
