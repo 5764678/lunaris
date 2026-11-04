@@ -164,6 +164,16 @@ OFFSET (1 737 400 m), and **PLANETARY_RADIUS = DN × SCALING_FACTOR + OFFSET**. 
 therefore yields a radius, not a height. These heights are relative to the sphere, not to
 a geoid (the label's "planetopotential topography").
 
+Implemented by `lunaris_data.pds3` (ODL label parser) and
+`lunaris_data.readers.ldem.read_ldem_polar` (T-11), which return a
+`lunaris_science.terrain.dem.PolarDem`: float32 heights in metres above the sphere, NaN
+where the label's `MISSING_CONSTANT` applies (LDEM_75S_240M declares none), never zero.
+The reader refuses a product unless it is polar stereographic, centred on −90°/0°,
+planetocentric, east-positive, unrotated, on a sphere whose radius equals `OFFSET`, in
+"MEAN EARTH/POLAR AXIS OF DE421", with a file size matching the label and DNs within
+`DERIVED_MINIMUM`/`DERIVED_MAXIMUM`. Bilinear sampling returns NaN outside the grid or
+next to a missing cell.
+
 **Projection.** Polar stereographic on a sphere of radius R (Snyder 1987). For the south
 pole, the radial distance of latitude φ from the pole in the projection plane is
 

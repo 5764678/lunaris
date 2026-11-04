@@ -565,6 +565,58 @@
         "title": "DatasetSummary",
         "type": "object"
       },
+      "DemProvenanceSchema": {
+        "description": "The DEM file a scene was computed from.",
+        "properties": {
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "frame": {
+            "description": "Frame named by the product label.",
+            "title": "Frame",
+            "type": "string"
+          },
+          "resolution_m": {
+            "description": "Nominal DEM grid spacing (true at the pole), m.",
+            "title": "Resolution M",
+            "type": "number"
+          },
+          "sha256": {
+            "description": "SHA-256 of the DEM data file actually read.",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "title",
+          "file_name",
+          "sha256",
+          "source_url",
+          "resolution_m",
+          "frame",
+          "citation"
+        ],
+        "title": "DemProvenanceSchema",
+        "type": "object"
+      },
       "EarthGeometrySample": {
         "properties": {
           "astronomical_visible_fraction": {
@@ -1282,6 +1334,64 @@
         "title": "RuntimeReport",
         "type": "object"
       },
+      "SceneBinaryLayoutSchema": {
+        "description": "How to decode the bytes returned by ``data_url``.",
+        "properties": {
+          "byte_length": {
+            "description": "Total body length in bytes.",
+            "title": "Byte Length",
+            "type": "integer"
+          },
+          "byte_order": {
+            "const": "little",
+            "default": "little",
+            "title": "Byte Order",
+            "type": "string"
+          },
+          "components": {
+            "description": "x, y, z relative to origin_moon_me_m (MOON_ME, m), then height above the reference sphere (m).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "dtype": {
+            "const": "float32",
+            "default": "float32",
+            "title": "Dtype",
+            "type": "string"
+          },
+          "order": {
+            "const": "row-major",
+            "default": "row-major",
+            "title": "Order",
+            "type": "string"
+          },
+          "row_direction": {
+            "default": "row 0 is the map's top edge (toward 0° E); rows advance toward 180° E; columns advance toward 90° E",
+            "title": "Row Direction",
+            "type": "string"
+          },
+          "values_per_vertex": {
+            "const": 4,
+            "default": 4,
+            "title": "Values Per Vertex",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dtype",
+          "byte_order",
+          "order",
+          "values_per_vertex",
+          "components",
+          "row_direction",
+          "byte_length"
+        ],
+        "title": "SceneBinaryLayoutSchema",
+        "type": "object"
+      },
       "SelenographicCoordinateSchema": {
         "properties": {
           "frame": {
@@ -1647,6 +1757,205 @@
           "vertical_reference"
         ],
         "title": "SpatialMetadataSchema",
+        "type": "object"
+      },
+      "TerrainSceneListResponse": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "scenes": {
+            "items": {
+              "$ref": "#/components/schemas/TerrainSceneSummary"
+            },
+            "title": "Scenes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scenes",
+          "count"
+        ],
+        "title": "TerrainSceneListResponse",
+        "type": "object"
+      },
+      "TerrainSceneMetadata": {
+        "description": "Metadata of one terrain scene; vertex data is served separately at ``data_url``.",
+        "properties": {
+          "center_latitude_deg": {
+            "title": "Center Latitude Deg",
+            "type": "number"
+          },
+          "center_longitude_deg": {
+            "title": "Center Longitude Deg",
+            "type": "number"
+          },
+          "data_url": {
+            "title": "Data Url",
+            "type": "string"
+          },
+          "dem": {
+            "$ref": "#/components/schemas/DemProvenanceSchema"
+          },
+          "etag": {
+            "title": "Etag",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "frame": {
+            "const": "MOON_ME",
+            "default": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "half_extent_m": {
+            "description": "Half side length of the square in the map plane.",
+            "title": "Half Extent M",
+            "type": "number"
+          },
+          "height": {
+            "description": "Rows of vertices (cap 1024).",
+            "title": "Height",
+            "type": "integer"
+          },
+          "height_max_m": {
+            "title": "Height Max M",
+            "type": "number"
+          },
+          "height_min_m": {
+            "title": "Height Min M",
+            "type": "number"
+          },
+          "height_reference_radius_m": {
+            "title": "Height Reference Radius M",
+            "type": "number"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/SceneBinaryLayoutSchema"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "nodata": {
+            "title": "Nodata",
+            "type": "string"
+          },
+          "nodata_vertex_count": {
+            "title": "Nodata Vertex Count",
+            "type": "integer"
+          },
+          "origin_moon_me_m": {
+            "description": "[x, y, z] in MOON_ME, m. Vertex positions are relative to this point.",
+            "items": {
+              "type": "number"
+            },
+            "title": "Origin Moon Me M",
+            "type": "array"
+          },
+          "resampling": {
+            "title": "Resampling",
+            "type": "string"
+          },
+          "scene_id": {
+            "title": "Scene Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "vertex_spacing_m": {
+            "description": "Nominal spacing in the polar stereographic map plane (true at the pole), m. Ground spacing is this divided by the point scale factor k = 1 + (ρ/2R)²; about 0.26% smaller at the corners of the ±125 km south-pole scene.",
+            "title": "Vertex Spacing M",
+            "type": "number"
+          },
+          "width": {
+            "description": "Vertices per row (cap 1024).",
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scene_id",
+          "title",
+          "frame",
+          "width",
+          "height",
+          "origin_moon_me_m",
+          "height_reference_radius_m",
+          "height_min_m",
+          "height_max_m",
+          "vertex_spacing_m",
+          "half_extent_m",
+          "center_latitude_deg",
+          "center_longitude_deg",
+          "resampling",
+          "method",
+          "nodata",
+          "nodata_vertex_count",
+          "layout",
+          "dem",
+          "evidence",
+          "etag",
+          "data_url"
+        ],
+        "title": "TerrainSceneMetadata",
+        "type": "object"
+      },
+      "TerrainSceneSummary": {
+        "properties": {
+          "acquire_command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Command that acquires the source DEM when unavailable.",
+            "title": "Acquire Command"
+          },
+          "available": {
+            "description": "Whether the source DEM is acquired locally.",
+            "title": "Available",
+            "type": "boolean"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "metadata_url": {
+            "title": "Metadata Url",
+            "type": "string"
+          },
+          "scene_id": {
+            "title": "Scene Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_id",
+          "title",
+          "description",
+          "dataset_id",
+          "available",
+          "acquire_command",
+          "metadata_url"
+        ],
+        "title": "TerrainSceneSummary",
         "type": "object"
       },
       "TimelineAnalysis": {
@@ -2367,6 +2676,247 @@
         "summary": "Scientific toolchain versions",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/api/v1/terrain/scenes": {
+      "get": {
+        "description": "Scenes LUNARIS can export, and whether each one's source DEM is acquired.",
+        "operationId": "list_scenes_api_v1_terrain_scenes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TerrainSceneListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Available terrain scenes",
+        "tags": [
+          "terrain"
+        ]
+      }
+    },
+    "/api/v1/terrain/scenes/{scene_id}": {
+      "get": {
+        "description": "Vertex-grid metadata, provenance and the URL of the binary vertex data.\n\nPositions are already in MOON_ME (relative to ``origin_moon_me_m``); clients never\nre-implement the polar stereographic inverse.",
+        "operationId": "get_scene_metadata_api_v1_terrain_scenes__scene_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9][a-z0-9-]{1,63}$",
+              "title": "Scene Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Vertices per side of the square grid (contract cap 1024).",
+            "in": "query",
+            "name": "grid_size",
+            "required": false,
+            "schema": {
+              "default": 512,
+              "description": "Vertices per side of the square grid (contract cap 1024).",
+              "maximum": 1024,
+              "minimum": 2,
+              "title": "Grid Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-none-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TerrainSceneMetadata"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "304": {
+            "description": "Not modified (If-None-Match matched the ETag)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown scene."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Source DEM not acquired or not verified."
+          }
+        },
+        "summary": "Terrain scene metadata",
+        "tags": [
+          "terrain"
+        ]
+      }
+    },
+    "/api/v1/terrain/scenes/{scene_id}/data": {
+      "get": {
+        "operationId": "get_scene_data_api_v1_terrain_scenes__scene_id__data_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9][a-z0-9-]{1,63}$",
+              "title": "Scene Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Vertices per side of the square grid (contract cap 1024).",
+            "in": "query",
+            "name": "grid_size",
+            "required": false,
+            "schema": {
+              "default": 512,
+              "description": "Vertices per side of the square grid (contract cap 1024).",
+              "maximum": 1024,
+              "minimum": 2,
+              "title": "Grid Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-none-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {}
+            },
+            "description": "Little-endian float32, row-major, 4 values per vertex: x, y, z (m, MOON_ME, relative to origin_moon_me_m) and height_m. NaN vertices have no DEM value and must not be drawn."
+          },
+          "304": {
+            "description": "Not modified (If-None-Match matched the ETag)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown scene."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Source DEM not acquired or not verified."
+          }
+        },
+        "summary": "Terrain scene vertex data (binary)",
+        "tags": [
+          "terrain"
         ]
       }
     },
