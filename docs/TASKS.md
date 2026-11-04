@@ -129,6 +129,15 @@ stereographic inverse.
   `origin_moon_me_m`), then `height_m` (for colouring).
 - The response must be cacheable (`ETag` derived from DEM checksum + parameters).
 
+Accepted with T-12 (#8):
+- Both endpoints take `grid_size` (vertices per side, 2–1024, default 512). It is part of
+  the `ETag`, and a matching `If-None-Match` returns `304`.
+- Grid orientation: row 0 lies toward 0° E, rows advance toward 180° E, and columns
+  advance toward 90° E. The web uses the `MOON_ME` positions and does not infer
+  orientation from the index.
+- The metadata may carry additional fields beyond the list above. Consumers ignore
+  fields they don't use.
+
 ### C4 — Illumination and visibility results
 
 `packages/shared-types/src/illumination.ts` and `visibility.ts` hold the draft wire
@@ -141,6 +150,27 @@ contracts. S-GEOMETRY finalises them with these changes:
 - Results report the **astronomical** horizon (body above the C0 plane) and the
   **terrain** horizon (C1 mask) separately.
 - Earth results state that geometric line of sight does not imply a radio link.
+
+Accepted with T-24 (#14):
+- Each sample carries `astronomical_visible_fraction` and `terrain_visible_fraction`.
+  The terrain fraction is null when no mask is available, and the result then says
+  `terrain_horizon_available: false`. Samples also carry
+  `terrain_horizon_elevation_deg` and `terrain_truncated`.
+- Each result carries an `astronomical` summary and a `terrain` summary.
+  - Sun: `illuminated_fraction`, `mean_visible_disk_fraction`, `fully_lit_fraction`.
+  - Earth: `visible_fraction`, `longest_outage_s`, `fully_visible_fraction`.
+  - Longest runs and windows that touch the analysis-window edge are flagged
+    `*_censored`.
+- Earth line-of-sight state per sample:
+  - `clear`: f > 0 against the terrain horizon. This can happen below 0° when the site
+    is on a peak.
+  - `terrain_obstructed`: visible above the astronomical horizon only.
+  - `below_geometric_horizon`: visible above neither.
+  Each state is reported together with its fractions. The radio-link disclaimer is the
+  first limitation on every Earth result.
+- Provenance goes in `evidence.sources`. Each entry gives the dataset manifest id, the
+  source URL and the SHA-256, plus `software` versions. This replaces the draft's
+  `ephemeris`/`dem` `DatasetProvenance` fields.
 
 ---
 
