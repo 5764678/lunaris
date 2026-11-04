@@ -169,13 +169,27 @@ pole, the radial distance of latitude φ from the pole in the projection plane i
 ρ(φ) = 2R · tan(45° + φ/2)          (φ ≤ 0)
 ```
 
-with point scale factor k(φ) = 2 / (1 − sin φ), equal to 1 at the pole. Axis orientation
-follows the label's map-projection definition and is pinned by tests against known
-pixels.
+with point scale factor k(φ) = 2 / (1 − sin φ), equal to 1 at the pole (k(75° S) ≈ 1.0173).
+Implemented in `lunaris_science.terrain.polar_stereographic` (T-10).
 
-*Consistency check (computed here, to be asserted in M02 tests):* for LDEM_75S_240M,
-ρ(−75°) = 2 · 1737.4 km · tan 7.5° ≈ 457.5 km ≈ 1906 px × 240 m, consistent with the
-3812 × 3812 grid and the 1905.5 px projection offsets in its label.
+*Axis orientation.* Map x = ρ sin λ, y = ρ cos λ: longitude 0° straight up, 90° E to the
+right, which is the south pole seen from outside the Moon (map x ∥ +Y_ME, map y ∥ +X_ME).
+For a polar LOLA image the centre of the pixel with **0-based** (line, sample) is at
+x = (sample − SAMPLE_PROJECTION_OFFSET) · MAP_SCALE, y = −(line − LINE_PROJECTION_OFFSET) ·
+MAP_SCALE. This follows the prose and the inverse equations of the GDR projection
+description `DSMAP_POLAR.CAT` and PROJ's `+proj=stere +lat_0=-90 +lon_0=0`. The same
+catalogue file's forward equation multiplies R by SIGN(LAT), which for the south would
+mirror the sample axis; LUNARIS does not follow it. The choice is pinned by
+`tests/science/test_polar_stereographic.py::test_orientation_against_independent_pgda_geotiff`:
+at 8 points, LDEM_75S_240M heights at the pixels this convention selects agree with the
+co-located 240 m footprint of the independently georeferenced PGDA 20 m GeoTIFF to < 5 m,
+while the mirrored-sample and flipped-line conventions are off by 300 m (median) to 8 km
+(fixture `tests/fixtures/terrain/ldem-75s-240m-orientation.json`, captured 2026-11-04).
+
+*Consistency with the label grid (asserted in tests):* for LDEM_75S_240M,
+ρ(−75°) = 2 · 1737.4 km · tan 7.5° = 457.47 km, within one pixel of the grid half-width
+1906 px × 240 m = 457.44 km; the pole falls exactly at the grid centre (0-based pixel
+1905.5, 1905.5), and the edge midpoints lie at 75.00° S.
 
 **Slope.** Horn (1981) 3 × 3 finite differences on the projected grid, with the ground
 sample distance corrected by the scale factor (240 m / k at the pixel). Slope =

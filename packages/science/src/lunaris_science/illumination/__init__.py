@@ -12,19 +12,23 @@ fractions, with the astronomical and terrain horizons reported separately.
 """
 
 from lunaris_science.illumination.disk_fraction import (
+    ASTRONOMICAL_HORIZON,
     DEFAULT_NODES,
     DiskFractionError,
     DiskFractionResult,
-    HorizonProfile,
+    FlatHorizon,
+    HorizonLike,
     straight_horizon_fraction,
     visible_disk_fraction,
 )
 
 __all__ = [
+    "ASTRONOMICAL_HORIZON",
     "DEFAULT_NODES",
     "DiskFractionError",
     "DiskFractionResult",
-    "HorizonProfile",
+    "FlatHorizon",
+    "HorizonLike",
     "straight_horizon_fraction",
     "visible_disk_fraction",
 ]
