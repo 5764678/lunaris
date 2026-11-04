@@ -228,14 +228,54 @@ vectors, not a flat-Earth approximation). The DEM extent bounds the farthest obs
 considered — a stated limitation, important at the poles where distant ridges set the
 horizon.
 
-**Visible solar-disk fraction.** With d = (e☉ − H(az☉)) / α☉, clamp d to [−1, 1]:
+**Visible disk fraction (implemented: T-23).** `lunaris_science.illumination.disk_fraction`.
+For a disk of apparent angular radius α centred at (A, e) and a horizon profile H(az),
+the visible fraction f is the share of the disk's area above H. It is computed for the
+Sun (α☉) and the Earth (α⊕), against the terrain horizon (C1 mask) or the flat
+astronomical horizon H ≡ 0°.
+
+For a straight horizon this is the circular segment
 
 ```
+d = clamp((e − H) / α, −1, 1)
 f = 1 − (acos(d) − d·√(1 − d²)) / π
 ```
 
-(f = 0 below, 0.5 when the centre is on the horizon, 1 fully above). Assumptions: the
-horizon is locally straight across the disk; limb darkening is neglected.
+(f = 0 below, 0.5 when the centre is on the horizon, 1 fully above). Polar horizons are
+not straight across a disk of 0.5°–1.9°: crater rims step and slope within that width.
+LUNARIS therefore does not assume a straight horizon. In the tangent plane at the disk
+centre (x = ΔA·cos e, y = Δel), the disk is cut into chords at x = α·sin θ. Each chord
+has half-height h = α·cos θ and visible length clamp(e + h − H(A + x/cos e), 0, 2h). A
+midpoint rule over θ with 128 chords gives
+
+```
+f = Σ visible(θ_m)·cos θ_m / Σ 2α·cos²θ_m
+```
+
+The denominator is the same rule over the whole disk, so f is exactly 0 or 1 when the
+disk is fully hidden or fully visible. H is interpolated linearly and periodically in
+azimuth (C1).
+
+*Accuracy, all tested (`tests/science/illumination/test_disk_fraction.py`, synthetic
+horizons):*
+
+| Case | Reference | Max error |
+| --- | --- | ---: |
+| Flat horizon, centre on it | 0.5 | < 1e-12 |
+| Centre at +α / −α | 1 / 0 | exact |
+| Straight horizon (H = 0°, 1.7°, −2.3°), d ∈ [−1.2, 1.2], Sun and Earth | segment formula | < 2e-5 (criterion 1e-3) |
+| Horizon sloping 0.4°/° in azimuth | segment at the line distance (e − H₀)/√(1 + s²) | < 1e-3 |
+| Step of 0.2° at the disk centre | mean of the two half-disk segments | < 1e-3 |
+| Steps at −0.7α … 0.9α, Sun and Earth, 512 chords | brute-force 1201² tangent-plane grid | < 3e-3 (grid resolution) |
+| Disk straddling azimuth 0°/360° | brute-force grid | < 3e-3 |
+
+*Approximations.* The tangent-plane description has a relative error of order α²
+(≈ 3e-4 for the Earth, 2e-5 for the Sun). Disks reaching beyond ±89° elevation are
+rejected. Limb darkening is neglected, so f is a fraction of area, not of flux.
+
+*Truncation (C1, D3).* If any horizon sample that the disk's azimuth span depends on
+(through interpolation) is truncated, the result is flagged. The mask elevation there is
+only a lower bound, so f is an upper bound and is never reported as exact.
 
 **Outputs.** Time series of f; illuminated fraction; longest continuous darkness and
 illumination; each with the window, step, ephemeris and DEM provenance. The astronomical
