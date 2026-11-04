@@ -67,9 +67,11 @@ assuming the constant in `lunaris_science.constants`.
 - **Azimuth**: clockwise from local north, degrees, [0, 360). **Elevation**: angle above
   the local horizontal plane, degrees. Both are geometric; the Moon has no atmosphere, so
   no refraction model applies.
-- **Pole singularity**: east and north are undefined exactly at ±90°. Milestone 03 must
-  adopt and document an explicit azimuth reference for sites within a stated distance of
-  the pole (for example, the direction of the 0° meridian), and test it.
+- **Pole singularity**: east and north are undefined exactly at ±90°. Topocentric
+  functions raise `CoordinateError` for latitude exactly ±90° (contract C0, D2); any
+  latitude strictly inside (−90, 90) is valid. Near the pole the basis stays well defined
+  because it is built from the site's own longitude (east = ẑ × up), so 89.999999° S is
+  accepted and tested (`tests/science/geometry/test_bodies.py`).
 
 ### 2.4 Time
 
@@ -218,28 +220,91 @@ craters below the grid spacing are invisible); polar products contain interpolat
 between altimetry tracks; PGDA/PDS products differ in processing and must not be mixed
 without noting it.
 
-### 5.2 Celestial geometry — Milestone 03
+### 5.2 Celestial geometry — Milestone 03 (implemented: T-20, T-21)
 
-**Kernels.** `naif0012.tls`, `pck00011.tpc`, `de440s.bsp`, `moon_pa_de440_200625.bpc`,
-`moon_de440_250416.tf` (verified 2026-11-04; see `docs/DATA_SOURCES.md`), furnished via
-a generated meta-kernel.
+Code: `lunaris_science.geometry` (`spice`, `epochs`, `bodies`). Tests:
+`tests/science/geometry/`.
 
-**Method.** Site vector **s** in `MOON_ME` from §4 (at the DEM height once available).
-Target vector from the Moon's centre with `spkpos(target, et, "MOON_ME", abcorr, "MOON")`;
-topocentric vector **t − s**; rotate into the local east-north-up frame (§2.3); azimuth =
-atan2(E, N) mod 360°, elevation = asin(U / |t − s|). Aberration correction is an explicit
-parameter recorded in outputs (apparent geometry: light time plus stellar aberration).
-CSPICE N0067 (installed) also provides `azlcpo`, used as an independent cross-check.
+**Kernels (T-20).** `naif0012.tls`, `pck00011.tpc`, `de440s.bsp`,
+`moon_pa_de440_200625.bpc`, `moon_de440_250416.tf` (see `docs/DATA_SOURCES.md`). The API
+builds the kernel set from the data store by manifest: every file is re-hashed against its
+acquisition record and the SHA-256 pinned in the manifest, and the set is refused on any
+mismatch (`lunaris_data.kernels.load_verified_kernel_set`). The science core
+then furnishes exactly those absolute paths, in the order LSK, text PCK, SPK, binary PCK,
+FK; it does no other I/O. On load it checks that `MOON_ME` is a TK alias of
+`MOON_ME_DE440_ME421` with an identity rotation (deviation 0 in every element), and
+records the time span covered by every kernel (the DE440s SPK for Sun, Earth and Moon and
+the DE440 lunar binary PCK, minus a 1 h margin for light-time iterations: 1849-12-26 to
+2150-01-21).
 
-*Feasibility check (2026-11-04, scratch script, not yet a committed test):* with the
-acquired kernel set, `azlcpo` (`ELLIPSOID`, `CN+S`, azimuth clockwise from north) reproduced
-both JPL Horizons samples in the validation fixture to < 0.05″ — within the precision
-Horizons printed — although Horizons used DE441 and LUNARIS uses DE440s. M03 must still
-state and justify its tolerance over full windows (D2).
+**Thread safety.** CSPICE has one kernel pool per process and is not thread-safe.
+Every SPICE call runs inside `SpiceContext.session()`, which holds one process-wide
+re-entrant lock. Loading a new kernel set invalidates every earlier context, which then
+refuses to compute instead of silently using another pool.
 
-**Angular sizes.** Solar angular radius α☉ = asin(R☉ / d☉) with R☉ = 695 700 km (IAU 2015
-nominal) — ≈ 0.267° at 1 au. Earth angular radius α⊕ = asin(R⊕ / d⊕) — roughly 0.9°–1.0°
-over the lunar orbit. Both are computed per epoch, never fixed.
+**Method (T-21).**
+
+1. Observer position **s** in `MOON_ME` at radius
+   R = 1 737 400 m + surface height + observer height. If the surface height has not
+   been sampled, the site is placed on the sphere (h = 0) and that assumption is reported.
+2. Apparent target position relative to the observer: CSPICE
+   `spkcpo(target, et, 'MOON_ME', 'OBSERVER', 'CN+S', s, 'MOON', 'MOON_ME')`, i.e.
+   converged Newtonian light time plus stellar aberration, observer fixed in `MOON_ME`,
+   output frame evaluated at the observer epoch.
+3. Local east-north-up basis from the reference-sphere radial direction (§2.3, C0);
+   azimuth = atan2(E, N) mod 360° (clockwise from north), elevation = asin(U / |r|).
+4. Angular radius α = asin(R_body / |r|), with R_body read from the loaded PCK by
+   `bodvrd`: Sun 695 700 km; Earth equatorial radius 6378.1366 km (pck00011 polar radius
+   6356.7519 km; using the equatorial radius overstates α⊕ by at most 0.34 %, ≈ 0.003°).
+5. `direction_moon_me` is the apparent unit vector **r** / |**r**| in `MOON_ME`.
+
+Epochs are a uniform UTC grid (start + k·step); each sample is converted to ET through the
+leap-seconds kernel, so a leap second inside a window is honoured (tested at
+2016-12-31T23:59:60).
+
+**Independent cross-check.** CSPICE `azlcpo('ELLIPSOID', target, et, 'CN+S', azccw=False,
+elplsz=True, …)` uses its own topocentric frame. It agrees with the method above to
+< 1 µas in azimuth (scaled by cos el) and elevation, and to 1e-12 relative in range, at
+four sites (including 89.9° S with h = +1500 m) and both bodies.
+
+**Validation against JPL Horizons and its tolerance (D2).** Fixtures
+`data/fixtures/validation/horizons-{sun,earth}-s89p5-e0-2026-11-04.json` hold 25 hourly
+samples each (site 89.5° S, 0° E, h = 0 on the 1737.4 km sphere, 2026-11-04 00:00 →
+11-05 00:00 UTC, `QUANTITIES='4'`, `EXTRA_PREC='YES'`), with the exact request URL and
+the verbatim `$$SOE…$$EOE` block. Measured differences (LUNARIS − Horizons):
+
+| Body | max abs Δaz · cos el | max abs Δel |
+| --- | ---: | ---: |
+| Sun | 0.00003″ | < 0.00001″ |
+| Earth | 0.0017″ | 0.0002″ |
+
+**Tolerance: 0.01″** in Δaz·cos el and in Δel, for both bodies. Justification:
+
+- *Resolution of the reference.* Horizons prints 1e-9° (0.0000036″) with `EXTRA_PREC`, so
+  the comparison is not limited by rounding.
+- *Model differences.* Horizons uses DE441 and corrects for gravitational light
+  deflection by the Sun and the Earth; LUNARIS uses DE440s and `CN+S`, which has no
+  deflection term. DE440 and DE441 are fitted to the same modern observations
+  (Park et al. 2021). Neither difference was separated here: the measured residuals above
+  bound their combined effect at this site and epoch. The larger Earth residual is
+  consistent with the Earth being much closer than the Sun, so any position or deflection
+  difference subtends a larger angle.
+- *Margin.* 0.01″ is about 6× the largest measured difference, so the test fails on any
+  real regression (a wrong correction, frame or azimuth convention moves the result by
+  arcseconds or more; switching `CN+S` to `LT` fails it) without being sensitive to the
+  ephemeris version.
+- *Relevance.* 0.01″ is 1/96 000 of the solar angular radius (≈ 960″), far below what
+  matters for disk fractions or visibility windows.
+
+On the fixture day the Earth is below the astronomical horizon at this site
+(elevation −1.16° to −2.61°), which the tests also pin.
+
+**Angular sizes.** Solar angular radius ≈ 0.267° at 1 au; Earth angular radius roughly
+0.9°–1.0° over the lunar orbit. Both are computed per epoch, never fixed.
+
+**Performance.** One year of hourly samples (8 760 epochs) for the Sun and the Earth,
+including UTC → ET conversion, runs in about 1 s on the development machine (acceptance
+< 2 s, asserted in `test_one_year_hourly_for_sun_and_earth_takes_under_two_seconds`).
 
 ### 5.3 Illumination — Milestone 04
 
@@ -343,11 +408,11 @@ sensitivity analysis over the weights. Placeholder evidence can never contribute
 | Published results | Polar illumination fractions vs Mazarico et al. (2011) and Gläser et al. (2014), with stated differences in DEM, period and method | M04 |
 | Reproducibility | Acquisition records + `GET /api/v1/system/runtime` versions embedded in results | all |
 
-**Horizons reference (recorded 2026-11-04).** `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json`
-holds two apparent Sun az/el samples for a site at 89.5° S, 0° E (Horizons, DE441,
-MEAN_ME, 1737.4 km sphere), plus the record of the SPICE cross-check in §5.2. It is a
-partial fixture: the full hourly table and the exact request URL must be re-captured
-before it is used as a regression test.
+**Horizons references (captured 2026-11-04).** `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json`
+and `horizons-earth-s89p5-e0-2026-11-04.json`: 25 hourly apparent az/el samples each,
+requested directly from the Horizons API by the development environment, with the exact
+request URL and the verbatim `$$SOE…$$EOE` table. They replace an earlier two-sample Sun
+fixture that had been relayed second-hand. Tolerance and its justification: §5.2.
 
 ---
 
