@@ -332,12 +332,15 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "missing" | "incomplete" | "untracked" | "acquired";
+            status: "missing" | "incomplete" | "untracked" | "acquired" | "remote_window";
         };
         /** DatasetSummary */
         DatasetSummary: {
-            /** Acquire Command */
-            acquire_command: string;
+            /**
+             * Acquire Command
+             * @description Command that acquires the dataset; null for remote-window datasets, which are read as windows over HTTP and never downloaded whole.
+             */
+            acquire_command: string | null;
             /**
              * Category
              * @enum {string}
