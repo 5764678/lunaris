@@ -1,0 +1,163 @@
+# LUNARIS — Architectural Decision Record
+
+Each entry records a decision, the evidence it rests on, and what it costs. Entries are
+append-only: a reversed decision gets a new entry that supersedes the old one; the old
+one is marked `Superseded by D<n>` and kept.
+
+Owner of this file: the technical-director session. Implementation sessions propose
+changes through their PR description; they do not edit accepted entries.
+
+Status values: `Proposed`, `Accepted`, `Superseded by D<n>`.
+
+---
+
+## D1 — Modular monolith on the Milestone 01 stack
+
+- **Status:** Accepted (2026-11-04)
+- **Context:** Milestone 01 establishes a monorepo: `apps/web` (Next.js, React Three
+  Fiber), `apps/api` (FastAPI), `packages/science` (pure scientific core),
+  `packages/data` (manifests, acquisition, verification), `packages/shared-types`
+  (TypeScript types generated from the API's OpenAPI document). Module layout and its
+  rules are described in `docs/ARCHITECTURE.md`.
+- **Decision:** Keep that structure and stack. No microservices, no PostGIS, no task
+  queue. Analysis endpoints compute synchronously and cache derived artefacts as files
+  under `data/processed/`, keyed by input checksums and parameters. SQLite stays for
+  lightweight application state.
+- **Why:** The expensive step (a horizon mask per site, D4) takes seconds and is cached;
+  a year of hourly SPICE geometry for one site is sub-second. Nothing in scope needs
+  asynchronous jobs or spatial SQL.
+- **Revisit if:** a request routinely exceeds ~10 s after caching, or regional
+  illumination maps (many horizon masks) move into scope.
+
+## D2 — SPICE is the geometry engine; Horizons is a validation oracle only
+
+- **Status:** Accepted (2026-11-04)
+- **Decision:** Sun and Earth directions from a lunar surface site are computed locally
+  with SpiceyPy from NAIF generic kernels: `naif0012.tls`, `pck00011.tpc`,
+  `moon_pa_de440_200625.bpc`, `moon_de440_250416.tf`, `de440s.bsp` (URLs and SHA-256 in
+  the NAIF manifest). JPL Horizons is used only to produce test fixtures. The running
+  application never calls Horizons.
+- **Requirements on the implementation:**
+  - Surface positions are in `MOON_ME`. A test must assert that `MOON_ME` in the loaded
+    FK resolves to `MOON_ME_DE440_ME421`, the realization consistent with the
+    "Mean Earth/Polar Axis of DE421" frame that LOLA products are registered to.
+  - No hard-coded integer frame IDs (they changed between FK versions: MOON_PA
+    31010 → 31000, MOON_ME 31011 → 31001).
+  - Times enter as UTC and are converted to ET/TDB through the leap-seconds kernel.
+  - Apparent directions use light-time and stellar aberration correction.
+  - The local topocentric frame is undefined at latitude exactly ±90°. The code must
+    reject it or define the azimuth reference explicitly; it must not return a silent
+    NaN.
+  - Validation against the Horizons fixture (site −89.5° lat, 0° E, h = 0 on the
+    1737.4 km sphere) uses a tolerance stated and justified in `docs/SCIENCE.md`.
+    Horizons used DE441 and we use DE440s, so the tolerance must allow for the
+    ephemeris difference.
+- **Why:** A live demo cannot depend on a third-party API's availability or rate
+  limits. Local SPICE is reproducible and fast.
+
+## D3 — Two terrain resolutions: regional for horizons, high resolution for hazards
+
+- **Status:** Accepted (2026-11-04)
+- **Context:**
+  - Horizons at the south pole are shaped by terrain up to ~200 km away. At 200 km the
+    lunar surface curves away from the site's horizontal plane by d²/2R ≈ 11.5 km, so
+    more distant terrain rarely matters.
+  - A slope value is only meaningful together with the distance it is measured over.
+    A 240 m pixel averages away slopes that matter at lander scale.
+  - Products checked 2026-11-04 (HTTP HEAD and remote TIFF header reads):
+
+    | Product | Size | Layout | Partial reads |
+    |---|---:|---|---|
+    | PDS `ldem_75s_240m.img` (75–90°S, 240 m) | 29,062,688 B | 3812×3812 int16 | n/a (download) |
+    | PGDA `LDEM_80S_20MPP_ADJ.TIF` (20 m) | 2,696,082,051 B | BigTIFF 30400², float32, 512² tiles, deflate, IFD at byte 200 | `Accept-Ranges: bytes` |
+    | PGDA `LDEM_83S_10MPP_ADJ.TIF` (10 m) | 5,116,709,568 B | BigTIFF 43280², same layout | `Accept-Ranges: bytes` |
+    | PGDA product 78 per-site 5 m DEMs (27 sites; e.g. `Haworth_final_adj_5mpp_surf.tif`) | 142,123,767 B (Haworth) | 5960², float32, uncompressed, 1-row strips | `Accept-Ranges: bytes` |
+
+- **Decision:**
+  - **Horizon masks** use LDEM_75S_240M.
+  - **Slope, roughness and hazard** use the PGDA 20 m DEM, read as a window around each
+    site through GDAL `/vsicurl/`. The PGDA 5 m site DEM is used where one covers the
+    site.
+  - Every slope or roughness value carries its baseline (for example
+    `slope_deg` with `baseline_m`).
+- **Constraints that follow:**
+  - Horizon rays that leave DEM coverage are flagged as truncated. They are never
+    treated as zero elevation. With LDEM_75S_240M, a full 200 km reach in every
+    direction needs a site poleward of about 82°S: (lat − 75°) × 30.3 km/° ≥ 200 km.
+  - Distances measured on the polar stereographic grid are corrected for scale (about
+    1.7% at 75°S, k = 2 / (1 + sin|φ|)) or computed on the sphere.
+  - Both products are south polar stereographic, MOON_ME (DE421). Readers verify this
+    from file metadata and refuse a mismatch.
+- **Fallback:** if `/vsicurl/` windowed reads prove unreliable, crop windows once into
+  `data/processed/`, or download the per-site 5 m tiles.
+- **Rejected:** a single 240 m DEM, because its hazard numbers can't be defended.
+  20 m everywhere, because horizon computation would need multi-GB inputs for no gain
+  in accuracy.
+
+## D4 — Illumination and Earth visibility as visible-disk fraction over a horizon mask
+
+- **Status:** Accepted (2026-11-04)
+- **Context:** Near the south pole the Sun's elevation stays within about ±1.5–2°, and
+  its disk is about 0.53° across. Partial occlusion of the disk by terrain is a
+  common state, not an edge case. Earth's disk is about 1.9° across and, seen from
+  the polar region, its elevation stays within roughly ±7° because of libration.
+- **Decision:**
+  1. For each site, compute a terrain horizon mask once: horizon elevation angle as a
+     function of azimuth, at a stated azimuth step. Rays are marched over the DEM with
+     curvature correction and truncation flags (D3).
+  2. At each time step, take the body's apparent azimuth, elevation and angular radius
+     (D2). Report the fraction of the body's disk above the horizon mask.
+  3. Illumination timelines, Sun-visible windows and direct-to-Earth (geometric)
+     visibility windows are derived from those fractions.
+- **Semantics:** the astronomical horizon (elevation 0°) and the terrain horizon are
+  reported separately. Earth visibility is geometric line of sight only. It does not
+  imply a radio link, which would need a link budget.
+- **Out of scope, and documented as such:** Earthshine, light scattered from nearby
+  terrain, and regional illumination maps (one mask per grid cell; possible later as a
+  coarse grid).
+- **Validation:** synthetic terrain with analytical answers (flat plane, axisymmetric
+  crater), and comparison with published polar illumination studies (Mazarico et al.
+  2011; Gläser et al. 2014, both in Icarus). Any agreement is reported with its stated
+  differences in DEM, period and method.
+- **Rejected:** a point Sun, because it misstates illumination percentage exactly where
+  LUNARIS specializes. Per-time-step ray tracing, which costs thousands of times more
+  for the same single-site answer.
+
+## D5 — The south-pole terrain scene is the main visualization
+
+- **Status:** Accepted (2026-11-04)
+- **Decision:** The main 3D view is a terrain mesh built from LOLA heights around the
+  south pole. It is lit by the SPICE Sun direction for the selected time, and a time
+  control moves the Sun. The globe remains as context and as the entry point into the
+  polar scene.
+- **Labelling rule:** shadows rendered by the 3D engine are an illustration. They are
+  labelled as such in the interface. Quantitative illumination comes only from D4, and
+  the selected site shows its computed value in the 3D view.
+- **Why:** the global colour map is most distorted at the poles, exactly where LUNARIS
+  works. Real terrain under real Sun geometry is the visual case for the product.
+- **Cost:** the largest single frontend task, plus an API endpoint that exports a
+  heightmap for the scene.
+
+## D6 — Documentation set
+
+- **Status:** Accepted (2026-11-04)
+- **Decision:** `README.md` plus `docs/` `ARCHITECTURE.md`, `SCIENCE.md`,
+  `DATA_SOURCES.md`, `API.md`, `ROADMAP.md` (created in Milestone 01), plus this file
+  and `docs/TASKS.md` (task assignments, owners, acceptance criteria). No separate
+  `PROJECT.md`: the project vision and scope live in `README.md` and `docs/ROADMAP.md`.
+
+## D7 — Parallel session organization
+
+- **Status:** Accepted (2026-11-04)
+- **Decision:**
+  - At most four implementation sessions run at once.
+  - Each session owns a set of directories, works on its own branch, and opens a PR to
+    `main`.
+  - Interfaces between sessions are fixed in `docs/API.md` (wire contracts, generated
+    OpenAPI) and `docs/SCIENCE.md` (science-core function contracts) before parallel
+    work starts.
+  - The technical director verifies each PR by running its tests and checks before it
+    merges. A session's own completion report is not taken as evidence.
+  - Implementation sessions run at high reasoning effort, not max, to fit the usage
+    budget.
+- **Ownership:** assigned per task in `docs/TASKS.md`.
