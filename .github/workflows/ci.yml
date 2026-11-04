@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python (${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - name: Install workspace (locked)
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Type check
+        run: uv run mypy
+      - name: Tests (science, data, API, live-server integration)
+        run: uv run pytest
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint and format
+        run: npm run lint -w @lunaris/web && npm run format:check
+      - name: Type check
+        run: npm run typecheck --workspaces --if-present
+      - name: Unit tests
+        run: npm run test:web
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  contracts:
+    name: API contract drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: uv sync --frozen
+      - run: npm ci
+      - name: OpenAPI document and generated TypeScript types are up to date
+        run: npm run contracts:check
+
+  e2e:
+    name: End-to-end (browser)
+    needs: [python, web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: uv sync --frozen
+      - run: npm ci
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Run end-to-end tests
+        run: npm run test:e2e
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/test-results
+          retention-days: 7

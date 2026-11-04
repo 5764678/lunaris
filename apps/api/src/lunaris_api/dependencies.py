@@ -1,0 +1,40 @@
+"""FastAPI dependency providers. Application-scoped resources live on ``app.state``
+(created in the lifespan); request-scoped resources (DB sessions) are yielded here."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import Annotated
+
+from fastapi import Depends, Request
+from sqlalchemy.orm import Session
+
+from lunaris_api.db.repositories import SqlAlchemySiteRepository
+from lunaris_api.services.datasets import DatasetService
+from lunaris_api.services.sites import SiteService
+from lunaris_api.settings import Settings
+
+
+def get_app_settings(request: Request) -> Settings:
+    settings: Settings = request.app.state.settings
+    return settings
+
+
+def get_session(request: Request) -> Iterator[Session]:
+    with request.app.state.session_factory() as session:
+        yield session
+
+
+def get_site_service(session: Annotated[Session, Depends(get_session)]) -> SiteService:
+    return SiteService(SqlAlchemySiteRepository(session))
+
+
+def get_dataset_service(request: Request) -> DatasetService:
+    return DatasetService(request.app.state.dataset_registry, request.app.state.data_layout)
+
+
+SettingsDep = Annotated[Settings, Depends(get_app_settings)]
+SiteServiceDep = Annotated[SiteService, Depends(get_site_service)]
+DatasetServiceDep = Annotated[DatasetService, Depends(get_dataset_service)]
+
+__all__ = ["DatasetServiceDep", "SettingsDep", "SiteServiceDep"]

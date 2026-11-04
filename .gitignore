@@ -1,0 +1,76 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# LUNARIS — repository ignore rules
+# Scientific datasets, SPICE kernels and generated assets are NEVER committed.
+# They are acquired reproducibly with `uv run lunaris-data acquire <dataset-id>`.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Acquired / generated data (keep the directory skeleton + READMEs only) ──
+/data/raw/*
+!/data/raw/README.md
+/data/processed/*
+!/data/processed/README.md
+/data/kernels/*
+!/data/kernels/README.md
+/data/state/*
+!/data/state/README.md
+# Fixtures are committed, but only small, documented, synthetic files.
+
+# Web-ready textures generated from acquired NASA products
+/apps/web/public/textures/moon/*
+!/apps/web/public/textures/moon/README.md
+
+# Raster / kernel formats as a safety net (large binaries never belong in git)
+*.IMG
+*.img
+*.jp2
+*.bsp
+*.bpc
+*.tls
+*.tpc
+*.tf
+*.tm
+*.cub
+*.part
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+
+# ── Node / Next.js ──
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.turbo/
+playwright-report/
+test-results/
+/blob-report/
+/playwright/.cache/
+
+# ── Environment / secrets ──
+.env
+.env.*
+!.env.example
+
+# ── OS / editor ──
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.log
+npm-debug.log*

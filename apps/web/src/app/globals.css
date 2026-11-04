@@ -1,0 +1,181 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * LUNARIS design tokens. The application is dark-only: mission-control surfaces are
+ * graphite/near-black, with a single restrained cool-blue accent. Status colours and
+ * evidence colours are separate vocabularies and must not be mixed:
+ *   status   — system state (ok / warn / critical / info)
+ *   evidence — epistemic kind of a value (observation, calculation, assumption, …)
+ */
+:root {
+  --radius: 0.375rem;
+
+  /* Surfaces */
+  --background: #05070a;
+  --surface: #080b0f;
+  --panel: #0b0f14;
+  --panel-raised: #10151c;
+  --panel-sunken: #06080b;
+  --hairline: #161c24;
+  --border: #1c232d;
+  --border-strong: #2a3441;
+
+  /* Text */
+  --foreground: #e6eaef;
+  --muted-foreground: #8d97a6;
+  --dim: #5c6774;
+
+  /* Accent (cool blue) */
+  --primary: #7cb5ff;
+  --primary-strong: #4f93ec;
+  --primary-foreground: #031022;
+  --ring: #4f93ec;
+
+  /* Status */
+  --ok: #46d19f;
+  --warn: #e9b14f;
+  --critical: #f0695d;
+  --info: #7cb5ff;
+
+  /* Evidence kinds */
+  --ev-observation: #7cb5ff;
+  --ev-derived: #93a9ff;
+  --ev-model: #b39dff;
+  --ev-calculation: #5ad2c4;
+  --ev-assumption: #e9b14f;
+  --ev-placeholder: #ec8d5b;
+  --ev-not-computed: #5c6774;
+
+  /* shadcn/ui semantic tokens */
+  --card: var(--panel);
+  --card-foreground: var(--foreground);
+  --popover: #0e1319;
+  --popover-foreground: var(--foreground);
+  --secondary: #121820;
+  --secondary-foreground: #c9d1db;
+  --muted: #10151c;
+  --accent: #152030;
+  --accent-foreground: var(--foreground);
+  --destructive: var(--critical);
+  --input: #1f2731;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-panel-raised: var(--panel-raised);
+  --color-panel-sunken: var(--panel-sunken);
+  --color-hairline: var(--hairline);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-dim: var(--dim);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-critical: var(--critical);
+  --color-info: var(--info);
+  --color-ev-observation: var(--ev-observation);
+  --color-ev-derived: var(--ev-derived);
+  --color-ev-model: var(--ev-model);
+  --color-ev-calculation: var(--ev-calculation);
+  --color-ev-assumption: var(--ev-assumption);
+  --color-ev-placeholder: var(--ev-placeholder);
+  --color-ev-not-computed: var(--ev-not-computed);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 13px;
+    line-height: 1.45;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+}
+
+@layer components {
+  /* Section/label typography: small, mono, tracked caps. */
+  .label-caps {
+    @apply font-mono text-3xs uppercase tracking-[0.14em] text-dim;
+  }
+  .numeric {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "zero";
+  }
+  /* Diagonal hatch: the universal LUNARIS pattern for "not computed / no data". */
+  .hatch {
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--dim) 16%, transparent) 0 1px,
+      transparent 1px 7px
+    );
+  }
+  /* Faint engineering grid used behind the lunar viewport. */
+  .hud-grid {
+    background-color: var(--panel-sunken);
+    background-image:
+      radial-gradient(ellipse at 50% 45%, #0e141c 0%, transparent 70%),
+      linear-gradient(to right, color-mix(in oklab, var(--hairline) 70%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--hairline) 70%, transparent) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      48px 48px,
+      48px 48px;
+    background-position: center;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
