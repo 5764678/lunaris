@@ -385,7 +385,8 @@
               "missing",
               "incomplete",
               "untracked",
-              "acquired"
+              "acquired",
+              "remote_window"
             ],
             "title": "Status",
             "type": "string"
@@ -405,8 +406,16 @@
       "DatasetSummary": {
         "properties": {
           "acquire_command": {
-            "title": "Acquire Command",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Command that acquires the dataset; null for remote-window datasets, which are read as windows over HTTP and never downloaded whole.",
+            "title": "Acquire Command"
           },
           "category": {
             "enum": [

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "pgda-lola-20mpp-80s",
+  "title": "PGDA LOLA south-pole DEM, 80°S–90°S, 20 m/pixel (LDEM_80S_20MPP_ADJ)",
+  "summary": "LOLA-derived south-polar topography at 20 m/pixel from the NASA GSFC Planetary Geodesy Data Archive (product 90), crossover-adjusted. Used for site-scale slope, roughness and hazard analysis (docs/DECISIONS.md D3). Read as windows over HTTP byte ranges; never downloaded whole (2.7 GB).",
+  "category": "terrain",
+  "evidence_kind": "derived_product",
+  "provider": "NASA Goddard Space Flight Center — Planetary Geodesy Data Archive (PGDA)",
+  "mission": "Lunar Reconnaissance Orbiter (LRO)",
+  "instrument": "Lunar Orbiter Laser Altimeter (LOLA)",
+  "product_family": "PGDA product 90: LOLA south-pole DEMs (20 m and 10 m)",
+  "source_page": "https://pgda.gsfc.nasa.gov/products/90",
+  "storage_area": "raw",
+  "files": [
+    {
+      "name": "LDEM_80S_20MPP_ADJ.TIF",
+      "url": "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+      "role": "data",
+      "size_bytes": 2696082051,
+      "access": "remote_window",
+      "etag": "W/\"a0b2f283-189327867b8\"",
+      "last_modified": "Fri, 07 Jul 2023 22:28:19 GMT",
+      "description": "BigTIFF, 30400 × 30400 float32, 512 × 512 deflate tiles, NaN nodata. CRS +proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +R=1737400; geotransform (20, 0, −304000, 0, −20, 304000). Heights in metres above the 1737.4 km sphere (GMT history: km × 1000)."
+    }
+  ],
+  "spatial": {
+    "body": "Moon",
+    "frame": "MOON_ME",
+    "projection": "Polar stereographic, south pole (centre −90°/0°, true scale at the pole) on a 1737.4 km sphere — from the GeoTIFF CRS, checked on every read",
+    "nominal_resolution_m": 20,
+    "coverage": "±304 km square around the south pole (about 80°S to 90°S)",
+    "vertical_reference": "Heights in metres above the 1737.4 km reference sphere"
+  },
+  "units": "float32 metres above the 1 737 400 m reference sphere; NaN where no value.",
+  "citation": "Barker, M. K., et al. (2023). The Planetary Science Journal, 4, 183. doi:10.3847/PSJ/acf3e1. Data: doi:10.60903/gsfcpgda-lola-spole (NASA GSFC PGDA product 90).",
+  "usage": "NASA PGDA data, publicly available. Cite the paper and the data DOI.",
+  "verification": {
+    "status": "verified",
+    "checked_on": "2026-11-04",
+    "note": "HEAD on 2026-11-04 from the LUNARIS development environment: 200, Content-Length 2696082051, Accept-Ranges bytes, ETag and Last-Modified as pinned. A 1000 × 1000 window (site 89.45°S, 222.69°E) was read through GDAL /vsicurl/ with ~9 MB requested; CRS and geotransform checked. No SHA-256 is pinned: the file is never downloaded whole, so the size and HTTP validators identify the version, and every read is refused if they differ."
+  },
+  "required_by": ["terrain"],
+  "notes": [
+    "Not acquired with `lunaris-data acquire`; read with lunaris_data.remote.window.read_window, optionally caching windows under data/processed/pgda-lola-20mpp-80s/windows/.",
+    "The server intermittently answers valid ranged GETs with HTTP 403 (observed 2026-11-04); reads retry 403/429/5xx a bounded number of times and record the retry count in the window provenance."
+  ]
+}

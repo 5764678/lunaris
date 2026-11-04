@@ -101,6 +101,40 @@ procedural placeholder to this texture automatically. A newer 16-bit map
 in km relative to 1737.4 km; uint16 TIFFs in half-metres, offset +20000, relative to
 1727.4 km) are not used — terrain comes from LOLA products directly.
 
+### 2.4 `pgda-lola-20mpp-80s` — PGDA LOLA south-pole DEM, 20 m/px (remote windowed source)
+
+| Field | Value |
+| --- | --- |
+| Provider | NASA GSFC Planetary Geodesy Data Archive, product 90 |
+| File | `LDEM_80S_20MPP_ADJ.TIF` — 2 696 082 051 B, BigTIFF 30400 × 30400 float32, 512² deflate tiles, NaN nodata |
+| URL | `https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF` |
+| Projection | `+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +R=1737400`, geotransform (20, 0, −304000, 0, −20, 304000); checked on every read |
+| Heights | metres above the 1737.4 km sphere (GMT history in the file: km × 1000) |
+| Version pin | Content-Length 2 696 082 051, ETag `W/"a0b2f283-189327867b8"`, Last-Modified `Fri, 07 Jul 2023 22:28:19 GMT` |
+| Citation | Barker et al. (2023), *PSJ* 4, 183, doi:10.3847/PSJ/acf3e1; data doi:10.60903/gsfcpgda-lola-spole |
+
+**Access kind `remote_window`** (manifest-model extension, T-13). The file is never
+downloaded whole and `lunaris-data acquire` refuses it. `lunaris_data.remote.window.read_window`
+reads a window around a site through GDAL `/vsicurl/`. Before each read it HEADs the URL
+and refuses the read if the size, ETag or Last-Modified differ from the manifest pins.
+Because no SHA-256 of the whole file exists, those validators identify the version. Each
+window carries its provenance: URL, validators, window in pixels and map metres,
+geotransform, HTTP requests, retried requests and bytes requested.
+
+**Network behaviour (observed 2026-11-04).** The server intermittently answers valid
+ranged GETs with **HTTP 403**; the same request then succeeds. Multi-range GETs stall
+behind HTTP proxies. Reads therefore use `GDAL_HTTP_MULTIRANGE=SINGLE_GET` (adjacent ranges
+merged) and retry 403/429/500/502/503/504 at most 6 times with a 1 s initial delay
+(GDAL backs off). Every retry is counted in the provenance and logged by
+`lunaris_data.remote`. Measured: a 1000 × 1000 window at 89.45° S, 222.69° E requested
+8.5 MB in 12 requests (4 retried after a 403), about 12 s.
+
+**Fallback.** With `cache_dir` set (convention: `data/processed/pgda-lola-20mpp-80s/windows/`),
+a successful window is stored with its provenance. A later request for the same window
+of the same pinned version is served from the cache **before any network access**,
+marked `served_from_cache`. If remote reads become unusable altogether, the PGDA product
+78 per-site 5 m tiles can be downloaded instead (D3).
+
 ## 3. Candidate products for Milestone 02 (site-scale terrain)
 
 Identified during the 2026-11-04 verification. `docs/DECISIONS.md` D3 selects the 240 m
@@ -115,7 +149,7 @@ source" kind for this. All are south polar stereographic, `MOON_ME` (DE421).
 | `LDEM_85S_10M`, `LDEM_875S_10M` | PDS LOLA GDR (polar) | 10 m | as above |
 | `LDEM_875S_5M` | PDS LOLA GDR (polar) | 5 m, 87.5° S – 90° S | as above |
 | PGDA product 81 `ldem_87s_5mpp.tif` | NASA GSFC PGDA | 5 m, 87° S – 90° S (3 465 285 714 B) | Barker et al. (2021), doi:10.1016/j.pss.2020.105119 |
-| PGDA product 90 `LDEM_80S_20MPP_ADJ.TIF` (2 696 082 051 B), `LDEM_83S_10MPP_ADJ.TIF` (5 116 709 568 B) | NASA GSFC PGDA | 20 m / 10 m | BigTIFF, float32, 512² deflate tiles, `Accept-Ranges: bytes` (D3). Barker et al. (2023), doi:10.3847/PSJ/acf3e1; data doi:10.60903/gsfcpgda-lola-spole |
+| PGDA product 90 `LDEM_80S_20MPP_ADJ.TIF` (2 696 082 051 B, **registered as §2.4**), `LDEM_83S_10MPP_ADJ.TIF` (5 116 709 568 B) | NASA GSFC PGDA | 20 m / 10 m | BigTIFF, float32, 512² deflate tiles, `Accept-Ranges: bytes` (D3). Barker et al. (2023), doi:10.3847/PSJ/acf3e1; data doi:10.60903/gsfcpgda-lola-spole |
 | PGDA product 78 | NASA GSFC PGDA | 5 m per-site DEMs (27 sites; e.g. Haworth, 142 123 767 B) | float32, uncompressed (D3) |
 | PGDA product 104 | Zenodo, doi:10.5281/zenodo.17954508 | 5 m shape-from-shading DEMs | Photoclinometry-derived: label as a distinct product class |
 

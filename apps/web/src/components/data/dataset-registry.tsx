@@ -107,10 +107,12 @@ function DatasetCard({ dataset }: { dataset: DatasetSummary }) {
             <p className="label-caps mb-1">URL verification</p>
             <p className="text-2xs leading-relaxed text-muted-foreground">{dataset.url_verification.note}</p>
           </div>
-          <div>
-            <p className="label-caps mb-1">Acquire</p>
-            <CopyCommand command={dataset.acquire_command} />
-          </div>
+          {dataset.acquire_command ? (
+            <div>
+              <p className="label-caps mb-1">Acquire</p>
+              <CopyCommand command={dataset.acquire_command} />
+            </div>
+          ) : null}
           <a
             href={dataset.source_page}
             target="_blank"
