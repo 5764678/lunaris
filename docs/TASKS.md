@@ -81,7 +81,9 @@ class HorizonMask:
     method: str  # e.g. "ray-march, curvature-corrected, ..."
 ```
 
-- Validation in `__post_init__`: equal lengths, uniform step, finite values, N ≥ 360.
+- Validation in `__post_init__`: equal lengths, uniform step, finite values, N ≥ 360,
+  and the samples cover the full circle exactly (N × step = 360°), so periodic
+  interpolation is always defined.
 - Consumers interpolate `elevation_deg` linearly and periodically in azimuth.
 - A truncated azimuth must be surfaced in any downstream result
   (`limitations`, evidence assumptions). It is never silently used as exact.
