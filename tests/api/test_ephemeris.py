@@ -12,8 +12,8 @@ from fastapi.testclient import TestClient
 
 from lunaris_api.app import create_app
 from lunaris_api.schemas.ephemeris import MAX_EPHEMERIS_SAMPLES
-from lunaris_api.services.ephemeris import KERNEL_DATASET_ID
 from lunaris_api.settings import Settings
+from lunaris_data.kernels import KERNEL_DATASET_ID
 from lunaris_data.registry import DatasetRegistry
 from lunaris_data.store import DataLayout, DatasetStatus, inspect_dataset
 
