@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+packages/shared-types/src/generated
+packages/shared-types/openapi
+*.md
+uv.lock
+package-lock.json

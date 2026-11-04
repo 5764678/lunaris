@@ -1,0 +1,36 @@
+{
+  "name": "lunaris",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LUNARIS — Lunar Mission Intelligence & Surface Operations Platform (monorepo root)",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "apps/web",
+    "packages/shared-types"
+  ],
+  "engines": {
+    "node": ">=20.9.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "uv run uvicorn lunaris_api.main:app --reload --reload-dir apps/api/src --reload-dir packages/science/src --reload-dir packages/data/src --host 127.0.0.1 --port 8000",
+    "dev:web": "npm run dev -w @lunaris/web",
+    "build": "npm run build -w @lunaris/web",
+    "start:web": "npm run start -w @lunaris/web",
+    "lint": "npm run lint -w @lunaris/web && npm run format:check && uv run ruff check . && uv run ruff format --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present && uv run mypy",
+    "test": "npm run test:web && npm run test:py",
+    "test:web": "npm run test -w @lunaris/web",
+    "test:py": "uv run pytest",
+    "test:e2e": "npm run test:e2e -w @lunaris/web",
+    "contracts:generate": "uv run lunaris-api-openapi && npm run generate -w @lunaris/shared-types",
+    "contracts:check": "uv run lunaris-api-openapi --check && npm run check:generated -w @lunaris/shared-types",
+    "check": "npm run lint && npm run typecheck && npm run contracts:check && npm test",
+    "format": "prettier --write \"apps/web/**/*.{ts,tsx,mts,css,json}\" \"packages/shared-types/**/*.{ts,mjs,json}\" \"scripts/**/*.mjs\" \"tests/integration/**/*.ts\"",
+    "format:check": "prettier --check \"apps/web/**/*.{ts,tsx,mts,css,json}\" \"packages/shared-types/**/*.{ts,mjs,json}\" \"scripts/**/*.mjs\" \"tests/integration/**/*.ts\""
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10"
+  }
+}
