@@ -8,7 +8,12 @@ from pydantic import ValidationError
 from lunaris_data.manifest import DatasetManifest, UrlVerificationStatus
 from lunaris_data.registry import DatasetRegistry, UnknownDatasetError
 
-EXPECTED_IDS = {"lola-ldem-75s-240m", "naif-generic-kernels-lunar", "nasa-svs-cgi-moon-kit"}
+EXPECTED_IDS = {
+    "lola-ldem-75s-240m",
+    "naif-generic-kernels-lunar",
+    "nasa-svs-cgi-moon-kit",
+    "pgda-lola-20mpp-80s",
+}
 
 
 @pytest.fixture(scope="module")
@@ -34,7 +39,35 @@ def test_verified_manifests_pin_every_checksum(registry: DatasetRegistry) -> Non
     for manifest in registry:
         if manifest.verification.status is UrlVerificationStatus.VERIFIED:
             assert manifest.verification.checked_on is not None
-            assert all(f.sha256 and f.size_bytes for f in manifest.files), manifest.id
+            for f in manifest.files:
+                if f.is_remote_window:
+                    # Never downloaded whole: pinned by size and HTTP validators.
+                    assert f.size_bytes, manifest.id
+                    assert f.etag or f.last_modified, manifest.id
+                else:
+                    assert f.sha256, manifest.id
+                    assert f.size_bytes, manifest.id
+
+
+def test_remote_window_manifest_rules(registry: DatasetRegistry) -> None:
+    pgda = registry.get("pgda-lola-20mpp-80s")
+    assert pgda.is_remote_window
+    payload = pgda.model_dump(mode="json")
+    unpinned = {**payload["files"][0], "etag": None, "last_modified": None}
+    with pytest.raises(ValidationError, match="HTTP validator"):
+        DatasetManifest.model_validate({**payload, "files": [unpinned]})
+    lola_file = registry.get("lola-ldem-75s-240m").model_dump(mode="json")["files"][0]
+    with pytest.raises(ValidationError, match="mixes"):
+        DatasetManifest.model_validate({**payload, "files": [payload["files"][0], lola_file]})
+
+
+def test_fingerprints_of_m01_manifests_are_unchanged_by_the_extension(
+    registry: DatasetRegistry,
+) -> None:
+    """Recorded acquisitions must not be flagged manifest_changed by the new fields."""
+    assert registry.get("lola-ldem-75s-240m").fingerprint().startswith("c2c3741cc70e")
+    assert registry.get("naif-generic-kernels-lunar").fingerprint().startswith("32a4df9ffaf0")
+    assert registry.get("nasa-svs-cgi-moon-kit").fingerprint().startswith("35b2694406cf")
 
 
 def test_lola_label_and_image_use_label_pointer_case(registry: DatasetRegistry) -> None:

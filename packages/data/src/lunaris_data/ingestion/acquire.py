@@ -59,8 +59,14 @@ def acquire_dataset(
     ``acquired``.
 
     Raises:
-        AcquisitionError: wrapping the underlying download or integrity error.
+        AcquisitionError: wrapping the underlying download or integrity error, or for a
+            remote-window dataset, which is read in windows and never downloaded whole.
     """
+    if manifest.is_remote_window:
+        raise AcquisitionError(
+            f"{manifest.id!r} is a remote windowed source: it is read as windows over HTTP "
+            "(lunaris_data.remote.window) and never downloaded whole"
+        )
     state = inspect_dataset(manifest, layout)
     if state.status is DatasetStatus.ACQUIRED and not force and state.record is not None:
         return AcquisitionOutcome(record=state.record, skipped=True)

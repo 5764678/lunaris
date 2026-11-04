@@ -55,6 +55,19 @@ class _Frozen(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
 
+class FileAccess(StrEnum):
+    """How LUNARIS obtains a file."""
+
+    DOWNLOAD = "download"
+    """Downloaded whole into the local store and pinned by SHA-256."""
+    REMOTE_WINDOW = "remote_window"
+    """Never downloaded: read as windows over HTTP byte ranges (GDAL /vsicurl/).
+    Pinned by size and HTTP validators (ETag / Last-Modified) instead of SHA-256."""
+
+
+_NEW_FILE_FIELDS = frozenset({"access", "etag", "last_modified"})
+
+
 class ManifestFile(_Frozen):
     name: FileName
     url: HttpUrl
@@ -62,6 +75,13 @@ class ManifestFile(_Frozen):
     sha256: Sha256Hex | None = None
     size_bytes: Annotated[int, Field(gt=0)] | None = None
     description: str | None = None
+    access: FileAccess = FileAccess.DOWNLOAD
+    etag: str | None = None
+    last_modified: str | None = None
+
+    @property
+    def is_remote_window(self) -> bool:
+        return self.access is FileAccess.REMOTE_WINDOW
 
 
 class SpatialMetadata(_Frozen):
@@ -114,19 +134,47 @@ class DatasetManifest(_Frozen):
             raise ValueError(f"manifest {self.id!r} lists duplicate file names")
         if self.evidence_kind in {EvidenceKind.PLACEHOLDER, EvidenceKind.ASSUMPTION}:
             raise ValueError("external datasets cannot be placeholders or assumptions")
-        if self.verification.status is UrlVerificationStatus.VERIFIED and any(
-            f.sha256 is None or f.size_bytes is None for f in self.files
+        verified = self.verification.status is UrlVerificationStatus.VERIFIED
+        if verified and any(
+            f.sha256 is None or f.size_bytes is None for f in self.files if not f.is_remote_window
         ):
             raise ValueError(
                 f"manifest {self.id!r} is marked verified, so every file must pin "
                 "sha256 and size_bytes"
             )
+        if verified and any(
+            f.size_bytes is None or (f.etag is None and f.last_modified is None)
+            for f in self.files
+            if f.is_remote_window
+        ):
+            raise ValueError(
+                f"manifest {self.id!r} is marked verified, so every remote-window file must "
+                "pin size_bytes and an HTTP validator (etag or last_modified)"
+            )
+        if any(f.is_remote_window for f in self.files) and not all(
+            f.is_remote_window for f in self.files
+        ):
+            raise ValueError(f"manifest {self.id!r} mixes downloaded and remote-window files")
         return self
+
+    @property
+    def is_remote_window(self) -> bool:
+        """True when the dataset is read remotely in windows and never acquired."""
+        return all(f.is_remote_window for f in self.files)
 
     def fingerprint(self) -> str:
         """SHA-256 of the canonical JSON form; recorded at acquisition time so that later
         manifest edits (e.g. a corrected URL) are detectable."""
-        canonical = self.model_dump_json(exclude_none=False).encode("utf-8")
+        # Fields added to ManifestFile after M01 are left out while they hold their
+        # defaults, so fingerprints recorded before the extension stay valid.
+        exclude = {
+            "files": {
+                index: set(_NEW_FILE_FIELDS)
+                for index, f in enumerate(self.files)
+                if f.access is FileAccess.DOWNLOAD and f.etag is None and f.last_modified is None
+            }
+        }
+        canonical = self.model_dump_json(exclude_none=False, exclude=exclude).encode("utf-8")
         return hashlib.sha256(canonical).hexdigest()
 
     def file(self, name: str) -> ManifestFile:
@@ -140,6 +188,7 @@ __all__ = [
     "DatasetCategory",
     "DatasetId",
     "DatasetManifest",
+    "FileAccess",
     "FileRole",
     "ManifestFile",
     "Sha256Hex",
