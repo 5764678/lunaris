@@ -58,7 +58,15 @@ export function ProceduralSurface() {
 
 /** Loads the acquired NASA color map. Renders nothing until loaded, so the HUD's
  *  "NASA SVS" disclosure never sits over the placeholder surface. */
-export function TexturedSurface({ url, onError }: { url: string; onError: (reason: string) => void }) {
+export function TexturedSurface({
+  url,
+  onError,
+  onLoaded,
+}: {
+  url: string;
+  onError: (reason: string) => void;
+  onLoaded: () => void;
+}) {
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
   const [texture, setTexture] = useState<Texture | null>(null);
@@ -78,6 +86,7 @@ export function TexturedSurface({ url, onError }: { url: string; onError: (reaso
         loaded.anisotropy = Math.min(8, maxAnisotropy);
         loaded.needsUpdate = true;
         setTexture(loaded);
+        onLoaded();
         invalidate();
       },
       undefined,
@@ -88,7 +97,7 @@ export function TexturedSurface({ url, onError }: { url: string; onError: (reaso
     return () => {
       cancelled = true;
     };
-  }, [url, gl, invalidate, onError]);
+  }, [url, gl, invalidate, onError, onLoaded]);
 
   useEffect(() => () => texture?.dispose(), [texture]);
   const material = useMemo(() => (texture ? makeMaterial(texture) : null), [texture]);
