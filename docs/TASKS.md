@@ -179,7 +179,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-12 | Terrain scene export (C3), `south-pole` scene | Endpoint + contract generated; byte layout tested; vertex positions spot-checked against `spherical_to_cartesian` at 5 vertices; ETag; size cap | T-11 | in review |
 | T-13 | Remote windowed source + PGDA 20 m `/vsicurl/` reader | 1000 × 1000 window around a test site read without full download (bytes transferred logged, well under 100 MB); provenance per read (URL, validators, window bounds); documented fallback | T-11 | todo |
 | T-14 | Terrain analysis + `GET /api/v1/sites/{id}/terrain` | Height (bilinear), Horn slope with scale-corrected spacing, defined roughness, footprint stats, hazard thresholds as config; every slope/roughness value carries `baseline_m`; synthetic plane/cone slopes within 0.1°; cross-check against `gdaldem slope` on a real window | T-11, T-13 | todo |
-| T-15 | Horizon mask computation (C1) from LDEM_75S_240M | Curvature-corrected ray march, scale-corrected distance, truncation flags. Tests: zero-height DEM on the sphere gives horizon = −acos(R/(R+h_obs)) within 0.01°; an axisymmetric synthetic crater rim gives its analytical angle; a site at 78°S flags truncation toward the north. One mask at 0.25° step, 200 km range in < 30 s | T-10, T-11 | todo |
+| T-15 | Horizon mask computation (C1) from LDEM_75S_240M | Curvature-corrected ray march, scale-corrected distance, truncation flags. Tests: zero-height DEM on the sphere gives horizon = −acos(R/(R+h_obs)) within 0.01°; an axisymmetric synthetic crater rim gives its analytical angle; a site at 78°S flags truncation toward the north. One mask at 0.25° step, 200 km range in < 30 s | T-10, T-11 | in review |
 
 ### S-GEOMETRY
 

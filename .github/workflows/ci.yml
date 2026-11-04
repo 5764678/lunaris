@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Space-separated dataset ids acquired before the tests (see "Acquire and verify").
-      LUNARIS_CI_DATASETS: naif-generic-kernels-lunar
+      LUNARIS_CI_DATASETS: naif-generic-kernels-lunar lola-ldem-75s-240m
     strategy:
       fail-fast: false
       matrix:
