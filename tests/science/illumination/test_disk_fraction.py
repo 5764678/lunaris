@@ -10,9 +10,13 @@ import time
 import numpy as np
 import pytest
 
+from lunaris_science.coordinates import SelenographicCoordinate
+from lunaris_science.horizon_mask import HorizonMask
 from lunaris_science.illumination import (
+    ASTRONOMICAL_HORIZON,
     DiskFractionError,
-    HorizonProfile,
+    FlatHorizon,
+    HorizonLike,
     straight_horizon_fraction,
     visible_disk_fraction,
 )
@@ -21,16 +25,25 @@ SUN_R = 0.2689  # deg, typical apparent solar radius
 EARTH_R = 0.95  # deg, typical apparent Earth radius
 
 
-def _profile(elevation: np.ndarray, truncated: np.ndarray | None = None) -> HorizonProfile:
+def _profile(elevation: np.ndarray, truncated: np.ndarray | None = None) -> HorizonMask:
+    """A real C1 HorizonMask carrying a synthetic horizon (test data, not lunar data)."""
     n = elevation.size
-    return HorizonProfile(
-        azimuth_deg=np.arange(n) * (360.0 / n),
+    return HorizonMask(
+        site=SelenographicCoordinate(-89.5, 0.0, 0.0),
+        observer_height_m=0.0,
+        surface_height_m=0.0,
+        azimuth_deg=np.arange(n, dtype=np.float64) * (360.0 / n),
         elevation_deg=elevation,
         truncated=np.zeros(n, dtype=bool) if truncated is None else truncated,
+        max_range_m=200_000.0,
+        dem_source_id="synthetic-test-horizon",
+        dem_sha256="0" * 64,
+        dem_resolution_m=240.0,
+        method="synthetic horizon built in the test (not lunar data)",
     )
 
 
-def _constant(value: float, samples: int = 1440) -> HorizonProfile:
+def _constant(value: float, samples: int = 1440) -> HorizonMask:
     return _profile(np.full(samples, value))
 
 
@@ -39,13 +52,13 @@ def _constant(value: float, samples: int = 1440) -> HorizonProfile:
 
 @pytest.mark.parametrize("radius", [SUN_R, EARTH_R])
 def test_flat_horizon_centre_on_it_gives_one_half(radius: float) -> None:
-    result = visible_disk_fraction(123.4, 0.0, radius, HorizonProfile.astronomical())
+    result = visible_disk_fraction(123.4, 0.0, radius, ASTRONOMICAL_HORIZON)
     assert result.visible_fraction[0] == pytest.approx(0.5, abs=1e-12)
 
 
 @pytest.mark.parametrize("radius", [SUN_R, EARTH_R])
 def test_centre_at_plus_r_gives_one_and_minus_r_gives_zero(radius: float) -> None:
-    flat = HorizonProfile.astronomical()
+    flat = ASTRONOMICAL_HORIZON
     result = visible_disk_fraction([10.0, 10.0], [radius, -radius], radius, flat)
     assert result.visible_fraction[0] == 1.0
     assert result.visible_fraction[1] == 0.0
@@ -93,7 +106,7 @@ def test_tilted_straight_horizon_matches_the_segment_at_the_line_distance() -> N
 # ── Acceptance: step-function horizons ─────────────────────────────────────
 
 
-def _step_profile(step_az: float, low: float, high: float, resolution: float) -> HorizonProfile:
+def _step_profile(step_az: float, low: float, high: float, resolution: float) -> HorizonMask:
     n = round(360.0 / resolution)
     az = np.arange(n) * resolution
     return _profile(np.where(az <= step_az, low, high))
@@ -115,7 +128,7 @@ def test_step_at_the_disk_centre_gives_the_mean_of_two_half_disks() -> None:
     assert np.max(np.abs(result.visible_fraction - expected)) < 1e-3
 
 
-def _grid_reference(centre_az: float, e: float, r: float, profile: HorizonProfile) -> float:
+def _grid_reference(centre_az: float, e: float, r: float, profile: HorizonMask) -> float:
     """Independent brute-force reference: area fraction on a dense tangent-plane grid."""
     m = 1201
     x, y = np.meshgrid(np.linspace(-r, r, m), np.linspace(-r, r, m))
@@ -162,28 +175,31 @@ def test_truncation_within_the_disk_span_is_flagged() -> None:
 
 
 def test_flat_astronomical_horizon_is_never_truncated() -> None:
-    result = visible_disk_fraction(
-        np.arange(0.0, 360.0, 7.0), 0.1, EARTH_R, HorizonProfile.astronomical()
-    )
+    result = visible_disk_fraction(np.arange(0.0, 360.0, 7.0), 0.1, EARTH_R, ASTRONOMICAL_HORIZON)
     assert not result.truncated.any()
 
 
 # ── Validation and performance ─────────────────────────────────────────────
 
 
-def test_profile_validation() -> None:
-    with pytest.raises(DiskFractionError, match="≥ 360"):
-        _profile(np.zeros(359))
-    with pytest.raises(DiskFractionError, match="uniform"):
-        HorizonProfile(np.linspace(0.0, 360.0, 720), np.zeros(720), np.zeros(720, dtype=bool))
-    with pytest.raises(DiskFractionError, match="finite"):
-        _profile(np.full(360, np.nan))
-    with pytest.raises(DiskFractionError, match="equal length"):
-        HorizonProfile(np.arange(360.0), np.zeros(361), np.zeros(360, dtype=bool))
+def test_horizon_mask_and_flat_horizon_satisfy_the_protocol() -> None:
+    assert isinstance(_constant(0.0), HorizonLike)
+    assert isinstance(ASTRONOMICAL_HORIZON, HorizonLike)
+    assert isinstance(FlatHorizon(), HorizonLike)
+
+
+def test_flat_horizon_matches_a_zero_horizon_mask() -> None:
+    az = np.linspace(0.0, 359.0, 37)
+    el = np.linspace(-1.0, 1.0, 37)
+    flat = visible_disk_fraction(az, el, EARTH_R, ASTRONOMICAL_HORIZON)
+    mask = visible_disk_fraction(az, el, EARTH_R, _constant(0.0, samples=360))
+    np.testing.assert_array_equal(flat.visible_fraction, mask.visible_fraction)
+    assert not flat.truncated.any()
+    np.testing.assert_array_equal(flat.horizon_elevation_deg, 0.0)
 
 
 def test_input_validation() -> None:
-    flat = HorizonProfile.astronomical()
+    flat = ASTRONOMICAL_HORIZON
     with pytest.raises(DiskFractionError, match="positive"):
         visible_disk_fraction(0.0, 0.0, 0.0, flat)
     with pytest.raises(DiskFractionError, match="finite"):

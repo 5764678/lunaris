@@ -3,7 +3,9 @@
 A body of angular radius *r* is centred at apparent azimuth *A* and elevation *e*
 (contract C0). The horizon is a profile H(az): the terrain horizon from a
 :class:`~lunaris_science.horizon_mask.HorizonMask` (C1), or the flat astronomical horizon
-H ≡ 0°. The visible fraction is the share of the disk's area lying above H.
+H ≡ 0° (:data:`ASTRONOMICAL_HORIZON`). Any object with ``elevation_at`` and
+``truncated_at`` works (:class:`HorizonLike`). The visible fraction is the share of
+the disk's area lying above H.
 
 Method. The disk is described in the tangent plane at its centre, with x along
 increasing azimuth (x = ΔA·cos e) and y along elevation. It is cut into vertical chords
@@ -16,8 +18,8 @@ with a midpoint rule (``nodes`` chords) gives::
 The denominator is the same rule applied to the full disk, so f is exactly 0 for a
 fully hidden disk and exactly 1 for a fully visible one. H is sampled per chord, so a
 horizon that slopes or steps within the disk's width is resolved, rather than assuming
-it is straight across the disk. Mask elevations are interpolated linearly and
-periodically in azimuth (C1).
+it is straight across the disk. Interpolation in azimuth is the horizon's own
+(HorizonMask: linear and periodic, C1).
 
 Accuracy:
 
@@ -33,6 +35,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Protocol, runtime_checkable
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -41,77 +44,41 @@ FloatArray = NDArray[np.float64]
 BoolArray = NDArray[np.bool_]
 
 DEFAULT_NODES = 128
-FULL_TURN_DEG = 360.0
-MIN_MASK_SAMPLES = 360
-"""C1: masks have at least 360 azimuth samples."""
-STEP_RELATIVE_TOLERANCE = 1e-9
 MAX_ABS_ELEVATION_DEG = 89.0
 """The tangent-plane azimuth scaling 1/cos e is not used near the zenith."""
 
 
 class DiskFractionError(ValueError):
-    """Raised for invalid horizon profiles or disk geometry."""
+    """Raised for invalid disk geometry."""
+
+
+@runtime_checkable
+class HorizonLike(Protocol):
+    """Anything that gives a horizon elevation and its truncation at arbitrary azimuths.
+
+    :class:`~lunaris_science.horizon_mask.HorizonMask` (C1) satisfies it, and owns the
+    grid validation and the linear periodic interpolation. :class:`FlatHorizon` is the
+    astronomical horizon.
+    """
+
+    def elevation_at(self, azimuth_deg: ArrayLike) -> FloatArray: ...
+
+    def truncated_at(self, azimuth_deg: ArrayLike) -> BoolArray: ...
 
 
 @dataclass(frozen=True, slots=True)
-class HorizonProfile:
-    """Horizon elevation as a function of azimuth, sampled on a uniform periodic grid.
-
-    ``azimuth_deg`` starts at 0 with a uniform step and covers [0, 360) (C1).
-    ``truncated`` marks azimuths whose elevation is only a lower bound because the ray
-    left DEM coverage. A flat astronomical horizon has every elevation at 0 and nothing
-    truncated (:meth:`astronomical`).
-    """
-
-    azimuth_deg: FloatArray
-    elevation_deg: FloatArray
-    truncated: BoolArray
-
-    def __post_init__(self) -> None:
-        az = np.asarray(self.azimuth_deg, dtype=np.float64)
-        el = np.asarray(self.elevation_deg, dtype=np.float64)
-        tr = np.asarray(self.truncated, dtype=np.bool_)
-        if az.ndim != 1 or el.shape != az.shape or tr.shape != az.shape:
-            raise DiskFractionError("azimuth, elevation and truncated must be 1-D and equal length")
-        if az.size < MIN_MASK_SAMPLES:
-            raise DiskFractionError(f"a horizon profile needs ≥ {MIN_MASK_SAMPLES} samples")
-        if not (np.all(np.isfinite(az)) and np.all(np.isfinite(el))):
-            raise DiskFractionError("horizon profile values must be finite")
-        step = FULL_TURN_DEG / az.size
-        expected = np.arange(az.size) * step
-        if not np.allclose(az, expected, rtol=0.0, atol=step * STEP_RELATIVE_TOLERANCE * az.size):
-            raise DiskFractionError(
-                "azimuths must start at 0 with a uniform step covering [0, 360)"
-            )
-        object.__setattr__(self, "azimuth_deg", expected)
-        object.__setattr__(self, "elevation_deg", el)
-        object.__setattr__(self, "truncated", tr)
-
-    @classmethod
-    def astronomical(cls, samples: int = 360) -> HorizonProfile:
-        """The local horizontal plane of the reference sphere (H ≡ 0°, C0)."""
-        return cls(
-            azimuth_deg=np.arange(samples, dtype=np.float64) * (FULL_TURN_DEG / samples),
-            elevation_deg=np.zeros(samples),
-            truncated=np.zeros(samples, dtype=np.bool_),
-        )
-
-    @property
-    def step_deg(self) -> float:
-        return FULL_TURN_DEG / self.azimuth_deg.size
+class FlatHorizon:
+    """The astronomical horizon: the local horizontal plane of the reference sphere
+    (H ≡ 0° at every azimuth, C0). Never truncated."""
 
     def elevation_at(self, azimuth_deg: ArrayLike) -> FloatArray:
-        """Horizon elevation, linear and periodic interpolation in azimuth (C1)."""
-        az = np.mod(np.asarray(azimuth_deg, dtype=np.float64), FULL_TURN_DEG)
-        return np.interp(az, self.azimuth_deg, self.elevation_deg, period=FULL_TURN_DEG)
+        return np.zeros(np.shape(azimuth_deg), dtype=np.float64)
 
     def truncated_at(self, azimuth_deg: ArrayLike) -> BoolArray:
-        """Whether the interpolated elevation depends on a truncated sample."""
-        az = np.mod(np.asarray(azimuth_deg, dtype=np.float64), FULL_TURN_DEG)
-        lower = np.floor(az / self.step_deg).astype(np.int64) % self.azimuth_deg.size
-        upper = (lower + 1) % self.azimuth_deg.size
-        on_sample = np.isclose(az, self.azimuth_deg[lower], rtol=0.0, atol=1e-12)
-        return self.truncated[lower] | (~on_sample & self.truncated[upper])
+        return np.zeros(np.shape(azimuth_deg), dtype=np.bool_)
+
+
+ASTRONOMICAL_HORIZON = FlatHorizon()
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,7 +99,7 @@ def visible_disk_fraction(
     azimuth_deg: ArrayLike,
     elevation_deg: ArrayLike,
     angular_radius_deg: ArrayLike,
-    horizon: HorizonProfile,
+    horizon: HorizonLike,
     *,
     nodes: int = DEFAULT_NODES,
 ) -> DiskFractionResult:
@@ -212,10 +179,12 @@ def straight_horizon_fraction(
 
 
 __all__ = [
+    "ASTRONOMICAL_HORIZON",
     "DEFAULT_NODES",
     "DiskFractionError",
     "DiskFractionResult",
-    "HorizonProfile",
+    "FlatHorizon",
+    "HorizonLike",
     "straight_horizon_fraction",
     "visible_disk_fraction",
 ]
