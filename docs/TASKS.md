@@ -171,7 +171,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 
 | ID | Task | Acceptance | Depends | Status |
 |---|---|---|---|---|
-| T-10 | `HorizonMask` type (C1) + south polar stereographic forward/inverse on the sphere + point scale factor | Round trip < 1e-9° over the 75–90°S domain; k = 2/(1 + sin\|φ\|) with k(75°S) ≈ 1.0173; consistency with the LDEM_75S_240M label grid (offsets 1905.5 px, 240 m/px); **merged first, small PR** | M01 | todo |
+| T-10 | `HorizonMask` type (C1) + south polar stereographic forward/inverse on the sphere + point scale factor | Round trip < 1e-9° over the 75–90°S domain; k = 2/(1 + sin\|φ\|) with k(75°S) ≈ 1.0173; consistency with the LDEM_75S_240M label grid (offsets 1905.5 px, 240 m/px); **merged first, small PR** | M01 | in review |
 | T-11 | PDS3 label parser + LDEM_75S_240M reader | Label values reproduced (3812², HEIGHT = DN × 0.5 m, DN range −15529…14049); heights in metres, NaN nodata; refuses a product whose projection or frame doesn't match | T-10 | todo |
 | T-12 | Terrain scene export (C3), `south-pole` scene | Endpoint + contract generated; byte layout tested; vertex positions spot-checked against `spherical_to_cartesian` at 5 vertices; ETag; size cap | T-11 | todo |
 | T-13 | Remote windowed source + PGDA 20 m `/vsicurl/` reader | 1000 × 1000 window around a test site read without full download (bytes transferred logged, well under 100 MB); provenance per read (URL, validators, window bounds); documented fallback | T-11 | todo |
