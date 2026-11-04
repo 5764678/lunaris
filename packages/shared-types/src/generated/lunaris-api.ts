@@ -4,6 +4,32 @@
  */
 
 export interface paths {
+    "/api/v1/analysis/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Illumination and Earth-visibility timelines for a site
+         * @description Visible fraction of the solar and Earth disks at every step from ``start_utc`` to
+         *     ``end_utc``, against the astronomical horizon and, when a horizon mask exists, the
+         *     terrain horizon (reported separately). Summaries: mean visible disk fraction,
+         *     illuminated / visible fraction, longest illumination and darkness (or visibility and
+         *     outage) with censoring, and windows. Same window rules, cap (10 000 samples) and error
+         *     codes as the ephemeris endpoint. Earth results are geometric line of sight only and do
+         *     not imply a radio link.
+         */
+        post: operations["post_timeline_api_v1_analysis_timeline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/datasets": {
         parameters: {
             query?: never;
@@ -364,6 +390,116 @@ export interface components {
             /** Usage */
             usage: string;
         };
+        /** EarthGeometrySample */
+        EarthGeometrySample: {
+            /**
+             * Astronomical Visible Fraction
+             * @description Fraction of the Earth's disk above the astronomical horizon, [0, 1].
+             */
+            astronomical_visible_fraction: number;
+            /** Azimuth Deg */
+            azimuth_deg: number;
+            /**
+             * Earth Radius Deg
+             * @description Apparent angular radius of the Earth.
+             */
+            earth_radius_deg: number;
+            /**
+             * Elevation Deg
+             * @description Of the Earth's centre, above the C0 plane.
+             */
+            elevation_deg: number;
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Line Of Sight
+             * @enum {string}
+             */
+            line_of_sight: "clear" | "terrain_obstructed" | "below_geometric_horizon";
+            /**
+             * Terrain Horizon Elevation Deg
+             * @description Terrain horizon at the Earth's azimuth; null without a horizon mask.
+             */
+            terrain_horizon_elevation_deg: number | null;
+            /**
+             * Terrain Truncated
+             * @description True when the terrain fraction is an upper bound (truncated mask rays).
+             */
+            terrain_truncated: boolean | null;
+            /**
+             * Terrain Visible Fraction
+             * @description Fraction of the disk above the terrain horizon; null without a mask.
+             */
+            terrain_visible_fraction: number | null;
+        };
+        /** EarthVisibilityResult */
+        EarthVisibilityResult: {
+            astronomical: components["schemas"]["EarthVisibilitySummary"];
+            /**
+             * Body
+             * @constant
+             */
+            body: "earth";
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Limitations
+             * @description Always includes the statement that geometric visibility does not imply a radio link.
+             */
+            limitations: string[];
+            /** Samples */
+            samples: components["schemas"]["EarthGeometrySample"][];
+            /** @description Null when no horizon mask is available for the site. */
+            terrain: components["schemas"]["EarthVisibilitySummary"] | null;
+        };
+        /** EarthVisibilitySummary */
+        EarthVisibilitySummary: {
+            /** Any Truncated */
+            any_truncated: boolean;
+            /**
+             * Fully Visible Fraction
+             * @description Share of samples with the whole disk visible.
+             */
+            fully_visible_fraction: number;
+            /**
+             * Horizon
+             * @enum {string}
+             */
+            horizon: "astronomical" | "terrain";
+            /** Longest Outage Censored */
+            longest_outage_censored: boolean;
+            /** Longest Outage S */
+            longest_outage_s: number;
+            /**
+             * Longest Visibility Censored
+             * @description The longest run touches the window edge: its duration is a lower bound.
+             */
+            longest_visibility_censored: boolean;
+            /** Longest Visibility S */
+            longest_visibility_s: number;
+            /**
+             * Mean Visible Disk Fraction
+             * @description Time average of the disk fraction.
+             */
+            mean_visible_disk_fraction: number;
+            /**
+             * Resolution S
+             * @description Sample step: window edges are known to ± this.
+             */
+            resolution_s: number;
+            /**
+             * Visible Fraction
+             * @description Share of samples with any part of the Earth's disk visible.
+             */
+            visible_fraction: number;
+            /**
+             * Windows
+             * @description Direct-to-Earth geometric visibility windows (any part of the disk visible).
+             */
+            windows: components["schemas"]["VisibilityWindow"][];
+        };
         /** EphemerisObserver */
         EphemerisObserver: {
             /**
@@ -522,6 +658,65 @@ export interface components {
              */
             version: string;
         };
+        /** IlluminationResult */
+        IlluminationResult: {
+            astronomical: components["schemas"]["IlluminationSummary"];
+            /**
+             * Body
+             * @constant
+             */
+            body: "sun";
+            evidence: components["schemas"]["EvidenceSchema"];
+            /** Limitations */
+            limitations: string[];
+            /** Samples */
+            samples: components["schemas"]["SolarGeometrySample"][];
+            /** @description Null when no horizon mask is available for the site. */
+            terrain: components["schemas"]["IlluminationSummary"] | null;
+        };
+        /** IlluminationSummary */
+        IlluminationSummary: {
+            /** Any Truncated */
+            any_truncated: boolean;
+            /**
+             * Fully Lit Fraction
+             * @description Share of samples with the whole disk visible.
+             */
+            fully_lit_fraction: number;
+            /**
+             * Horizon
+             * @enum {string}
+             */
+            horizon: "astronomical" | "terrain";
+            /**
+             * Illuminated Fraction
+             * @description Share of samples with any part of the solar disk visible (≥ the mean).
+             */
+            illuminated_fraction: number;
+            /** Longest Darkness Censored */
+            longest_darkness_censored: boolean;
+            /** Longest Darkness S */
+            longest_darkness_s: number;
+            /**
+             * Longest Illumination Censored
+             * @description The longest run touches the window edge: its duration is a lower bound.
+             */
+            longest_illumination_censored: boolean;
+            /** Longest Illumination S */
+            longest_illumination_s: number;
+            /**
+             * Mean Visible Disk Fraction
+             * @description Time average of the visible solar-disk fraction: the quantity comparable to published average polar illumination (docs/SCIENCE.md §5.3).
+             */
+            mean_visible_disk_fraction: number;
+            /**
+             * Resolution S
+             * @description Sample step: window edges are known to ± this.
+             */
+            resolution_s: number;
+            /** Sunlit Windows */
+            sunlit_windows: components["schemas"]["VisibilityWindow"][];
+        };
         /** RuntimeComponentSchema */
         RuntimeComponentSchema: {
             /** Available */
@@ -609,6 +804,60 @@ export interface components {
             /** Step S */
             step_s: number;
         };
+        /** SoftwareComponent */
+        SoftwareComponent: {
+            /** Name */
+            name: string;
+            /** Version */
+            version: string | null;
+        };
+        /** SoftwareProvenance */
+        SoftwareProvenance: {
+            /** Components */
+            components: components["schemas"]["SoftwareComponent"][];
+            /** Service Version */
+            service_version: string;
+        };
+        /** SolarGeometrySample */
+        SolarGeometrySample: {
+            /**
+             * Astronomical Visible Fraction
+             * @description Fraction of the solar disk above the astronomical horizon, [0, 1].
+             */
+            astronomical_visible_fraction: number;
+            /** Azimuth Deg */
+            azimuth_deg: number;
+            /**
+             * Elevation Deg
+             * @description Of the Sun's centre, above the C0 plane.
+             */
+            elevation_deg: number;
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Solar Radius Deg
+             * @description Apparent angular radius of the Sun.
+             */
+            solar_radius_deg: number;
+            /**
+             * Terrain Horizon Elevation Deg
+             * @description Terrain horizon at the Sun's azimuth; null without a horizon mask.
+             */
+            terrain_horizon_elevation_deg: number | null;
+            /**
+             * Terrain Truncated
+             * @description True when the terrain fraction is an upper bound (truncated mask rays).
+             */
+            terrain_truncated: boolean | null;
+            /**
+             * Terrain Visible Fraction
+             * @description Fraction of the solar disk above the terrain horizon; null without a mask.
+             */
+            terrain_visible_fraction: number | null;
+        };
         /** SourceReferenceSchema */
         SourceReferenceSchema: {
             /** Citation */
@@ -642,6 +891,65 @@ export interface components {
             /** Vertical Reference */
             vertical_reference: string | null;
         };
+        /**
+         * TimelineAnalysis
+         * @description Illumination and Earth-visibility timelines for one site over a UTC window (C4).
+         */
+        TimelineAnalysis: {
+            /**
+             * Computed At Utc
+             * Format: date-time
+             */
+            computed_at_utc: string;
+            earth_visibility: components["schemas"]["EarthVisibilityResult"];
+            /**
+             * End Utc
+             * Format: date-time
+             */
+            end_utc: string;
+            illumination: components["schemas"]["IlluminationResult"];
+            /** Max Samples */
+            max_samples: number;
+            observer: components["schemas"]["EphemerisObserver"];
+            /** Sample Count */
+            sample_count: number;
+            /** Site Id */
+            site_id: string;
+            /** Site Name */
+            site_name: string;
+            software: components["schemas"]["SoftwareProvenance"];
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+            /** Step S */
+            step_s: number;
+            /** Terrain Horizon Available */
+            terrain_horizon_available: boolean;
+        };
+        /** TimelineRequest */
+        TimelineRequest: {
+            /**
+             * End Utc
+             * Format: date-time
+             * @description Window end (inclusive when on a step), UTC.
+             */
+            end_utc: string;
+            /** Site Id */
+            site_id: string;
+            /**
+             * Start Utc
+             * Format: date-time
+             * @description Window start, ISO 8601 UTC.
+             */
+            start_utc: string;
+            /**
+             * Step S
+             * @description Sample spacing, seconds.
+             */
+            step_s: number;
+        };
         /** UrlVerificationSchema */
         UrlVerificationSchema: {
             /**
@@ -657,6 +965,36 @@ export interface components {
              */
             status: "unverified" | "verified";
         };
+        /**
+         * VisibilityWindow
+         * @description A maximal run of samples meeting a condition. Each sample stands for one step, so
+         *     the edges are known to within ``resolution_s``.
+         */
+        VisibilityWindow: {
+            /**
+             * Censored End
+             * @description Run touches the end of the analysis window.
+             */
+            censored_end: boolean;
+            /**
+             * Censored Start
+             * @description Run touches the start of the analysis window.
+             */
+            censored_start: boolean;
+            /** Duration S */
+            duration_s: number;
+            /**
+             * End Utc
+             * Format: date-time
+             * @description Epoch of the last sample in the run + step.
+             */
+            end_utc: string;
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -666,6 +1004,66 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    post_timeline_api_v1_analysis_timeline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimelineRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineAnalysis"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_datasets_api_v1_datasets_get: {
         parameters: {
             query?: never;
