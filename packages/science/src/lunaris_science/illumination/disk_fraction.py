@@ -139,7 +139,9 @@ def visible_disk_fraction(
     horizon_el = horizon.elevation_at(chord_az)
     visible = np.clip(el[:, None] + half_height - horizon_el, 0.0, 2.0 * half_height)
     numerator = np.sum(visible * cos_t[None, :], axis=1)
-    denominator = 2.0 * radius * np.sum(cos_t**2)
+    # Same expression as the numerator with every chord fully visible, so a fully visible
+    # disk gives exactly 1.0 (not 1 - 1 ulp) and a fully hidden one exactly 0.0.
+    denominator = np.sum(2.0 * half_height * cos_t[None, :], axis=1)
     fraction = np.clip(numerator / denominator, 0.0, 1.0)
 
     # Truncation: any horizon sample within the disk's azimuth span (edges included).
