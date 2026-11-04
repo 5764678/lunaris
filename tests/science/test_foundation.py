@@ -32,7 +32,7 @@ def test_scientific_toolchain_is_complete() -> None:
     assert components["cspice"].version.startswith("CSPICE_")
 
 
-PLANNED_MODULES = ["terrain", "geometry", "illumination", "visibility", "energy", "scoring"]
+PLANNED_MODULES = ["geometry", "illumination", "visibility", "energy", "scoring"]
 
 
 @pytest.mark.parametrize("name", PLANNED_MODULES)
