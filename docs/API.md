@@ -156,6 +156,36 @@ Response **201** (`CandidateSite`):
 
 Get one site, or delete it (**204**). **404** for unknown ids.
 
+### `GET /api/v1/terrain/scenes` · `GET /api/v1/terrain/scenes/{scene_id}` · `GET /api/v1/terrain/scenes/{scene_id}/data`
+
+Terrain scene export (contract C3 in `docs/TASKS.md`; owner S-TERRAIN). M02 ships one
+scene, `south-pole`: a square of the south polar stereographic plane centred on the pole,
+±125 km, resampled bilinearly from LOLA `LDEM_75S_240M`.
+
+- `GET /terrain/scenes` lists scenes, with `available` (source DEM acquired locally) and,
+  when unavailable, the `acquire_command`.
+- `GET /terrain/scenes/{scene_id}?grid_size=512` returns metadata: `width`, `height`,
+  `origin_moon_me_m`, `height_reference_radius_m` (1 737 400), `height_min_m`,
+  `height_max_m`, `vertex_spacing_m` (map-plane, true at the pole), `half_extent_m`,
+  `center_latitude_deg`/`center_longitude_deg`, `resampling`, `method`, `nodata`,
+  `nodata_vertex_count`, `layout` (binary description and `byte_length`), `dem`
+  (dataset, file, SHA-256 of the file actually read, URL, citation), `evidence`
+  (`derived_product`), `etag` and `data_url`.
+- `GET /terrain/scenes/{scene_id}/data?grid_size=512` returns `application/octet-stream`:
+  little-endian float32, row-major, 4 values per vertex: `x`, `y`, `z` (m, `MOON_ME`,
+  relative to `origin_moon_me_m`), then `height_m`. Row 0 is the map's top edge (toward
+  0° E); columns advance toward 90° E. Vertices with no DEM value are NaN in all four
+  components and must not be drawn.
+
+`grid_size` is the number of vertices per side, 2–1024 (default 512, about 4 MiB; 1024 is
+16 MiB). Both scene responses carry a strong `ETag` derived from the DEM SHA-256, the
+scene, `grid_size` and the algorithm version, plus `Cache-Control: public, max-age=3600`;
+`If-None-Match` returns **304**. **404** for an unknown scene, **422** for an out-of-range
+`grid_size`, **503** `dataset_unavailable` when the DEM is not acquired or does not match
+the SHA-256 pinned in its manifest. Measured locally with the real DEM: the first metadata
+request (reads and hashes the 29 MB DEM, builds the grid) takes ≈ 0.8 s; later requests
+are served from the in-process cache.
+
 ### `GET /api/v1/sites/{site_id}/ephemeris`
 
 Apparent Sun and Earth geometry from a registered site (contract C2, `docs/SCIENCE.md`

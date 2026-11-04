@@ -1,4 +1,8 @@
-"""Terrain intelligence — planned for Milestone 02. Not implemented.
+"""Terrain intelligence — Milestone 02, in progress.
+
+Implemented:
+    * :mod:`lunaris_science.terrain.polar_stereographic` — south polar stereographic
+      projection on a sphere, point scale factor, and the LOLA polar pixel grid (T-10).
 
 Responsibility (when implemented):
     Elevation, slope and roughness analysis of LOLA digital elevation models
@@ -14,6 +18,6 @@ Planned method notes (see docs/SCIENCE.md § Terrain):
       baseline (e.g. RMS height deviation from a local plane).
     * Every output carries its DEM source, resolution and evidence kind.
 
-This module deliberately exposes no functions until those computations are
-implemented and validated against reference data.
+Analysis functions are added only once they are implemented and validated against
+reference data.
 """

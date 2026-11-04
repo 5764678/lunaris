@@ -129,6 +129,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/terrain/scenes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Available terrain scenes
+         * @description Scenes LUNARIS can export, and whether each one's source DEM is acquired.
+         */
+        get: operations["list_scenes_api_v1_terrain_scenes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/terrain/scenes/{scene_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Terrain scene metadata
+         * @description Vertex-grid metadata, provenance and the URL of the binary vertex data.
+         *
+         *     Positions are already in MOON_ME (relative to ``origin_moon_me_m``); clients never
+         *     re-implement the polar stereographic inverse.
+         */
+        get: operations["get_scene_metadata_api_v1_terrain_scenes__scene_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/terrain/scenes/{scene_id}/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Terrain scene vertex data (binary) */
+        get: operations["get_scene_data_api_v1_terrain_scenes__scene_id__data_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -364,6 +424,37 @@ export interface components {
             /** Usage */
             usage: string;
         };
+        /**
+         * DemProvenanceSchema
+         * @description The DEM file a scene was computed from.
+         */
+        DemProvenanceSchema: {
+            /** Citation */
+            citation: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** File Name */
+            file_name: string;
+            /**
+             * Frame
+             * @description Frame named by the product label.
+             */
+            frame: string;
+            /**
+             * Resolution M
+             * @description Nominal DEM grid spacing (true at the pole), m.
+             */
+            resolution_m: number;
+            /**
+             * Sha256
+             * @description SHA-256 of the DEM data file actually read.
+             */
+            sha256: string;
+            /** Source Url */
+            source_url: string;
+            /** Title */
+            title: string;
+        };
         /** EphemerisObserver */
         EphemerisObserver: {
             /**
@@ -547,6 +638,51 @@ export interface components {
             /** Service Version */
             service_version: string;
         };
+        /**
+         * SceneBinaryLayoutSchema
+         * @description How to decode the bytes returned by ``data_url``.
+         */
+        SceneBinaryLayoutSchema: {
+            /**
+             * Byte Length
+             * @description Total body length in bytes.
+             */
+            byte_length: number;
+            /**
+             * Byte Order
+             * @default little
+             * @constant
+             */
+            byte_order: "little";
+            /**
+             * Components
+             * @description x, y, z relative to origin_moon_me_m (MOON_ME, m), then height above the reference sphere (m).
+             */
+            components: string[];
+            /**
+             * Dtype
+             * @default float32
+             * @constant
+             */
+            dtype: "float32";
+            /**
+             * Order
+             * @default row-major
+             * @constant
+             */
+            order: "row-major";
+            /**
+             * Row Direction
+             * @default row 0 is the map's top edge (toward 0° E); rows advance toward 180° E; columns advance toward 90° E
+             */
+            row_direction: string;
+            /**
+             * Values Per Vertex
+             * @default 4
+             * @constant
+             */
+            values_per_vertex: 4;
+        };
         /** SelenographicCoordinateSchema */
         SelenographicCoordinateSchema: {
             /**
@@ -641,6 +777,102 @@ export interface components {
             projection: string | null;
             /** Vertical Reference */
             vertical_reference: string | null;
+        };
+        /** TerrainSceneListResponse */
+        TerrainSceneListResponse: {
+            /** Count */
+            count: number;
+            /** Scenes */
+            scenes: components["schemas"]["TerrainSceneSummary"][];
+        };
+        /**
+         * TerrainSceneMetadata
+         * @description Metadata of one terrain scene; vertex data is served separately at ``data_url``.
+         */
+        TerrainSceneMetadata: {
+            /** Center Latitude Deg */
+            center_latitude_deg: number;
+            /** Center Longitude Deg */
+            center_longitude_deg: number;
+            /** Data Url */
+            data_url: string;
+            dem: components["schemas"]["DemProvenanceSchema"];
+            /** Etag */
+            etag: string;
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Frame
+             * @default MOON_ME
+             * @constant
+             */
+            frame: "MOON_ME";
+            /**
+             * Half Extent M
+             * @description Half side length of the square in the map plane.
+             */
+            half_extent_m: number;
+            /**
+             * Height
+             * @description Rows of vertices (cap 1024).
+             */
+            height: number;
+            /** Height Max M */
+            height_max_m: number;
+            /** Height Min M */
+            height_min_m: number;
+            /** Height Reference Radius M */
+            height_reference_radius_m: number;
+            layout: components["schemas"]["SceneBinaryLayoutSchema"];
+            /** Method */
+            method: string;
+            /** Nodata */
+            nodata: string;
+            /** Nodata Vertex Count */
+            nodata_vertex_count: number;
+            /**
+             * Origin Moon Me M
+             * @description [x, y, z] in MOON_ME, m. Vertex positions are relative to this point.
+             */
+            origin_moon_me_m: number[];
+            /** Resampling */
+            resampling: string;
+            /** Scene Id */
+            scene_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Vertex Spacing M
+             * @description Nominal spacing in the polar stereographic map plane (true at the pole), m. Ground spacing is this divided by the point scale factor k = 1 + (ρ/2R)²; about 0.26% smaller at the corners of the ±125 km south-pole scene.
+             */
+            vertex_spacing_m: number;
+            /**
+             * Width
+             * @description Vertices per row (cap 1024).
+             */
+            width: number;
+        };
+        /** TerrainSceneSummary */
+        TerrainSceneSummary: {
+            /**
+             * Acquire Command
+             * @description Command that acquires the source DEM when unavailable.
+             */
+            acquire_command: string | null;
+            /**
+             * Available
+             * @description Whether the source DEM is acquired locally.
+             */
+            available: boolean;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Description */
+            description: string;
+            /** Metadata Url */
+            metadata_url: string;
+            /** Scene Id */
+            scene_id: string;
+            /** Title */
+            title: string;
         };
         /** UrlVerificationSchema */
         UrlVerificationSchema: {
@@ -1005,6 +1237,175 @@ export interface operations {
             };
             /** @description Unexpected server error. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_scenes_api_v1_terrain_scenes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerrainSceneListResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_scene_metadata_api_v1_terrain_scenes__scene_id__get: {
+        parameters: {
+            query?: {
+                /** @description Vertices per side of the square grid (contract cap 1024). */
+                grid_size?: number;
+            };
+            header?: {
+                "if-none-match"?: string | null;
+            };
+            path: {
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerrainSceneMetadata"];
+                };
+            };
+            /** @description Not modified (If-None-Match matched the ETag). */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown scene. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Source DEM not acquired or not verified. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_scene_data_api_v1_terrain_scenes__scene_id__data_get: {
+        parameters: {
+            query?: {
+                /** @description Vertices per side of the square grid (contract cap 1024). */
+                grid_size?: number;
+            };
+            header?: {
+                "if-none-match"?: string | null;
+            };
+            path: {
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Little-endian float32, row-major, 4 values per vertex: x, y, z (m, MOON_ME, relative to origin_moon_me_m) and height_m. NaN vertices have no DEM value and must not be drawn. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Not modified (If-None-Match matched the ETag). */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown scene. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Source DEM not acquired or not verified. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
