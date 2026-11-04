@@ -37,15 +37,19 @@
     "coverage": "75°S to 90°S",
     "vertical_reference": "Heights relative to the 1737.4 km reference sphere (radius = height + 1 737 400 m), per the PDS label"
   },
-  "units": "Raster values are 16-bit signed integers (LSB). Height in metres = DN × 0.5, per the label's scaling factor. Ingestion code reads scaling and offset from the label rather than from this manifest.",
+  "units": "Raster values are 16-bit signed integers (LSB). Per the PDS label: HEIGHT (m) = DN × SCALING_FACTOR (0.5), relative to a reference sphere of radius OFFSET (1 737 400 m); PLANETARY_RADIUS (m) = DN × SCALING_FACTOR + OFFSET. Heights are relative to the sphere, not to a geoid. Ingestion code reads scaling and offset from the label rather than from this manifest.",
   "citation": "Smith, D. E., et al. (2010). The Lunar Orbiter Laser Altimeter Investigation on the Lunar Reconnaissance Orbiter Mission. Space Science Reviews, 150, 209–241. doi:10.1007/s11214-009-9512-y. Data set: LRO-L-LOLA-4-GDR-V1.0, NASA Planetary Data System (use the exact data set citation from the PDS product page).",
   "usage": "NASA PDS archive data, publicly available. Cite the instrument paper and the PDS data set.",
   "verification": {
     "status": "verified",
     "checked_on": "2026-11-04",
-    "note": "URLs, byte sizes and SHA-256 values confirmed on 2026-11-04 by an independent session with direct access to pds-geosciences.wustl.edu (files downloaded and hashed, label inspected). Not re-checked from the LUNARIS development environment, where NASA hosts are blocked."
+    "note": "URLs, byte sizes and SHA-256 values confirmed on 2026-11-04 by an independent session with direct access to pds-geosciences.wustl.edu (files downloaded and hashed, label inspected). Re-verified the same day by a full acquisition and `lunaris-data verify` from the LUNARIS development environment: every file matched its pinned SHA-256."
   },
-  "required_by": ["terrain", "illumination", "visibility"],
+  "required_by": [
+    "terrain",
+    "illumination",
+    "visibility"
+  ],
   "notes": [
     "Label contents observed on 2026-11-04 (independent verification): 3812 × 3812 samples, LSB 16-bit integers; scaling 0.5 m per DN; polar stereographic on a 1737.4 km sphere centred on −90°/0°; LINE_PROJECTION_OFFSET = SAMPLE_PROJECTION_OFFSET = 1905.5 px; coverage −75° to −90°; reference frame 'MEAN EARTH/POLAR AXIS OF DE421'; DN range −15529 to 14049. Milestone 02 ingestion parses these from the label and tests against these observed values.",
     "240 m/pixel is regional context only; slope and hazard assessment at landing-site scale requires the 5–20 m/pixel south-polar products (see docs/DATA_SOURCES.md § Candidate products for Milestone 02)."

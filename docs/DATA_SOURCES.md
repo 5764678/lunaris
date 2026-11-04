@@ -28,11 +28,11 @@ Local status values: `missing`, `untracked`, `incomplete`, `acquired`.
 ## 2. Registered datasets (Milestone 01)
 
 URL verification: all three manifests were **verified on 2026-11-04 by an independent
-session with direct archive access** (files downloaded and hashed). The LUNARIS
-development environment itself cannot reach NASA hosts (egress policy), so these values
-were not re-checked from there. Two corrections came out of that verification and are
-reflected below: the lunar frames kernel had been superseded, and the PDS serves
-lower-case file names.
+session with direct archive access** (files downloaded and hashed), then **re-verified the
+same day by a full `lunaris-data acquire` + `verify` from the LUNARIS development
+environment** — every file matched its pinned SHA-256. Two corrections came out of the
+first verification and are reflected below: the lunar frames kernel had been superseded,
+and the PDS serves lower-case file names.
 
 ### 2.1 `lola-ldem-75s-240m` — LOLA GDR, south polar stereographic, 240 m/px
 
@@ -44,7 +44,7 @@ lower-case file names.
 | Coverage / resolution | 75° S – 90° S, 240 m/pixel (nominal) |
 | Grid | 3812 × 3812, LSB 16-bit signed integers |
 | Projection | Polar stereographic on a 1737.4 km sphere, centre −90° / 0°, east-positive; line/sample projection offsets 1905.5 px |
-| Heights | h = DN × 0.5 m relative to 1737.4 km (radius = h + 1 737 400 m); DN range −15529 … 14049 |
+| Heights | Label: HEIGHT = DN × 0.5 m relative to the 1737.4 km sphere; PLANETARY_RADIUS = DN × 0.5 + 1 737 400 m (OFFSET is the sphere radius); DN range −15529 … 14049 |
 | Frame | "MEAN EARTH/POLAR AXIS OF DE421" |
 | Files | `LDEM_75S_240M.LBL` (4 990 B, `ec07239f41d8abc1a3681495b5799b770c7206b5268b76721d69180df0422e02`) · `LDEM_75S_240M.IMG` (29 062 688 B, `d031efe2611b17dfbf3c158f5e15dc04cd5719349dcbf6384bb21fd97697c490`) |
 | URLs | `https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldem_75s_240m.{lbl,img}` |
@@ -74,6 +74,9 @@ Notes from verification:
 - DE442 (`de442s.bsp`) exists, but NAIF publishes no DE442-consistent lunar PCK/FK, so
   LUNARIS keeps the internally consistent DE440 set.
 - The `de440s.bsp` MD5 also matched NAIF's `aa_checksums.txt`.
+- With the acquired set loaded in CSPICE N0067, `MOON_ME` resolves to
+  `MOON_ME_DE440_ME421` (identity rotation) and the PA↔ME rotation is ≈104″ (≈875 m at
+  the surface).
 
 Citations: Acton (1996), doi:10.1016/0032-0633(95)00107-7; Park et al. (2021),
 doi:10.3847/1538-3881/abd414.
@@ -100,8 +103,11 @@ in km relative to 1737.4 km; uint16 TIFFs in half-metres, offset +20000, relativ
 
 ## 3. Candidate products for Milestone 02 (site-scale terrain)
 
-Identified during the 2026-11-04 verification; manifests will be added when products are
-selected. All are south polar stereographic, `MOON_ME` (DE421).
+Identified during the 2026-11-04 verification. `docs/DECISIONS.md` D3 selects the 240 m
+GDR (§2.1) for horizon masks and the PGDA 20 m DEM — read as windows via GDAL `/vsicurl/`,
+not downloaded whole — for slope and hazards, with PGDA 5 m per-site DEMs where they cover
+a site. Manifests will be added in M02; the manifest model must gain a "remote windowed
+source" kind for this. All are south polar stereographic, `MOON_ME` (DE421).
 
 | Product | Source | Resolution / coverage | Notes |
 | --- | --- | --- | --- |
@@ -109,8 +115,8 @@ selected. All are south polar stereographic, `MOON_ME` (DE421).
 | `LDEM_85S_10M`, `LDEM_875S_10M` | PDS LOLA GDR (polar) | 10 m | as above |
 | `LDEM_875S_5M` | PDS LOLA GDR (polar) | 5 m, 87.5° S – 90° S | as above |
 | PGDA product 81 `ldem_87s_5mpp.tif` | NASA GSFC PGDA | 5 m, 87° S – 90° S (3 465 285 714 B) | Barker et al. (2021), doi:10.1016/j.pss.2020.105119 |
-| PGDA product 90 `LDEM_83S_10MPP_ADJ.TIF`, `LDEM_80S_20MPP_ADJ.TIF` | NASA GSFC PGDA | 10 m / 20 m | Barker et al. (2023), doi:10.3847/PSJ/acf3e1; data doi:10.60903/gsfcpgda-lola-spole |
-| PGDA product 78 | NASA GSFC PGDA | 5 m per-site DEMs (27 sites) | |
+| PGDA product 90 `LDEM_80S_20MPP_ADJ.TIF` (2 696 082 051 B), `LDEM_83S_10MPP_ADJ.TIF` (5 116 709 568 B) | NASA GSFC PGDA | 20 m / 10 m | BigTIFF, float32, 512² deflate tiles, `Accept-Ranges: bytes` (D3). Barker et al. (2023), doi:10.3847/PSJ/acf3e1; data doi:10.60903/gsfcpgda-lola-spole |
+| PGDA product 78 | NASA GSFC PGDA | 5 m per-site DEMs (27 sites; e.g. Haworth, 142 123 767 B) | float32, uncompressed (D3) |
 | PGDA product 104 | Zenodo, doi:10.5281/zenodo.17954508 | 5 m shape-from-shading DEMs | Photoclinometry-derived: label as a distinct product class |
 
 Selection criteria for M02: coverage of the analysis region, resolution vs. slope
@@ -121,7 +127,7 @@ requirements.
 
 | File | Content | Status |
 | --- | --- | --- |
-| `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json` | JPL Horizons apparent Sun az/el from 89.5° S, 0° E (DE441, MEAN_ME, 1737.4 km sphere) at 2026-11-04 00:00 and 2026-11-05 00:00 UTC | Partial: re-capture full hourly table and request URL before use as a regression fixture (M03) |
+| `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json` | JPL Horizons apparent Sun az/el from 89.5° S, 0° E (DE441, MEAN_ME, 1737.4 km sphere) at 2026-11-04 00:00 and 2026-11-05 00:00 UTC; records a SPICE cross-check (< 0.05″) | Partial: re-capture full hourly table and request URL before use as a regression fixture (M03) |
 
 ## 5. Future sources (not yet registered)
 
@@ -146,5 +152,6 @@ requirements.
 ## 7. Acquisition from restricted networks
 
 `lunaris-data` uses `httpx` with the system's proxy settings and CA store. If an archive
-host is blocked (as in the environment where Milestone 01 was built), acquisition fails
-with the HTTP/transport error and a pointer to the manifest; nothing partial is recorded.
+host is blocked by a network policy (this happened for part of the Milestone 01 build
+session, before the policy was widened), acquisition fails with the HTTP/transport error
+and a pointer to the manifest; nothing partial is recorded.

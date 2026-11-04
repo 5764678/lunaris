@@ -137,6 +137,8 @@ for every API request); full SHA-256 verification is an explicit CLI operation. 
   (`label-registry.ts`), instead of a React root per label.
 - **Camera**: presets (south polar, pole with 0° at top, near side, far side), fly-to on
   site selection, rotation speed scaled with altitude, telemetry readout.
+- **Next (D5)**: a south-pole terrain mesh from LOLA heights becomes the main 3D view, with
+  the globe kept as context and entry point.
 
 ## 6. Testing strategy
 
@@ -153,7 +155,11 @@ for every API request); full SHA-256 verification is an explicit CLI operation. 
 Synthetic test data is generated inside tests and labeled synthetic; it is never presented
 as lunar data.
 
-## 7. Decision log
+## 7. Milestone 01 implementation decisions
+
+Accepted architectural decisions (D1–D7) are recorded in `docs/DECISIONS.md`, owned by the
+technical-director session. The entries below are implementation choices made while
+building Milestone 01, offered for that log.
 
 | Decision | Rationale |
 | --- | --- |
@@ -164,7 +170,7 @@ as lunar data.
 | shadcn/ui components written in-repo | The shadcn registry was unreachable from the build environment; components follow the shadcn source conventions and `components.json` is configured for future `shadcn add`. |
 | Plotly deferred to the first module that produces time series | Part of the approved stack, but M01 has nothing real to plot; shipping a multi-megabyte charting bundle to draw empty axes would violate "avoid excessive dependencies". |
 | No curated landing sites in M01 | Coordinates for Artemis candidate regions could not be cited to a verified source; sites are user-defined and labeled. |
-| Procedural placeholder + optional NASA texture | NASA hosts were unreachable when building M01; the placeholder is labeled, and the real texture is one command away. |
+| Procedural placeholder + optional NASA texture | A fresh clone works with no download; the placeholder is labeled. The NASA texture path was verified end to end on 2026-11-04 (real acquisition, correct near-side orientation). |
 | View-relative lighting | A fixed "sun" would imply computed illumination. |
 | `httpx2` for tests | Starlette 1.x deprecates `httpx` in its TestClient; runtime code keeps the stable `httpx`. |
 

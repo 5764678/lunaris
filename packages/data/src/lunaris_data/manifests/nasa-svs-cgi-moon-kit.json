@@ -35,9 +35,11 @@
   "verification": {
     "status": "verified",
     "checked_on": "2026-11-04",
-    "note": "URL, pixel dimensions, byte size and SHA-256 confirmed on 2026-11-04 by an independent session with direct access to svs.gsfc.nasa.gov. Not re-checked from the LUNARIS development environment, where NASA hosts are blocked."
+    "note": "URL, pixel dimensions, byte size and SHA-256 confirmed on 2026-11-04 by an independent session with direct access to svs.gsfc.nasa.gov. Re-verified the same day by a full acquisition and `lunaris-data verify` from the LUNARIS development environment: every file matched its pinned SHA-256."
   },
-  "required_by": ["visualization"],
+  "required_by": [
+    "visualization"
+  ],
   "notes": [
     "After acquisition, run `uv run lunaris-data build-web-texture` to produce a web-ready JPEG and a provenance manifest in apps/web/public/textures/moon/. The web client uses it automatically and otherwise shows a clearly labeled procedural placeholder surface.",
     "A newer 16-bit map (lroc_color_16bit_srgb_4k.tif, 4096 × 2048, 61 891 324 bytes, SHA-256 9731fa8af425b6c2f88f277ecca82bf8c603f3743894f64ed7b25c5bfefa22ff) was published in 2025. Milestone 01 keeps the 8-bit map because the texture builder accepts 8-bit input only.",

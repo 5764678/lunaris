@@ -36,12 +36,14 @@ scientific code in `packages/science`.
 | `MOON_ME` | Mean Earth / Polar Axis: +Z along the mean rotation axis, +X toward the mean Earth direction (0° E), +Y toward 90° E. | **Canonical.** All stored and exchanged surface coordinates. LRO/LOLA products are referred to the ME frame (LOLA labels: *"MEAN EARTH/POLAR AXIS OF DE421"*). |
 | `MOON_PA` | Principal Axis frame, realized by the JPL lunar ephemeris (DE440 via `moon_pa_de440_200625.bpc`). | Internal to SPICE computations (Milestone 03). |
 
-`MOON_ME` and `MOON_PA` differ by a fixed rotation of tens of arcseconds (several
-hundred metres at the surface). LUNARIS will obtain that rotation from the NAIF lunar
-frames kernel (`moon_de440_250416.tf`, which defines `MOON_ME_DE440_ME421`, the ME
-realization consistent with DE421-based LRO products) and never hard-codes angles or
-frame ID integers. Frame **names** are used throughout; the generic alias IDs changed in
-the 2025 FK release.
+`MOON_ME` and `MOON_PA` differ by a fixed rotation of **≈104 arcseconds (≈875 m at the
+surface)**, computed on 2026-11-04 with `pxform` from the acquired DE440 kernel set.
+LUNARIS obtains that rotation from the NAIF lunar frames kernel (`moon_de440_250416.tf`,
+which defines `MOON_ME_DE440_ME421`, the ME realization consistent with DE421-based LRO
+products) and never hard-codes angles or frame ID integers. Frame **names** are used
+throughout; the generic alias IDs changed in the 2025 FK release (in the acquired FK:
+`MOON_ME` = 31001, `MOON_PA` = 31000). With that FK loaded, `MOON_ME` → `MOON_ME_DE440_ME421`
+is the identity rotation, as `docs/DECISIONS.md` D2 requires.
 
 References: LRO Project and LGCWG (2008); Archinal et al. (2018); NAIF lunar FK comments.
 
@@ -143,16 +145,22 @@ round-trip property tests with Hypothesis), `tests/science/test_provenance.py`.
 ## 5. Planned methods
 
 These are designs, not implementations. Each module ships only when its validation
-(§6) passes.
+(§6) passes. The accepted architectural decisions that govern them are in
+`docs/DECISIONS.md`: D2 (geometry engine), D3 (terrain resolutions), D4 (illumination and
+Earth visibility), D5 (terrain scene).
 
 ### 5.1 Terrain intelligence — Milestone 02
 
-**Input.** LOLA south-polar stereographic GDRs (PDS) and LOLA team south-pole DEMs
-(PGDA); see `docs/DATA_SOURCES.md`.
+**Input (D3).** Horizon masks from the 240 m PDS GDR (`LDEM_75S_240M`); slope, roughness
+and hazards from the PGDA 20 m south-pole DEM read as windows around each site through GDAL
+`/vsicurl/`, or a PGDA 5 m per-site DEM where one covers the site. See `docs/DATA_SOURCES.md`.
 
 **Reading.** Parse the PDS3 label (projection, offsets, scaling, units, reference
-radius); never hard-code those values. Heights: h = DN × SCALING_FACTOR (+ OFFSET where
-defined); for LDEM_75S_240M the label gives h = DN × 0.5 m.
+radius); never hard-code those values. The `LDEM_75S_240M` label (acquired 2026-11-04)
+defines **HEIGHT = DN × SCALING_FACTOR** (0.5 m) relative to a reference sphere of radius
+OFFSET (1 737 400 m), and **PLANETARY_RADIUS = DN × SCALING_FACTOR + OFFSET**. Adding OFFSET
+therefore yields a radius, not a height. These heights are relative to the sphere, not to
+a geoid (the label's "planetopotential topography").
 
 **Projection.** Polar stereographic on a sphere of radius R (Snyder 1987). For the south
 pole, the radial distance of latitude φ from the pole in the projection plane is
@@ -196,8 +204,14 @@ a generated meta-kernel.
 Target vector from the Moon's centre with `spkpos(target, et, "MOON_ME", abcorr, "MOON")`;
 topocentric vector **t − s**; rotate into the local east-north-up frame (§2.3); azimuth =
 atan2(E, N) mod 360°, elevation = asin(U / |t − s|). Aberration correction is an explicit
-parameter recorded in outputs (apparent geometry: `"LT+S"`). CSPICE N0067 (installed) also
-provides `azlcpo`, which will be used as an independent cross-check.
+parameter recorded in outputs (apparent geometry: light time plus stellar aberration).
+CSPICE N0067 (installed) also provides `azlcpo`, used as an independent cross-check.
+
+*Feasibility check (2026-11-04, scratch script, not yet a committed test):* with the
+acquired kernel set, `azlcpo` (`ELLIPSOID`, `CN+S`, azimuth clockwise from north) reproduced
+both JPL Horizons samples in the validation fixture to < 0.05″ — within the precision
+Horizons printed — although Horizons used DE441 and LUNARIS uses DE440s. M03 must still
+state and justify its tolerance over full windows (D2).
 
 **Angular sizes.** Solar angular radius α☉ = asin(R☉ / d☉) with R☉ = 695 700 km (IAU 2015
 nominal) — ≈ 0.267° at 1 au. Earth angular radius α⊕ = asin(R⊕ / d⊕) — roughly 0.9°–1.0°
@@ -224,7 +238,10 @@ f = 1 − (acos(d) − d·√(1 − d²)) / π
 horizon is locally straight across the disk; limb darkening is neglected.
 
 **Outputs.** Time series of f; illuminated fraction; longest continuous darkness and
-illumination; each with the window, step, ephemeris and DEM provenance.
+illumination; each with the window, step, ephemeris and DEM provenance. The astronomical
+horizon (0°) and the terrain horizon are reported separately; rays that leave DEM coverage
+are flagged as truncated, never treated as zero elevation (D3, D4). Out of scope:
+earthshine, light scattered from nearby terrain, and regional illumination maps.
 
 ### 5.4 Earth visibility — Milestone 04
 
@@ -258,15 +275,15 @@ sensitivity analysis over the weights. Placeholder evidence can never contribute
 | Definitional | Exact values (axes, poles, normalization edge cases) | `tests/science` |
 | Property | Round trips and invariants over random inputs (Hypothesis) | `tests/science` |
 | Product consistency | Label-derived grid geometry (§5.1 check), DN ranges vs label | M02 |
-| Independent ephemeris | Sun/Earth az/el vs JPL Horizons at reference sites/epochs | M03, fixture `data/fixtures/validation/` |
-| Published results | Polar illumination fractions vs Mazarico et al. (2011) (qualitative/statistical) | M04 |
+| Independent ephemeris | Sun/Earth az/el vs JPL Horizons at reference sites/epochs (feasibility shown 2026-11-04, §5.2) | M03, fixture `data/fixtures/validation/` |
+| Published results | Polar illumination fractions vs Mazarico et al. (2011) and Gläser et al. (2014), with stated differences in DEM, period and method | M04 |
 | Reproducibility | Acquisition records + `GET /api/v1/system/runtime` versions embedded in results | all |
 
 **Horizons reference (recorded 2026-11-04).** `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json`
 holds two apparent Sun az/el samples for a site at 89.5° S, 0° E (Horizons, DE441,
-MEAN_ME, 1737.4 km sphere). It is a partial fixture: the full hourly table and the exact
-request URL must be re-captured before it is used as a regression test, and the DE441
-vs DE440 difference must be bounded in M03.
+MEAN_ME, 1737.4 km sphere), plus the record of the SPICE cross-check in §5.2. It is a
+partial fixture: the full hourly table and the exact request URL must be re-captured
+before it is used as a regression test.
 
 ---
 
@@ -284,6 +301,8 @@ vs DE440 difference must be bounded in M03.
   Science*, 203, 105119. doi:10.1016/j.pss.2020.105119
 - Barker, M. K., et al. (2023). *The Planetary Science Journal*, 4, 183.
   doi:10.3847/PSJ/acf3e1
+- Gläser, P., et al. (2014). Illumination conditions at the lunar south pole using high
+  resolution Digital Terrain Models from LOLA. *Icarus*, 243, 78–90.
 - Horn, B. K. P. (1981). Hill shading and the reflectance map. *Proceedings of the IEEE*,
   69(1), 14–47. doi:10.1109/PROC.1981.11918
 - Kopp, G., & Lean, J. L. (2011). A new, lower value of total solar irradiance: Evidence

@@ -17,9 +17,10 @@ or the Earth? How do candidate sites compare, and what are the trade-offs?*
 
 ![LUNARIS mission overview](docs/images/mission-overview.jpg)
 
-*Mission overview. The globe shows a clearly labeled procedural placeholder surface until
-the NASA SVS color map is acquired (two commands, below). Lighting is view-relative
-and labeled as such.*
+*Mission overview with the NASA SVS CGI Moon Kit color map, acquired with `lunaris-data`.
+A fresh clone shows a clearly labeled procedural placeholder surface until the data is
+acquired (commands below). Lighting is view-relative and labeled as such; the site is
+user-defined.*
 
 ## What works in Milestone 01
 
@@ -33,7 +34,8 @@ and labeled as such.*
   provenance status, sites API; uniform error envelope, request ids, CORS.
 - **Reproducible data acquisition**: manifests for LOLA GDR, NAIF lunar SPICE kernels and
   the SVS CGI Moon Kit — URLs verified and SHA-256 pinned; acquisition records; integrity
-  verification.
+  verification. Proven against the real NASA archives: all three datasets acquired and
+  verified with matching checksums.
 - **Contracts**: TypeScript types generated from the API's OpenAPI document, drift-checked
   in CI; draft contracts for future modules.
 - **Tests**: 117 Python tests (science, data, API, live-server integration), 42 web unit
@@ -143,6 +145,7 @@ No secrets are required. Never put secrets in `NEXT_PUBLIC_*` variables.
 - [Data sources](docs/DATA_SOURCES.md) — datasets, provenance rules, verification
 - [API](docs/API.md) — endpoints and conventions
 - [Roadmap](docs/ROADMAP.md) — milestones, including the future LUNARIS FIELD research track
+- [Decisions](docs/DECISIONS.md) — accepted architectural decision records
 
 ## Data credits
 

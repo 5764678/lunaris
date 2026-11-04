@@ -12,10 +12,10 @@ matter for lunar work:
 ``MOON_PA`` — Principal Axis frame
     Aligned with the Moon's principal axes of inertia and realized by the JPL lunar
     ephemeris (for example DE440 through the NAIF binary PCK
-    ``moon_pa_de440_*.bpc``). It differs from ``MOON_ME`` by a small fixed rotation
-    (tens of arcseconds, i.e. several hundred metres at the surface). The exact
-    angles are defined in the NAIF lunar frames kernel; LUNARIS will obtain them from
-    SPICE, never hard-code them.
+    ``moon_pa_de440_*.bpc``). It differs from ``MOON_ME`` by a small fixed rotation:
+    about 104 arcseconds, i.e. about 875 m at the surface (computed 2026-11-04 with
+    ``pxform`` from the acquired DE440 kernel set). The exact angles are defined in the
+    NAIF lunar frames kernel; LUNARIS obtains them from SPICE and never hard-codes them.
 
 References: LRO Project and LGCWG (2008) white paper "A Standardized Lunar Coordinate
 System for the Lunar Reconnaissance Orbiter and Lunar Datasets"; NAIF lunar frames

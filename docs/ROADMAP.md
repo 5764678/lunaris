@@ -2,7 +2,8 @@
 
 LUNARIS has two branches: **MISSION** (current development) and **FIELD** (a future
 research direction, not implemented). Milestones are delivered in order; each module
-ships only with its validation.
+ships only with its validation. Accepted architectural decisions are recorded in
+`docs/DECISIONS.md` (D1–D7) and govern the plans below.
 
 | Milestone | Theme | Status |
 | --- | --- | --- |
@@ -23,7 +24,8 @@ ships only with its validation.
   boundaries for planned modules.
 - `lunaris-data`: dataset manifests (LOLA GDR 240 m, NAIF lunar kernel set, SVS CGI Moon
   Kit), all URL-verified with pinned SHA-256; reproducible acquisition with provenance
-  records; integrity verification; web texture builder; CLI.
+  records — proven against the real NASA archives on 2026-11-04 (all checksums matched);
+  integrity verification; web texture builder; CLI.
 - `lunaris-api`: `/health`, runtime report, dataset registry, user-defined candidate
   sites (SQLite via a repository abstraction), error envelope, request ids, CORS.
 - `@lunaris/shared-types`: OpenAPI-generated contracts + draft domain contracts.
@@ -36,27 +38,34 @@ ships only with its validation.
 **Goal:** real LOLA topography in the analysis and on screen, with slope and roughness
 at candidate sites.
 
-1. **Product selection.** Choose site-scale DEMs from the verified shortlist
-   (`docs/DATA_SOURCES.md` §3) — e.g. PDS `LDEM_80S_20M` for regional work plus a 5–10 m
-   product for landing-site scale. Add manifests with pinned checksums.
+1. **Products (D3).** Horizon masks from `LDEM_75S_240M` (acquired and verified in M01).
+   Slope, roughness and hazards from the PGDA 20 m DEM (`LDEM_80S_20MPP_ADJ.TIF`) read as
+   windows around each site via GDAL `/vsicurl/`; PGDA product 78 5 m per-site DEMs where
+   they cover a site. Extend the manifest model with a **remote windowed source** kind
+   (URL, byte size, HTTP validators, header checksum) and record provenance per window
+   read. Fallback if `/vsicurl/` proves unreliable: crop windows once into `data/processed/`.
 2. **PDS3 label parser** (`lunaris_data.ingestion`): parse `OBJECT = IMAGE` and
    `IMAGE_MAP_PROJECTION`; expose dimensions, sample type, scaling, offset, projection
-   parameters and reference radius. Test against the verified LDEM_75S_240M label values
-   (3812 × 3812, 0.5 m/DN, offsets 1905.5 px, DN range −15529…14049).
-3. **DEM reader** (rasterio/GDAL + label metadata): windowed reads returning heights in
-   metres with an explicit polar-stereographic CRS; GeoTIFF support for PGDA products.
+   parameters and reference radius. Test against the acquired LDEM_75S_240M label
+   (3812 × 3812, HEIGHT = DN × 0.5 m, PLANETARY_RADIUS = HEIGHT + 1 737 400 m, offsets
+   1905.5 px, DN range −15529…14049).
+3. **DEM readers** (rasterio/GDAL + label metadata): PDS IMG and (Big)GeoTIFF windowed
+   reads returning heights in metres; verify from file metadata that each product is south
+   polar stereographic `MOON_ME` (DE421) and refuse a mismatch (D3).
 4. **Projection math** (`lunaris_science.terrain`): forward/inverse south polar
    stereographic on the reference sphere and the point scale factor; property tests and
    the grid-consistency check in `docs/SCIENCE.md` §5.1.
 5. **Terrain analysis**: height sampling at sites (bilinear, documented), Horn slope with
    scale-factor-corrected spacing, a defined roughness statistic, footprint statistics,
    configurable hazard thresholds (assumptions) — returning `TerrainAnalysisResult` with
-   evidence and provenance.
-6. **API**: `GET /api/v1/sites/{id}/terrain` (and a batch variant), contract generated
-   into shared-types.
-7. **Web**: site panel shows sampled height, slope and roughness with evidence badges and
-   DEM provenance; first Plotly chart (elevation profile or slope histogram); a terrain
-   tile layer for the south-polar region (hillshade/slope colorization from the DEM).
+   evidence and provenance. Every slope and roughness value carries its `baseline_m` (D3).
+6. **API**: `GET /api/v1/sites/{id}/terrain` (and a batch variant), plus a heightmap export
+   for the polar scene (D5); contracts generated into shared-types.
+7. **Web**: the **south-pole terrain scene** — a mesh built from LOLA heights — becomes
+   the main 3D view, with the globe kept as context and entry point (D5). Until M03 it uses
+   the labeled display light; rendered shadows are always labeled as illustration. The site
+   panel shows sampled height, slope and roughness with evidence badges and DEM
+   provenance; first Plotly chart (elevation profile or slope histogram).
 8. **Validation**: synthetic DEM fixtures with analytically known slopes (planes, cones),
    cross-check against GDAL's slope output, and spot checks on the real product.
 
@@ -67,18 +76,22 @@ and tests pass in CI.
 ## M03 — Celestial geometry
 
 SPICE kernel manager and generated meta-kernel; Sun/Earth topocentric azimuth/elevation
-and angular radii as time series over the analysis window; explicit aberration
-corrections; pole azimuth convention; validation against JPL Horizons (complete the
-recorded fixture; bound DE440 vs DE441 differences); the timeline's Sun/Earth lanes and
-an ephemeris-driven lighting option in the viewport.
+and angular radii as time series over the analysis window; light-time and stellar
+aberration corrections; an explicit rejection or azimuth convention at latitude ±90°, never
+a silent NaN; a committed test that `MOON_ME` resolves to `MOON_ME_DE440_ME421` (D2).
+Validation against JPL Horizons: complete the recorded fixture and state the tolerance
+(a scratch cross-check already agrees to < 0.05″ at two epochs). The timeline's Sun/Earth
+lanes and SPICE-driven lighting of the terrain scene (D5).
 
 ## M04 — Illumination and Earth visibility
 
-Horizon-elevation profiles from DEMs (curvature-correct ray marching), visible solar-disk
-fraction, illumination statistics (illuminated fraction, longest darkness), Earth
-line-of-sight states and direct-to-Earth visibility windows — always with the statement
-that geometric visibility does not imply a radio link. Comparison with published polar
-illumination results (Mazarico et al. 2011).
+Per-site horizon masks from `LDEM_75S_240M` (curvature-correct ray marching, truncation
+flags for rays leaving coverage), visible solar- and Earth-disk fractions, illumination
+statistics (illuminated fraction, longest darkness), Earth line-of-sight states and
+direct-to-Earth visibility windows — astronomical and terrain horizons reported separately,
+always with the statement that geometric visibility does not imply a radio link (D4).
+Validation on synthetic terrain with analytical answers and against Mazarico et al. (2011)
+and Gläser et al. (2014).
 
 ## M05 — Mission intelligence
 

@@ -67,9 +67,13 @@
   "verification": {
     "status": "verified",
     "checked_on": "2026-11-04",
-    "note": "URLs, byte sizes and SHA-256 values confirmed on 2026-11-04 by an independent session with direct access to naif.jpl.nasa.gov (files downloaded and hashed; de440s.bsp MD5 also matched NAIF's aa_checksums.txt). Not re-checked from the LUNARIS development environment, where NASA hosts are blocked. The previous FK moon_de440_220930.tf was superseded (moved to a_old_versions/) by moon_de440_250416.tf."
+    "note": "URLs, byte sizes and SHA-256 values confirmed on 2026-11-04 by an independent session with direct access to naif.jpl.nasa.gov (files downloaded and hashed; de440s.bsp MD5 also matched NAIF's aa_checksums.txt). Re-verified the same day by a full acquisition and `lunaris-data verify` from the LUNARIS development environment: every file matched its pinned SHA-256. The previous FK moon_de440_220930.tf was superseded (moved to a_old_versions/) by moon_de440_250416.tf."
   },
-  "required_by": ["geometry", "illumination", "visibility"],
+  "required_by": [
+    "geometry",
+    "illumination",
+    "visibility"
+  ],
   "notes": [
     "Kernels are stored under data/kernels/<dataset-id>/. A SPICE meta-kernel that furnishes them in the correct order is a Milestone 03 deliverable.",
     "moon_de440_250416.tf keeps the frame names MOON_PA, MOON_ME, MOON_PA_DE440 (ID 31008) and MOON_ME_DE440_ME421 (ID 31009) but changed the generic alias IDs (MOON_PA 31010→31000, MOON_ME 31011→31001). LUNARIS refers to frames by name only and never hard-codes frame ID integers.",
