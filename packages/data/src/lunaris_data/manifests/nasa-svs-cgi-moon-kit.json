@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "nasa-svs-cgi-moon-kit",
+  "title": "NASA SVS CGI Moon Kit — global color map (visualization only)",
+  "summary": "Global color map of the Moon produced by NASA's Scientific Visualization Studio for rendering. LUNARIS uses it ONLY as the visual surface of the 3D globe. It is never an input to any analysis.",
+  "category": "visualization",
+  "evidence_kind": "derived_product",
+  "provider": "NASA Scientific Visualization Studio (SVS), Goddard Space Flight Center",
+  "mission": "Lunar Reconnaissance Orbiter (LRO)",
+  "instrument": "LROC Wide Angle Camera (70°N–70°S); poles filled with LOLA-derived albedo (LDAM), per SVS",
+  "product_family": "SVS CGI Moon Kit (SVS visualization 4720)",
+  "source_page": "https://svs.gsfc.nasa.gov/4720",
+  "storage_area": "raw",
+  "files": [
+    {
+      "name": "lroc_color_poles_4k.tif",
+      "url": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_4k.tif",
+      "role": "visual",
+      "sha256": "918649a7f8ed2f1329b2cd95bb0d25483befdcb60ae1a66db681a637cc21344f",
+      "size_bytes": 13095388,
+      "description": "Global color map, 4096 × 2048, 8-bit RGB."
+    }
+  ],
+  "spatial": {
+    "body": "Moon",
+    "frame": "MOON_ME",
+    "projection": "Global 2:1 map 'centered on 0° longitude' (SVS page). The page names no projection and no numeric longitude range; LUNARIS ASSUMES simple cylindrical (equirectangular) spanning −180°..+180° longitude and +90°..−90° latitude",
+    "nominal_resolution_m": null,
+    "coverage": "Global",
+    "vertical_reference": null
+  },
+  "units": "8-bit RGB color for display. LROC WAC Hapke-normalized mosaic (70°N–70°S) with LOLA LDAM polar fill, per SVS. Not radiometrically calibrated for analysis.",
+  "citation": "NASA's Scientific Visualization Studio. CGI Moon Kit, SVS visualization 4720 (https://svs.gsfc.nasa.gov/4720).",
+  "usage": "NASA visualization product, freely usable with the credit line \"NASA's Scientific Visualization Studio\". Visualization only — not an analysis input.",
+  "verification": {
+    "status": "verified",
+    "checked_on": "2026-11-04",
+    "note": "URL, pixel dimensions, byte size and SHA-256 confirmed on 2026-11-04 by an independent session with direct access to svs.gsfc.nasa.gov. Not re-checked from the LUNARIS development environment, where NASA hosts are blocked."
+  },
+  "required_by": ["visualization"],
+  "notes": [
+    "After acquisition, run `uv run lunaris-data build-web-texture` to produce a web-ready JPEG and a provenance manifest in apps/web/public/textures/moon/. The web client uses it automatically and otherwise shows a clearly labeled procedural placeholder surface.",
+    "A newer 16-bit map (lroc_color_16bit_srgb_4k.tif, 4096 × 2048, 61 891 324 bytes, SHA-256 9731fa8af425b6c2f88f277ecca82bf8c603f3743894f64ed7b25c5bfefa22ff) was published in 2025. Milestone 01 keeps the 8-bit map because the texture builder accepts 8-bit input only.",
+    "Equirectangular maps are resolution-starved at the poles. South-polar terrain visualization will use LOLA polar products (Milestone 02), not this texture."
+  ]
+}

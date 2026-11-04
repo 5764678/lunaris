@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "lola-ldem-75s-240m",
+  "title": "LOLA GDR south-polar stereographic DEM, 75°S–90°S, 240 m/pixel",
+  "summary": "Regional context topography of the lunar south-polar region from the Lunar Orbiter Laser Altimeter Gridded Data Record. The first terrain product for ingestion development; site-scale analysis requires the higher-resolution products listed in docs/DATA_SOURCES.md.",
+  "category": "terrain",
+  "evidence_kind": "derived_product",
+  "provider": "NASA Planetary Data System — Geosciences Node",
+  "mission": "Lunar Reconnaissance Orbiter (LRO)",
+  "instrument": "Lunar Orbiter Laser Altimeter (LOLA)",
+  "product_family": "LOLA Gridded Data Record (GDR), polar stereographic",
+  "source_page": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
+  "storage_area": "raw",
+  "files": [
+    {
+      "name": "LDEM_75S_240M.LBL",
+      "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldem_75s_240m.lbl",
+      "role": "label",
+      "sha256": "ec07239f41d8abc1a3681495b5799b770c7206b5268b76721d69180df0422e02",
+      "size_bytes": 4990,
+      "description": "PDS3 detached label: map projection, scaling factor, offset, units and reference radius. Authoritative metadata for the image. Stored under the upper-case name used by the archive's label conventions."
+    },
+    {
+      "name": "LDEM_75S_240M.IMG",
+      "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldem_75s_240m.img",
+      "role": "data",
+      "sha256": "d031efe2611b17dfbf3c158f5e15dc04cd5719349dcbf6384bb21fd97697c490",
+      "size_bytes": 29062688,
+      "description": "Gridded topography raster described by the label. The server publishes lower-case file names but the label's ^IMAGE pointer names 'LDEM_75S_240M.IMG'; it is stored under that upper-case name so the pointer resolves on case-sensitive file systems."
+    }
+  ],
+  "spatial": {
+    "body": "Moon",
+    "frame": "MOON_ME",
+    "projection": "Polar stereographic, south pole (center latitude −90°, center longitude 0°, east-positive) on a 1737.4 km sphere — per the PDS label",
+    "nominal_resolution_m": 240,
+    "coverage": "75°S to 90°S",
+    "vertical_reference": "Heights relative to the 1737.4 km reference sphere (radius = height + 1 737 400 m), per the PDS label"
+  },
+  "units": "Raster values are 16-bit signed integers (LSB). Height in metres = DN × 0.5, per the label's scaling factor. Ingestion code reads scaling and offset from the label rather than from this manifest.",
+  "citation": "Smith, D. E., et al. (2010). The Lunar Orbiter Laser Altimeter Investigation on the Lunar Reconnaissance Orbiter Mission. Space Science Reviews, 150, 209–241. doi:10.1007/s11214-009-9512-y. Data set: LRO-L-LOLA-4-GDR-V1.0, NASA Planetary Data System (use the exact data set citation from the PDS product page).",
+  "usage": "NASA PDS archive data, publicly available. Cite the instrument paper and the PDS data set.",
+  "verification": {
+    "status": "verified",
+    "checked_on": "2026-11-04",
+    "note": "URLs, byte sizes and SHA-256 values confirmed on 2026-11-04 by an independent session with direct access to pds-geosciences.wustl.edu (files downloaded and hashed, label inspected). Not re-checked from the LUNARIS development environment, where NASA hosts are blocked."
+  },
+  "required_by": ["terrain", "illumination", "visibility"],
+  "notes": [
+    "Label contents observed on 2026-11-04 (independent verification): 3812 × 3812 samples, LSB 16-bit integers; scaling 0.5 m per DN; polar stereographic on a 1737.4 km sphere centred on −90°/0°; LINE_PROJECTION_OFFSET = SAMPLE_PROJECTION_OFFSET = 1905.5 px; coverage −75° to −90°; reference frame 'MEAN EARTH/POLAR AXIS OF DE421'; DN range −15529 to 14049. Milestone 02 ingestion parses these from the label and tests against these observed values.",
+    "240 m/pixel is regional context only; slope and hazard assessment at landing-site scale requires the 5–20 m/pixel south-polar products (see docs/DATA_SOURCES.md § Candidate products for Milestone 02)."
+  ]
+}

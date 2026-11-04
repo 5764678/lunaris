@@ -1,0 +1,30 @@
+[project]
+name = "lunaris-api"
+version = "0.1.0"
+description = "LUNARIS HTTP API (FastAPI). Thin transport layer over lunaris-science and lunaris-data."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "UNLICENSED" }
+dependencies = [
+  "lunaris-science",
+  "lunaris-data",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.7",
+  "sqlalchemy>=2.0.36",
+]
+
+[project.scripts]
+lunaris-api-openapi = "lunaris_api.openapi:main"
+
+[tool.uv.sources]
+lunaris-science = { workspace = true }
+lunaris-data = { workspace = true }
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lunaris_api"]

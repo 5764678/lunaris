@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "horizons-sun-s89p5-e0-2026-11-04",
+  "purpose": "Validation reference for Milestone 03 celestial geometry: apparent Sun azimuth/elevation from a lunar south-polar surface site.",
+  "evidence_kind": "model",
+  "source": {
+    "provider": "JPL Solar System Dynamics Group — Horizons system (API)",
+    "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+    "retrieved_on": "2026-11-04",
+    "retrieved_by": "Independent verification session with direct internet access; values relayed by the project owner. Not retrieved from the LUNARIS development environment (NASA/JPL hosts blocked there).",
+    "ephemeris_reported": "DE441",
+    "body_frame_reported": "MEAN_ME (lunar Mean Earth / polar axis)"
+  },
+  "observer": {
+    "center_body": "Moon (301)",
+    "latitude_deg": -89.5,
+    "east_longitude_deg": 0.0,
+    "height_m": 0.0,
+    "reference_surface": "Sphere of radius 1737.4 km (as reported by Horizons; geodetic and planetocentric latitude coincide on a sphere)"
+  },
+  "target": "Sun (10)",
+  "quantities": "Horizons QUANTITIES='4' — apparent azimuth and elevation",
+  "samples": [
+    { "time_utc": "2026-11-04T00:00:00Z", "azimuth_deg": 248.586138, "elevation_deg": 1.304694 },
+    { "time_utc": "2026-11-05T00:00:00Z", "azimuth_deg": 236.397425, "elevation_deg": 1.221441 }
+  ],
+  "context": "The query used a 1-hour step from 2026-11-04 00:00 to 2026-11-05 00:00 UTC (25 samples). Per the relayed summary, the Sun stayed above the geometric horizon for all 25 samples with slowly decreasing elevation. Only the first and last samples were relayed and are recorded here.",
+  "limitations": [
+    "The 23 intermediate hourly values and the exact request URL were not captured. Re-capture the raw $$SOE..$$EOE block and request URL verbatim before relying on this file as a regression fixture (Milestone 03 task).",
+    "Horizons used DE441; LUNARIS plans to use DE440 (de440s.bsp). Small differences are expected; Milestone 03 must justify its comparison tolerances.",
+    "The azimuth origin/direction convention must be confirmed against the Horizons documentation before comparison (expected: measured from local north toward east)."
+  ]
+}

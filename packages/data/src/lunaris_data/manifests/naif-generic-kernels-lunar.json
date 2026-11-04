@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "id": "naif-generic-kernels-lunar",
+  "title": "NAIF SPICE generic kernel set for lunar surface geometry",
+  "summary": "Leap seconds, planetary and lunar ephemeris (DE440, short span), lunar orientation (binary PCK) and lunar frame definitions (MOON_PA / MOON_ME), plus the generic text PCK. Required for Sun and Earth geometry as seen from the lunar surface.",
+  "category": "ephemeris",
+  "evidence_kind": "model",
+  "provider": "NASA Navigation and Ancillary Information Facility (NAIF), JPL",
+  "mission": null,
+  "instrument": null,
+  "product_family": "SPICE generic kernels",
+  "source_page": "https://naif.jpl.nasa.gov/naif/data_generic.html",
+  "storage_area": "kernels",
+  "files": [
+    {
+      "name": "naif0012.tls",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+      "role": "kernel",
+      "sha256": "678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b",
+      "size_bytes": 5257,
+      "description": "Leap seconds kernel (LSK): UTC ↔ ephemeris time."
+    },
+    {
+      "name": "pck00011.tpc",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+      "role": "kernel",
+      "sha256": "3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1",
+      "size_bytes": 131226,
+      "description": "Generic text PCK: IAU body radii and orientation models."
+    },
+    {
+      "name": "de440s.bsp",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp",
+      "role": "kernel",
+      "sha256": "c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2",
+      "size_bytes": 32726016,
+      "description": "Planetary and lunar ephemeris DE440, short time span (SPK)."
+    },
+    {
+      "name": "moon_pa_de440_200625.bpc",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/moon_pa_de440_200625.bpc",
+      "role": "kernel",
+      "sha256": "60cd55aa401ea2ea97360636f567554bfe4e37bb829f901b4460a455dfaf783f",
+      "size_bytes": 12863488,
+      "description": "High-accuracy lunar orientation (principal-axis frame) consistent with DE440 (binary PCK)."
+    },
+    {
+      "name": "moon_de440_250416.tf",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_de440_250416.tf",
+      "role": "kernel",
+      "sha256": "a47c71e9c9f33796bdafb2c9d69a7ee447b6016ecad80f71cd6f3e479f9cf768",
+      "size_bytes": 19478,
+      "description": "Lunar frames kernel (FK) defining MOON_PA_DE440, MOON_ME_DE440_ME421 and the generic MOON_PA / MOON_ME aliases."
+    }
+  ],
+  "spatial": {
+    "body": "Moon",
+    "frame": "MOON_ME",
+    "projection": null,
+    "nominal_resolution_m": null,
+    "coverage": "Ephemeris time span defined by the SPK (DE440 short-span version)",
+    "vertical_reference": null
+  },
+  "units": "SPICE conventions: km, km/s, seconds past J2000 TDB. LUNARIS converts to SI metres at its API boundary.",
+  "citation": "Acton, C. H. (1996). Ancillary data services of NASA's Navigation and Ancillary Information Facility. Planetary and Space Science, 44(1), 65–70. doi:10.1016/0032-0633(95)00107-7. Park, R. S., Folkner, W. M., Williams, J. G., & Boggs, D. H. (2021). The JPL Planetary and Lunar Ephemerides DE440 and DE441. The Astronomical Journal, 161(3), 105. doi:10.3847/1538-3881/abd414",
+  "usage": "NAIF generic kernels are publicly available. Cite SPICE (Acton 1996) and the ephemeris (Park et al. 2021).",
+  "verification": {
+    "status": "verified",
+    "checked_on": "2026-11-04",
+    "note": "URLs, byte sizes and SHA-256 values confirmed on 2026-11-04 by an independent session with direct access to naif.jpl.nasa.gov (files downloaded and hashed; de440s.bsp MD5 also matched NAIF's aa_checksums.txt). Not re-checked from the LUNARIS development environment, where NASA hosts are blocked. The previous FK moon_de440_220930.tf was superseded (moved to a_old_versions/) by moon_de440_250416.tf."
+  },
+  "required_by": ["geometry", "illumination", "visibility"],
+  "notes": [
+    "Kernels are stored under data/kernels/<dataset-id>/. A SPICE meta-kernel that furnishes them in the correct order is a Milestone 03 deliverable.",
+    "moon_de440_250416.tf keeps the frame names MOON_PA, MOON_ME, MOON_PA_DE440 (ID 31008) and MOON_ME_DE440_ME421 (ID 31009) but changed the generic alias IDs (MOON_PA 31010→31000, MOON_ME 31011→31001). LUNARIS refers to frames by name only and never hard-codes frame ID integers.",
+    "MOON_ME_DE440_ME421 realizes the Mean Earth/Polar Axis frame consistently with the DE421-based ME frame used by LRO/LOLA products ('MEAN EARTH/POLAR AXIS OF DE421' in LOLA labels).",
+    "DE442 (de442s.bsp) is published, but NAIF publishes no DE442-consistent lunar orientation PCK or FK; LUNARIS keeps the internally consistent DE440 lunar set.",
+    "de440s.bsp covers a reduced time span compared with de440.bsp; confirm the span covers the mission analysis windows."
+  ]
+}
