@@ -2,8 +2,12 @@
 
 import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from "react";
 
+import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { DAY_MS, HOUR_MS, dayTicks, formatUtc } from "@/lib/time/time";
+import { elevationAt, type ElevationSeries } from "@/lib/timeline/series";
 import { useMissionStore } from "@/store/mission-store";
+
+import { ELEVATION_LANE_HEIGHT_PX, ElevationLane } from "./elevation-lane";
 
 export const ANALYSIS_LANES = [
   { id: "sun", label: "Sun elevation", milestone: "M03", note: "SPICE solar geometry" },
@@ -12,11 +16,27 @@ export const ANALYSIS_LANES = [
   { id: "los", label: "Earth line of sight", milestone: "M04", note: "terrain-obstructed DTE" },
 ] as const;
 
+export type LaneId = (typeof ANALYSIS_LANES)[number]["id"];
+
+/** Computed data per lane. Only the Sun and Earth elevation lanes (C2) take data so far. */
+export type LaneData = Partial<Record<"sun" | "earth", ElevationSeries>>;
+
+const EMPTY_LANE_HEIGHT_PX = 18;
+
+function laneSeries(data: LaneData, id: LaneId): ElevationSeries | undefined {
+  return id === "sun" || id === "earth" ? data[id] : undefined;
+}
+
+function formatElevation(deg: number | null): string {
+  if (deg === null) return "—";
+  return `${deg >= 0 ? "+" : "−"}${Math.abs(deg).toFixed(2)}°`;
+}
+
 /**
  * Time axis + analysis lanes with a draggable epoch cursor. Exposed to assistive
  * technology as a slider (arrows ±1 h, PageUp/PageDown ±1 d, Home/End).
  */
-export function TimelineTrack() {
+export function TimelineTrack({ lanes = {} }: { lanes?: LaneData }) {
   const epochMs = useMissionStore((s) => s.epochMs);
   const startMs = useMissionStore((s) => s.windowStartMs);
   const endMs = useMissionStore((s) => s.windowEndMs);
@@ -110,17 +130,35 @@ export function TimelineTrack() {
             </div>
           ))}
         </div>
-        {ANALYSIS_LANES.map((lane) => (
-          <div
-            key={lane.id}
-            data-lane={lane.id}
-            className="hatch relative mt-1 flex h-[18px] items-center justify-center rounded-[3px] border border-hairline"
-          >
-            <span className="rounded-sm bg-panel-sunken/90 px-1.5 font-mono text-3xs uppercase tracking-[0.12em] text-dim">
-              Not computed · {lane.milestone} · {lane.note}
-            </span>
-          </div>
-        ))}
+        {ANALYSIS_LANES.map((lane) => {
+          const series = laneSeries(lanes, lane.id);
+          if (series && ready) {
+            return (
+              <div
+                key={lane.id}
+                data-lane={lane.id}
+                data-lane-state="computed"
+                className="relative mt-1 overflow-hidden rounded-[3px] border border-hairline bg-panel-sunken/40"
+                style={{ height: ELEVATION_LANE_HEIGHT_PX }}
+              >
+                <ElevationLane series={series} startMs={startMs} endMs={endMs} />
+              </div>
+            );
+          }
+          return (
+            <div
+              key={lane.id}
+              data-lane={lane.id}
+              data-lane-state="not-computed"
+              className="hatch relative mt-1 flex items-center justify-center rounded-[3px] border border-hairline"
+              style={{ height: EMPTY_LANE_HEIGHT_PX }}
+            >
+              <span className="rounded-sm bg-panel-sunken/90 px-1.5 font-mono text-3xs uppercase tracking-[0.12em] text-dim">
+                Not computed · {lane.milestone} · {lane.note}
+              </span>
+            </div>
+          );
+        })}
         {ready && (
           <div
             aria-hidden="true"
@@ -131,11 +169,41 @@ export function TimelineTrack() {
           </div>
         )}
       </div>
-      {ANALYSIS_LANES.map((lane) => (
-        <div key={lane.id} className="mt-1 flex h-[18px] items-center text-2xs text-muted-foreground">
-          {lane.label}
-        </div>
-      ))}
+      {ANALYSIS_LANES.map((lane) => {
+        const series = laneSeries(lanes, lane.id);
+        if (series && ready) {
+          return (
+            <div
+              key={lane.id}
+              className="mt-1 flex flex-col justify-center gap-0.5 text-2xs text-muted-foreground"
+              style={{ height: ELEVATION_LANE_HEIGHT_PX }}
+            >
+              <span className="flex items-center gap-1.5">
+                {lane.label}
+                <EvidenceBadge
+                  kind={series.evidence.kind}
+                  detail={[series.evidence.statement, series.evidence.method].filter(Boolean).join(" · ")}
+                />
+              </span>
+              <span
+                className="numeric font-mono text-xs text-foreground"
+                data-testid={`lane-readout-${lane.id}`}
+              >
+                {formatElevation(elevationAt(series, epochMs))}
+              </span>
+            </div>
+          );
+        }
+        return (
+          <div
+            key={lane.id}
+            className="mt-1 flex items-center text-2xs text-muted-foreground"
+            style={{ height: EMPTY_LANE_HEIGHT_PX }}
+          >
+            {lane.label}
+          </div>
+        );
+      })}
     </div>
   );
 }
