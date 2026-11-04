@@ -1,0 +1,24 @@
+{
+  "name": "@lunaris/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LUNARIS shared domain and API contract types (TypeScript).",
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi/lunaris-api.openapi.json --output src/generated/lunaris-api.ts",
+    "check:generated": "node scripts/check-generated.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}

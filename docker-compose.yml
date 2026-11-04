@@ -1,0 +1,37 @@
+# LUNARIS local stack: API on :8000, web client on :3000.
+#   docker compose up --build
+# ./data is bind-mounted so datasets acquired on the host (uv run lunaris-data acquire …)
+# are visible to the API and the SQLite development database persists.
+name: lunaris
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    # Run as the host user so the bind-mounted ./data stays writable (Linux hosts).
+    user: "${LUNARIS_UID:-1000}:${LUNARIS_GID:-1000}"
+    environment:
+      LUNARIS_ENVIRONMENT: development
+      LUNARIS_LOG_LEVEL: INFO
+      LUNARIS_DATA_DIR: /data
+      LUNARIS_CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Inlined into the browser bundle: the URL the *browser* uses to reach the API.
+        NEXT_PUBLIC_LUNARIS_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

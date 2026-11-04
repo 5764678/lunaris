@@ -1,0 +1,18 @@
+# Keep build contexts small and free of local state and secrets.
+.git
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.hypothesis
+**/playwright-report
+**/test-results
+data
+apps/web/public/textures/moon/*.jpg
+apps/web/public/textures/moon/manifest.json
+.env
+.env.*
+!.env.example

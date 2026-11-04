@@ -1,0 +1,93 @@
+# LUNARIS Python workspace root.
+#
+# This file is NOT a distributable package. It declares a uv workspace that ties
+# together the Python members of the monorepo and holds shared tool settings.
+#
+#   uv sync            # create .venv with every member + dev tools (uses uv.lock)
+#   uv run pytest      # run the Python test suite (tests/)
+#
+# Members:
+#   packages/science  -> lunaris-science  (pure scientific core, no I/O)
+#   packages/data     -> lunaris-data     (dataset manifests, acquisition, preprocessing)
+#   apps/api          -> lunaris-api      (FastAPI application)
+
+[project]
+name = "lunaris-workspace"
+version = "0.1.0"
+description = "LUNARIS monorepo Python workspace root (not a distributable package)."
+requires-python = ">=3.11"
+dependencies = [
+  "lunaris-science",
+  "lunaris-data",
+  "lunaris-api",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "hypothesis>=6.120",
+  "ruff>=0.8",
+  "mypy>=1.13",
+  # Starlette's TestClient now requires httpx2 (httpx is deprecated for it).
+  "httpx2>=2.16",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/science", "packages/data", "apps/api"]
+
+[tool.uv.sources]
+lunaris-science = { workspace = true }
+lunaris-data = { workspace = true }
+lunaris-api = { workspace = true }
+
+# ── pytest ──────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+markers = [
+  "integration: starts real processes or servers on the loopback interface",
+]
+filterwarnings = [
+  "error",
+  # rasterio warns when a test raster intentionally has no georeferencing.
+  "ignore::rasterio.errors.NotGeoreferencedWarning",
+]
+
+# ── ruff ────────────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["packages/science/src", "packages/data/src", "apps/api/src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W", "F", "I", "B", "UP", "N", "SIM", "C4", "RUF", "PT", "TID", "DTZ", "S", "PL", "PTH", "ERA",
+]
+ignore = [
+  "PLR0913", # scientific functions legitimately take many explicit parameters
+  "RUF001",  # allow unicode symbols such as ° and – in strings
+  "RUF002",
+  "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004", "S310", "S603", "S104"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+# ── mypy ────────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+packages = ["lunaris_science", "lunaris_data", "lunaris_api"]
+
+[[tool.mypy.overrides]]
+module = ["rasterio", "rasterio.*", "spiceypy", "spiceypy.*", "scipy", "scipy.*"]
+ignore_missing_imports = true
