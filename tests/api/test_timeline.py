@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
+from lunaris_api.services.illumination import dem_source
+from lunaris_data.registry import DatasetRegistry
+from lunaris_science.coordinates import SelenographicCoordinate
+from lunaris_science.horizon_mask import HorizonMask
 from lunaris_science.visibility import RADIO_LINK_DISCLAIMER
 from tests.api.test_ephemeris import _create_site, kernel_client  # noqa: F401 - fixture
 
@@ -77,3 +82,33 @@ def test_pole_site_and_unknown_site(kernel_client: TestClient) -> None:  # noqa:
 def test_unknown_fields_are_rejected(client: TestClient) -> None:
     response = client.post(URL, json={"site_id": "abc", **DAY, "horizon": "terrain"})
     assert response.status_code == 422
+
+
+def test_dem_source_carries_dataset_id_url_and_checksum() -> None:
+    """TD condition on C4: every evidence source names its dataset, URL and SHA-256."""
+    registry = DatasetRegistry.load_builtin()
+    manifest = registry.get("lola-ldem-75s-240m")
+    img = next(f for f in manifest.files if f.name.endswith(".IMG"))
+    assert img.sha256 is not None
+    mask = HorizonMask(
+        site=SelenographicCoordinate(-89.5, 0.0, 0.0),
+        observer_height_m=2.0,
+        surface_height_m=0.0,
+        azimuth_deg=np.arange(360, dtype=np.float64),
+        elevation_deg=np.zeros(360),
+        truncated=np.zeros(360, dtype=bool),
+        max_range_m=200_000.0,
+        dem_source_id=manifest.id,
+        dem_sha256=img.sha256,
+        dem_resolution_m=240.0,
+        method="synthetic flat horizon (test only)",
+    )
+    source = dem_source(mask, registry)
+    assert source.source_id == f"{manifest.id}/{img.name}"
+    assert source.url == str(img.url)
+    assert source.sha256 == img.sha256
+    mismatched = HorizonMask(
+        **{**{f: getattr(mask, f) for f in mask.__slots__}, "dem_sha256": "f" * 64}
+    )
+    with pytest.raises(ValueError, match="matches no file"):
+        dem_source(mismatched, registry)

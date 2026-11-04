@@ -77,8 +77,9 @@ def _horizon_timeline(
 
 
 def _mask_source(mask: HorizonMask) -> SourceReference:
+    """Fallback DEM source when the caller cannot resolve the mask's DEM to a URL."""
     return SourceReference(
-        source_id=f"horizon-mask/{mask.dem_source_id}",
+        source_id=f"{mask.dem_source_id}/horizon-mask-dem",
         title=(
             f"Terrain horizon mask from {mask.dem_source_id} "
             f"({mask.dem_resolution_m:g} m, {mask.size} azimuths, range "
@@ -92,9 +93,15 @@ def body_timeline(
     geometry: BodyGeometrySeries,
     terrain: HorizonMask | None = None,
     *,
+    dem_source: SourceReference | None = None,
     nodes: int = DEFAULT_NODES,
 ) -> BodyTimeline:
-    """Astronomical and (optionally) terrain timelines for one body's geometry series."""
+    """Astronomical and (optionally) terrain timelines for one body's geometry series.
+
+    ``dem_source`` is the provenance of the DEM the mask came from (dataset id, URL and
+    SHA-256), resolved by the caller from the dataset registry; without it, the source is
+    built from the mask's own dataset id and checksum (no URL).
+    """
     astronomical = _horizon_timeline(
         HorizonKind.ASTRONOMICAL, ASTRONOMICAL_HORIZON, geometry, nodes
     )
@@ -128,7 +135,7 @@ def body_timeline(
     )
     assumptions = list(geometry.evidence.assumptions)
     if terrain is not None:
-        sources.append(_mask_source(terrain))
+        sources.append(dem_source if dem_source is not None else _mask_source(terrain))
         method += f" Terrain horizon: {terrain.method}."
         assumptions.append(
             f"Eye point {terrain.observer_height_m:g} m above the DEM surface "

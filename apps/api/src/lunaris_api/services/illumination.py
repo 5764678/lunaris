@@ -28,12 +28,14 @@ from lunaris_api.schemas.visibility import (
     VisibilityWindow,
 )
 from lunaris_api.services.ephemeris import EphemerisService, evidence_schema, observer_schema
+from lunaris_data.registry import DatasetRegistry
 from lunaris_data.runtime import data_runtime
 from lunaris_data.store import utc_now
 from lunaris_science.geometry import Body
 from lunaris_science.horizon_mask import HorizonMask
 from lunaris_science.illumination.analysis import BodyTimeline, HorizonTimeline, body_timeline
 from lunaris_science.illumination.timeline import Window
+from lunaris_science.provenance import SourceReference
 from lunaris_science.runtime import scientific_runtime
 from lunaris_science.visibility import classify_line_of_sight
 
@@ -189,6 +191,25 @@ def _earth(
     )
 
 
+def dem_source(mask: HorizonMask, registry: DatasetRegistry) -> SourceReference:
+    """Provenance of the DEM file a mask came from: manifest dataset id, file URL and the
+    SHA-256 the mask records, matched against the manifest's pinned checksum."""
+    manifest = registry.get(mask.dem_source_id)
+    spec = next((f for f in manifest.files if f.sha256 == mask.dem_sha256), None)
+    if spec is None:
+        raise ValueError(
+            f"horizon mask DEM checksum {mask.dem_sha256} matches no file pinned in the "
+            f"{manifest.id} manifest"
+        )
+    return SourceReference(
+        source_id=f"{manifest.id}/{spec.name}",
+        title=spec.description or spec.name,
+        url=str(spec.url),
+        sha256=mask.dem_sha256,
+        citation=manifest.citation,
+    )
+
+
 def _software() -> SoftwareProvenance:
     return SoftwareProvenance(
         service_version=__version__,
@@ -215,8 +236,9 @@ class TimelineService:
             request.site_id, request.start_utc, request.end_utc, request.step_s, location="body"
         )
         mask = self._terrain_mask(geometry.site_id)
-        sun = body_timeline(geometry.series[Body.SUN], mask)
-        earth = body_timeline(geometry.series[Body.EARTH], mask)
+        source = dem_source(mask, self._ephemeris.registry) if mask is not None else None
+        sun = body_timeline(geometry.series[Body.SUN], mask, dem_source=source)
+        earth = body_timeline(geometry.series[Body.EARTH], mask, dem_source=source)
         return TimelineAnalysis(
             site_id=geometry.site_id,
             site_name=geometry.site_name,
@@ -234,4 +256,4 @@ class TimelineService:
         )
 
 
-__all__ = ["TimelineService"]
+__all__ = ["TimelineService", "dem_source"]

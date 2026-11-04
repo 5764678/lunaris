@@ -151,6 +151,10 @@ class EphemerisService:
         self._registry = registry
         self._layout = layout
 
+    @property
+    def registry(self) -> DatasetRegistry:
+        return self._registry
+
     def _context(self) -> SpiceContext:
         try:
             return get_spice_context(self._registry.get(KERNEL_DATASET_ID), self._layout)

@@ -104,7 +104,7 @@ def test_astronomical_and_terrain_are_reported_separately() -> None:
     )
     assert timeline.evidence.kind is EvidenceKind.CALCULATION
     source_ids = {s.source_id for s in timeline.evidence.sources}
-    assert source_ids == {"test/kernel", "horizon-mask/synthetic-test-dem"}
+    assert source_ids == {"test/kernel", "synthetic-test-dem/horizon-mask-dem"}
     assert any("2 m above the DEM surface" in a for a in timeline.evidence.assumptions)
 
 
