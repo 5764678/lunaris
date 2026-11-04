@@ -163,7 +163,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 
 | ID | Task | Acceptance | Depends | Status |
 |---|---|---|---|---|
-| T-01 | Review and merge Milestone 01 (PR #2) | TD re-ran `npm run check` (117 pytest, 42 Vitest, strict mypy/tsc), `next build`, live API + web smoke, real NAIF acquisition + verify; CI green | — | in review |
+| T-01 | Review and merge Milestone 01 (PR #2) | TD re-ran `npm run check` (117 pytest, 42 Vitest, strict mypy/tsc), `next build`, live API + web smoke, real NAIF acquisition + verify; CI green | — | done |
 | T-02 | Cited candidate-site list: PGDA product 78's 27 named 5 m sites and NASA's Artemis III candidate regions, each with coordinates and a citation | Every site has a source a reader can check; nothing uncited ships | — | todo |
 
 ### S-TERRAIN
