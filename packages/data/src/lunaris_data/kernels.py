@@ -1,12 +1,13 @@
-"""Ephemeris use-cases: the verified SPICE kernel context for the API process.
+"""Verified SPICE kernel sets from the data store.
 
-The kernel set comes from the data store by manifest: every file of
-``naif-generic-kernels-lunar`` is re-hashed against its acquisition record and the
-SHA-256 pinned in the manifest before anything is furnished. Only then is a
-:class:`~lunaris_science.geometry.spice.KernelSet` built from explicit paths.
+The kernel set is resolved by manifest: every file of the dataset is re-hashed against
+its acquisition record and the SHA-256 pinned in the manifest before anything is
+furnished. Only then is a :class:`~lunaris_science.geometry.spice.KernelSet` built,
+from explicit absolute paths, for the science core to load.
 
-CSPICE has one kernel pool per process, so the API keeps one
-:class:`~lunaris_science.geometry.spice.SpiceContext` per process and reuses it.
+CSPICE has one kernel pool per process, so :func:`get_spice_context` keeps one
+:class:`~lunaris_science.geometry.spice.SpiceContext` per process and reuses it. The
+API, the CLI and later analysis modules all go through it.
 """
 
 from __future__ import annotations
@@ -16,12 +17,7 @@ import threading
 from lunaris_data.manifest import DatasetManifest
 from lunaris_data.store import DataLayout, read_record
 from lunaris_data.validation.integrity import FileCheckResult, verify_dataset
-from lunaris_science.geometry.spice import (
-    KernelFile,
-    KernelRole,
-    KernelSet,
-    SpiceContext,
-)
+from lunaris_science.geometry.spice import KernelFile, KernelRole, KernelSet, SpiceContext
 from lunaris_science.provenance import SourceReference
 
 KERNEL_DATASET_ID = "naif-generic-kernels-lunar"

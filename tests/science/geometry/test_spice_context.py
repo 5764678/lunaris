@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 import spiceypy
 
-from lunaris_api.services.ephemeris import (
+from lunaris_data.kernels import (
     KERNEL_DATASET_ID,
     KernelSetUnavailableError,
     load_verified_kernel_set,

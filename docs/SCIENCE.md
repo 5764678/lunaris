@@ -205,7 +205,7 @@ Code: `lunaris_science.geometry` (`spice`, `epochs`, `bodies`). Tests:
 `moon_pa_de440_200625.bpc`, `moon_de440_250416.tf` (see `docs/DATA_SOURCES.md`). The API
 builds the kernel set from the data store by manifest: every file is re-hashed against its
 acquisition record and the SHA-256 pinned in the manifest, and the set is refused on any
-mismatch (`lunaris_api.services.ephemeris.load_verified_kernel_set`). The science core
+mismatch (`lunaris_data.kernels.load_verified_kernel_set`). The science core
 then furnishes exactly those absolute paths, in the order LSK, text PCK, SPK, binary PCK,
 FK; it does no other I/O. On load it checks that `MOON_ME` is a TK alias of
 `MOON_ME_DE440_ME421` with an identity rotation (deviation 0 in every element), and
