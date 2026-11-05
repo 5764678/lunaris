@@ -41,13 +41,14 @@ from lunaris_science.visibility import classify_line_of_sight
 
 
 def _windows(
-    windows: tuple[Window, ...], epochs: tuple[datetime, ...], step_s: float
+    windows: tuple[Window, ...], epochs: tuple[datetime, ...], step_s: float, end: datetime
 ) -> list[VisibilityWindow]:
+    """UTC windows; each sample's interval is clipped to the requested window end."""
     step = timedelta(seconds=step_s)
     return [
         VisibilityWindow(
             start_utc=epochs[w.start_index],
-            end_utc=epochs[w.end_index] + step,
+            end_utc=min(epochs[w.end_index] + step, end),
             duration_s=w.duration_s,
             censored_start=w.censored_start,
             censored_end=w.censored_end,
@@ -57,7 +58,7 @@ def _windows(
 
 
 def _illumination_summary(
-    timeline: HorizonTimeline, epochs: tuple[datetime, ...], step_s: float
+    timeline: HorizonTimeline, epochs: tuple[datetime, ...], step_s: float, end: datetime
 ) -> IlluminationSummary:
     s = timeline.summary
     return IlluminationSummary(
@@ -71,12 +72,12 @@ def _illumination_summary(
         longest_darkness_censored=s.longest_hidden.censored,
         resolution_s=step_s,
         any_truncated=s.any_truncated,
-        sunlit_windows=_windows(s.visible_windows, epochs, step_s),
+        sunlit_windows=_windows(s.visible_windows, epochs, step_s, end),
     )
 
 
 def _earth_summary(
-    timeline: HorizonTimeline, epochs: tuple[datetime, ...], step_s: float
+    timeline: HorizonTimeline, epochs: tuple[datetime, ...], step_s: float, end: datetime
 ) -> EarthVisibilitySummary:
     s = timeline.summary
     return EarthVisibilitySummary(
@@ -90,7 +91,7 @@ def _earth_summary(
         longest_outage_censored=s.longest_hidden.censored,
         resolution_s=step_s,
         any_truncated=s.any_truncated,
-        windows=_windows(s.visible_windows, epochs, step_s),
+        windows=_windows(s.visible_windows, epochs, step_s, end),
     )
 
 
@@ -108,7 +109,7 @@ def _terrain_columns(
 
 
 def _illumination(
-    timeline: BodyTimeline, epochs: tuple[datetime, ...], step_s: float
+    timeline: BodyTimeline, epochs: tuple[datetime, ...], step_s: float, end: datetime
 ) -> IlluminationResult:
     g = timeline.geometry
     horizon_el, terrain_f, truncated = _terrain_columns(timeline, len(epochs))
@@ -138,9 +139,11 @@ def _illumination(
     return IlluminationResult(
         body="sun",
         samples=samples,
-        astronomical=_illumination_summary(timeline.astronomical, epochs, step_s),
+        astronomical=_illumination_summary(timeline.astronomical, epochs, step_s, end),
         terrain=(
-            _illumination_summary(timeline.terrain, epochs, step_s) if timeline.terrain else None
+            _illumination_summary(timeline.terrain, epochs, step_s, end)
+            if timeline.terrain
+            else None
         ),
         evidence=evidence_schema(timeline.evidence),
         limitations=list(timeline.limitations),
@@ -148,7 +151,7 @@ def _illumination(
 
 
 def _earth(
-    timeline: BodyTimeline, epochs: tuple[datetime, ...], step_s: float
+    timeline: BodyTimeline, epochs: tuple[datetime, ...], step_s: float, end: datetime
 ) -> EarthVisibilityResult:
     g = timeline.geometry
     horizon_el, terrain_f, truncated = _terrain_columns(timeline, len(epochs))
@@ -184,8 +187,10 @@ def _earth(
     return EarthVisibilityResult(
         body="earth",
         samples=samples,
-        astronomical=_earth_summary(timeline.astronomical, epochs, step_s),
-        terrain=_earth_summary(timeline.terrain, epochs, step_s) if timeline.terrain else None,
+        astronomical=_earth_summary(timeline.astronomical, epochs, step_s, end),
+        terrain=(
+            _earth_summary(timeline.terrain, epochs, step_s, end) if timeline.terrain else None
+        ),
         evidence=evidence_schema(timeline.evidence),
         limitations=list(timeline.limitations),
     )
@@ -237,8 +242,18 @@ class TimelineService:
         )
         mask = self._terrain_mask(geometry.site_id)
         source = dem_source(mask, self._ephemeris.registry) if mask is not None else None
-        sun = body_timeline(geometry.series[Body.SUN], mask, dem_source=source)
-        earth = body_timeline(geometry.series[Body.EARTH], mask, dem_source=source)
+        sun = body_timeline(
+            geometry.series[Body.SUN],
+            mask,
+            dem_source=source,
+            window_end_et_s=geometry.window_end_et_s,
+        )
+        earth = body_timeline(
+            geometry.series[Body.EARTH],
+            mask,
+            dem_source=source,
+            window_end_et_s=geometry.window_end_et_s,
+        )
         return TimelineAnalysis(
             site_id=geometry.site_id,
             site_name=geometry.site_name,
@@ -249,8 +264,8 @@ class TimelineService:
             sample_count=len(geometry.epochs),
             max_samples=MAX_EPHEMERIS_SAMPLES,
             terrain_horizon_available=mask is not None,
-            illumination=_illumination(sun, geometry.epochs, request.step_s),
-            earth_visibility=_earth(earth, geometry.epochs, request.step_s),
+            illumination=_illumination(sun, geometry.epochs, request.step_s, request.end_utc),
+            earth_visibility=_earth(earth, geometry.epochs, request.step_s, request.end_utc),
             computed_at_utc=utc_now(),
             software=_software(),
         )

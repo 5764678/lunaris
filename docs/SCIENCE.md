@@ -374,10 +374,11 @@ separately (C4). Definitions:
 
 | Quantity | Definition |
 | --- | --- |
-| `mean_visible_disk_fraction` | Time average of f over the samples. This is the quantity comparable to the "average illumination" of published polar studies. |
-| `illuminated_fraction` (Sun) / `visible_fraction` (Earth) | Share of samples with f > 0 (any part of the disk visible). Always ≥ the mean. |
-| `fully_lit_fraction` / `fully_visible_fraction` | Share of samples with f = 1 (exact by construction: the chord sum is normalised by its own fully-visible value). |
-| Window | Maximal run of consecutive samples with f > 0. Each sample stands for [t, t + step), so a run of k samples lasts k·step, and its edges are known to ± step (`resolution_s`). |
+| `mean_visible_disk_fraction` | Time average of f, each sample weighted by its clipped interval. This is the quantity comparable to the "average illumination" of published polar studies. |
+| `illuminated_fraction` (Sun) / `visible_fraction` (Earth) | Share of the analysis window (interval-weighted) with f > 0 (any part of the disk visible). Always ≥ the mean. |
+| `fully_lit_fraction` / `fully_visible_fraction` | Share of the analysis window with f = 1 (exact by construction: the chord sum is normalised by its own fully-visible value). |
+| Sample interval | Each sample stands for [t, t + step) **clipped to the analysis window** [start, end]. With an end-inclusive grid (last epoch = end), the last sample's interval is empty: it carries weight 0. |
+| Window | Maximal run of consecutive samples with f > 0, from the first sample's epoch to the end of the last sample's clipped interval. Edges are known to ± step (`resolution_s`). Visible and hidden windows together tile [start, end] exactly (tested). |
 | Longest illumination / darkness (Sun), visibility / outage (Earth) | Longest run with f > 0 / f = 0. |
 | Censoring | A run that touches the start or end of the analysis window is **censored**: its true duration may be longer. The longest-run flags say so. A whole-window run is always censored. |
 
@@ -388,7 +389,7 @@ upper bound (D3).
 Tests: `tests/science/illumination/test_timeline.py` (definitions, censoring, leap-second
 tolerance, malformed input) and `test_analysis.py` (separate horizons, truncation
 surfaced with a count, radio-link disclaimer, and the 2026-11-04 fixture day with the real
-kernels: Sun f = 1 at all 25 samples, Earth f = 0 at all 25).
+kernels: Sun f = 1 at all 25 samples, one sunlit window 00:00 → 11-05 00:00 of exactly 86 400 s censored at both ends; Earth f = 0 at all 25).
 
 **Terrain masks.** Until S-TERRAIN's mask computation (T-15) is merged and served, results
 report the astronomical horizon only. `terrain` is null, `terrain_horizon_available` is

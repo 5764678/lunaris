@@ -273,11 +273,11 @@ Response **200** (`TimelineAnalysis`, abridged):
                    "terrain_truncated": null } ],
     "astronomical": { "horizon": "astronomical", "mean_visible_disk_fraction": 1.0,
                       "illuminated_fraction": 1.0, "fully_lit_fraction": 1.0,
-                      "longest_illumination_s": 90000.0, "longest_illumination_censored": true,
+                      "longest_illumination_s": 86400.0, "longest_illumination_censored": true,
                       "longest_darkness_s": 0.0, "longest_darkness_censored": false,
                       "resolution_s": 3600.0, "any_truncated": false,
-                      "sunlit_windows": [ { "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T01:00:00Z",
-                                            "duration_s": 90000.0, "censored_start": true, "censored_end": true } ] },
+                      "sunlit_windows": [ { "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T00:00:00Z",
+                                            "duration_s": 86400.0, "censored_start": true, "censored_end": true } ] },
     "terrain": null,
     "evidence": { "kind": "calculation", "…": "…" },
     "limitations": [ "…", "Terrain horizon not available for this site: …" ]
@@ -298,6 +298,9 @@ Response **200** (`TimelineAnalysis`, abridged):
 - Each sample carries the astronomical **and** the terrain fraction. The terrain fields are
   `null` when no horizon mask exists for the site (`terrain_horizon_available: false`;
   masks arrive with S-TERRAIN T-15).
+- Each sample's interval [t, t + step) is clipped to the requested window, so durations
+  and fractions never extend past `end_utc` (the last sample of an end-inclusive grid has
+  weight 0).
 - `*_censored: true` means the run touches the analysis window edge, so its duration is a
   lower bound. Window edges are known to ± `resolution_s`.
 - `terrain_truncated: true` means the mask ray left DEM coverage. There the terrain

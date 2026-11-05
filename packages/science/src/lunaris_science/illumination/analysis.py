@@ -63,7 +63,11 @@ COMMON_LIMITATIONS = (
 
 
 def _horizon_timeline(
-    kind: HorizonKind, horizon: HorizonLike, geometry: BodyGeometrySeries, nodes: int
+    kind: HorizonKind,
+    horizon: HorizonLike,
+    geometry: BodyGeometrySeries,
+    nodes: int,
+    window_end_et_s: float | None,
 ) -> HorizonTimeline:
     disk = visible_disk_fraction(
         geometry.azimuth_deg,
@@ -72,7 +76,9 @@ def _horizon_timeline(
         horizon,
         nodes=nodes,
     )
-    summary = summarize(geometry.epochs_et_s, disk.visible_fraction, disk.truncated)
+    summary = summarize(
+        geometry.epochs_et_s, disk.visible_fraction, disk.truncated, window_end_s=window_end_et_s
+    )
     return HorizonTimeline(horizon=kind, disk=disk, summary=summary)
 
 
@@ -94,19 +100,21 @@ def body_timeline(
     terrain: HorizonMask | None = None,
     *,
     dem_source: SourceReference | None = None,
+    window_end_et_s: float | None = None,
     nodes: int = DEFAULT_NODES,
 ) -> BodyTimeline:
     """Astronomical and (optionally) terrain timelines for one body's geometry series.
 
     ``dem_source`` is the provenance of the DEM the mask came from (dataset id, URL and
     SHA-256), resolved by the caller from the dataset registry; without it, the source is
-    built from the mask's own dataset id and checksum (no URL).
+    built from the mask's own dataset id and checksum (no URL). ``window_end_et_s`` is the
+    end of the analysis window (ET); it defaults to the last epoch (end-inclusive grid).
     """
     astronomical = _horizon_timeline(
-        HorizonKind.ASTRONOMICAL, ASTRONOMICAL_HORIZON, geometry, nodes
+        HorizonKind.ASTRONOMICAL, ASTRONOMICAL_HORIZON, geometry, nodes, window_end_et_s
     )
     terrain_timeline = (
-        _horizon_timeline(HorizonKind.TERRAIN, terrain, geometry, nodes)
+        _horizon_timeline(HorizonKind.TERRAIN, terrain, geometry, nodes, window_end_et_s)
         if terrain is not None
         else None
     )
