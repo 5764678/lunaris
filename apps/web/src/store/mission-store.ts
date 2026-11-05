@@ -12,6 +12,12 @@ import { DEFAULT_WINDOW_MS, MINUTE_MS, clamp } from "@/lib/time/time";
 
 export type ViewPreset = "south-polar" | "south-pole" | "near-side" | "far-side";
 
+/** Which 3D scene the viewport shows: the global context globe or the south-pole terrain (D5). */
+export type SceneMode = "globe" | "terrain";
+
+/** Camera distance (lunar radii) the globe flies down to before handing over to the terrain. */
+export const TERRAIN_DESCENT_DISTANCE = 1.15;
+
 export interface LayerVisibility {
   graticule: boolean;
   sites: boolean;
@@ -26,8 +32,12 @@ export interface MissionState {
   /** Simulated seconds per real second. */
   rate: number;
   selectedSiteId: string | null;
-  /** Camera preset request; `requestId` changes on every request so repeats re-trigger. */
-  view: { preset: ViewPreset; requestId: number };
+  /** Camera preset request; `requestId` changes on every request so repeats re-trigger.
+   *  `distance` overrides the preset's distance (used for the descent to the terrain). */
+  view: { preset: ViewPreset; requestId: number; distance?: number };
+  scene: SceneMode;
+  /** `descending`: the globe camera is flying down to the pole before the terrain mounts. */
+  sceneTransition: "idle" | "descending";
   layers: LayerVisibility;
 
   initializeTime: (nowMs: number) => void;
@@ -41,6 +51,12 @@ export interface MissionState {
   selectSite: (siteId: string | null) => void;
   requestView: (preset: ViewPreset) => void;
   toggleLayer: (layer: keyof LayerVisibility) => void;
+  /** Globe → pole: fly the globe camera down to the pole, then show the terrain. */
+  enterTerrain: () => void;
+  /** Called by the viewport when the descent has finished. */
+  completeDescent: () => void;
+  /** Back to the globe, framing the south polar region. */
+  exitTerrain: () => void;
 }
 
 function windowFrom(nowMs: number) {
@@ -56,6 +72,8 @@ export const useMissionStore = create<MissionState>()((set, get) => ({
   rate: 3_600,
   selectedSiteId: null,
   view: { preset: "south-polar", requestId: 0 },
+  scene: "globe",
+  sceneTransition: "idle",
   layers: { graticule: true, sites: true, labels: true },
 
   initializeTime: (nowMs) => {
@@ -91,4 +109,23 @@ export const useMissionStore = create<MissionState>()((set, get) => ({
   selectSite: (selectedSiteId) => set({ selectedSiteId }),
   requestView: (preset) => set({ view: { preset, requestId: get().view.requestId + 1 } }),
   toggleLayer: (layer) => set({ layers: { ...get().layers, [layer]: !get().layers[layer] } }),
+  enterTerrain: () => {
+    const { scene, sceneTransition, view } = get();
+    if (scene === "terrain" || sceneTransition === "descending") return;
+    set({
+      sceneTransition: "descending",
+      view: { preset: "south-pole", requestId: view.requestId + 1, distance: TERRAIN_DESCENT_DISTANCE },
+    });
+  },
+  completeDescent: () => {
+    if (get().sceneTransition === "descending") set({ scene: "terrain", sceneTransition: "idle" });
+  },
+  exitTerrain: () => {
+    const { view } = get();
+    set({
+      scene: "globe",
+      sceneTransition: "idle",
+      view: { preset: "south-polar", requestId: view.requestId + 1 },
+    });
+  },
 }));

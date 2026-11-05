@@ -28,9 +28,11 @@ export class LabelRegistry {
   private readonly anchors = new Map<string, Anchor>();
   private invalidate: (() => void) | null = null;
 
-  register(id: string, position: Vec3, element: HTMLElement, offset: LabelAnchorOffset): void {
+  /** `normal` defaults to the radial direction of `position` (globe: scene origin = Moon centre). */
+  register(id: string, position: Vec3, element: HTMLElement, offset: LabelAnchorOffset, normal?: Vec3): void {
     const point = new Vector3(...position);
-    this.anchors.set(id, { position: point, normal: point.clone().normalize(), element, offset });
+    const up = normal ? new Vector3(...normal).normalize() : point.clone().normalize();
+    this.anchors.set(id, { position: point, normal: up, element, offset });
     this.invalidate?.();
   }
 

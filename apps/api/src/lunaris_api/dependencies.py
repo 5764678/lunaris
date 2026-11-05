@@ -13,7 +13,7 @@ from lunaris_api.db.repositories import SqlAlchemySiteRepository
 from lunaris_api.services.catalog import CatalogService
 from lunaris_api.services.datasets import DatasetService
 from lunaris_api.services.sites import SiteService
-from lunaris_api.services.terrain import TerrainSceneService
+from lunaris_api.services.terrain import SiteTerrainService, TerrainSceneService
 from lunaris_api.settings import Settings
 from lunaris_data.catalogs.sites import load_site_catalog
 
@@ -49,6 +49,12 @@ def get_terrain_scene_service(request: Request) -> TerrainSceneService:
 
 TerrainSceneServiceDep = Annotated[TerrainSceneService, Depends(get_terrain_scene_service)]
 
+
+def get_site_terrain_service(request: Request) -> SiteTerrainService:
+    return SiteTerrainService(request.app.state.dataset_registry, request.app.state.data_layout)
+
+
+SiteTerrainServiceDep = Annotated[SiteTerrainService, Depends(get_site_terrain_service)]
 # ── Ephemeris (S-GEOMETRY, T-22) ────────────────────────────────────────────
 from lunaris_api.services.ephemeris import EphemerisService  # noqa: E402
 

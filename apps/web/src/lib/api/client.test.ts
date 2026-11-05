@@ -142,3 +142,80 @@ describe("createApiClient", () => {
     await expect(pending).rejects.toBeInstanceOf(DOMException);
   });
 });
+
+describe("terrain scene (C3)", () => {
+  // SYNTHETIC metadata shaped like the API's TerrainSceneMetadata; a 2×2 grid.
+  const META = {
+    scene_id: "south-pole",
+    title: "synthetic",
+    frame: "MOON_ME",
+    width: 2,
+    height: 2,
+    origin_moon_me_m: [0, 0, -1737400],
+    height_reference_radius_m: 1737400,
+    height_min_m: -1,
+    height_max_m: 1,
+    vertex_spacing_m: 100,
+    half_extent_m: 50,
+    center_latitude_deg: -90,
+    center_longitude_deg: 0,
+    resampling: "bilinear",
+    method: "synthetic",
+    nodata: "NaN",
+    nodata_vertex_count: 0,
+    layout: {
+      dtype: "float32",
+      byte_order: "little",
+      order: "row-major",
+      values_per_vertex: 4,
+      components: ["x_m", "y_m", "z_m", "height_m"],
+      row_direction: "row 0 toward 0° E",
+      byte_length: 64,
+    },
+    dem: { sha256: "a".repeat(64) },
+    evidence: { kind: "derived_product" },
+    etag: '"e"',
+    data_url: "/api/v1/terrain/scenes/south-pole/data?grid_size=2",
+  };
+
+  it("fetches metadata with the grid size and checks its layout", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse(META));
+    const client = clientWith(fetchMock as unknown as typeof fetch);
+    const result = await client.terrainScene("south-pole", 2);
+    expect(result.data.width).toBe(2);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/api/v1/terrain/scenes/south-pole?grid_size=2",
+      expect.anything(),
+    );
+    const wrong = clientWith((async () =>
+      jsonResponse({ ...META, layout: { ...META.layout, byte_length: 63 } })) as unknown as typeof fetch);
+    await expect(wrong.terrainScene("south-pole", 2)).rejects.toMatchObject({ kind: "invalid_response" });
+  });
+
+  it("downloads the vertex buffer with ETag revalidation and checks its length", async () => {
+    const body = new Uint8Array(64);
+    const fetchMock = vi.fn(async () => new Response(body, { status: 200 }));
+    const client = clientWith(fetchMock as unknown as typeof fetch);
+    const result = await client.terrainSceneData(META as never);
+    expect(result.data.byteLength).toBe(64);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/api/v1/terrain/scenes/south-pole/data?grid_size=2",
+      expect.objectContaining({ cache: "no-cache" }),
+    );
+    const short = clientWith((async () => new Response(new Uint8Array(60))) as unknown as typeof fetch);
+    await expect(short.terrainSceneData(META as never)).rejects.toMatchObject({ kind: "invalid_response" });
+  });
+
+  it("parses an error envelope from the data endpoint", async () => {
+    const client = clientWith((async () =>
+      jsonResponse(
+        { error: { code: "not_found", message: "DEM not acquired", details: [], request_id: "r" } },
+        404,
+      )) as unknown as typeof fetch);
+    await expect(client.terrainSceneData(META as never)).rejects.toMatchObject({
+      kind: "http",
+      status: 404,
+      message: "DEM not acquired",
+    });
+  });
+});
