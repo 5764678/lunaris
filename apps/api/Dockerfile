@@ -3,6 +3,10 @@
 #   docker build -f apps/api/Dockerfile -t lunaris-api .
 FROM python:3.12-slim AS runtime
 
+# rasterio/GDAL wheels require the system Expat shared library at runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends libexpat1 \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
