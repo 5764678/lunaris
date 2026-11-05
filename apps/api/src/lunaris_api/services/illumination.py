@@ -9,6 +9,7 @@ report the astronomical horizon only and say so (``terrain_horizon_available: fa
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Protocol
 
 from lunaris_api import __version__
 from lunaris_api.schemas.ephemeris import MAX_EPHEMERIS_SAMPLES
@@ -28,6 +29,8 @@ from lunaris_api.schemas.visibility import (
     VisibilityWindow,
 )
 from lunaris_api.services.ephemeris import EphemerisService, evidence_schema, observer_schema
+from lunaris_api.services.horizon import DEFAULT_OBSERVER_HEIGHT_M, OutOfCoverageError
+from lunaris_api.services.terrain import DatasetUnavailableError
 from lunaris_data.registry import DatasetRegistry
 from lunaris_data.runtime import data_runtime
 from lunaris_data.store import utc_now
@@ -225,34 +228,58 @@ def _software() -> SoftwareProvenance:
     )
 
 
+class HorizonMaskProvider(Protocol):
+    """Source of C1 horizon masks: S-TERRAIN's ``HorizonMaskService`` (file-cached)."""
+
+    def get_site_mask(
+        self, site_id: str, *, observer_height_m: float = DEFAULT_OBSERVER_HEIGHT_M
+    ) -> HorizonMask: ...
+
+
 class TimelineService:
     """Illumination and Earth-visibility timelines (contract C4)."""
 
-    def __init__(self, ephemeris: EphemerisService) -> None:
+    def __init__(
+        self, ephemeris: EphemerisService, masks: HorizonMaskProvider | None = None
+    ) -> None:
         self._ephemeris = ephemeris
+        self._masks = masks
 
-    def _terrain_mask(self, site_id: str) -> HorizonMask | None:
-        """Horizon mask for the site. None until S-TERRAIN's mask service (T-15) exists."""
-        del site_id
-        return None
+    def _terrain_mask(self, site_id: str) -> tuple[HorizonMask | None, str | None]:
+        """The site's horizon mask, or None and the reason none is available."""
+        if self._masks is None:
+            return None, "no horizon mask provider is configured"
+        try:
+            return self._masks.get_site_mask(site_id), None
+        except (DatasetUnavailableError, OutOfCoverageError) as exc:
+            return None, exc.message
 
     def timeline(self, request: TimelineRequest) -> TimelineAnalysis:
+        self._ephemeris.site(request.site_id)  # 404 before any terrain work
+        mask, unavailable_reason = self._terrain_mask(request.site_id)
         geometry = self._ephemeris.compute_geometry(
-            request.site_id, request.start_utc, request.end_utc, request.step_s, location="body"
+            request.site_id,
+            request.start_utc,
+            request.end_utc,
+            request.step_s,
+            location="body",
+            surface_height_m=mask.surface_height_m if mask is not None else None,
+            observer_height_m=mask.observer_height_m if mask is not None else 0.0,
         )
-        mask = self._terrain_mask(geometry.site_id)
         source = dem_source(mask, self._ephemeris.registry) if mask is not None else None
         sun = body_timeline(
             geometry.series[Body.SUN],
             mask,
             dem_source=source,
             window_end_et_s=geometry.window_end_et_s,
+            terrain_unavailable_reason=unavailable_reason,
         )
         earth = body_timeline(
             geometry.series[Body.EARTH],
             mask,
             dem_source=source,
             window_end_et_s=geometry.window_end_et_s,
+            terrain_unavailable_reason=unavailable_reason,
         )
         return TimelineAnalysis(
             site_id=geometry.site_id,
@@ -271,4 +298,4 @@ class TimelineService:
         )
 
 
-__all__ = ["TimelineService", "dem_source"]
+__all__ = ["HorizonMaskProvider", "TimelineService", "dem_source"]
