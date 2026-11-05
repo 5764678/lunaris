@@ -12,6 +12,7 @@ import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { useMissionStore } from "@/store/mission-store";
 
 import { DataRow, PanelSection } from "./panel-section";
+import { SiteOriginBadge, TILE_CENTRE_NOTE } from "./site-origin";
 
 const NOT_COMPUTED_ROWS: { label: string; milestone: string; detail: string }[] = [
   { label: "Height", milestone: "M02", detail: "Sampled from a LOLA DEM in Milestone 02." },
@@ -41,11 +42,7 @@ export function SelectedSite() {
   const km = (m: number) => (m / 1000).toFixed(3);
 
   return (
-    <PanelSection
-      id="selected-site"
-      title="Selected site"
-      aside={<EvidenceBadge kind="assumption" label="USER" detail="Coordinates entered by a user." />}
-    >
+    <PanelSection id="selected-site" title="Selected site" aside={<SiteOriginBadge site={site} />}>
       <p className="mb-2 truncate text-sm text-foreground" data-testid="selected-site-name">
         {site.name}
       </p>
@@ -53,6 +50,16 @@ export function SelectedSite() {
         <DataRow label="Latitude">{formatLatitude(site.coordinate.latitude_deg, 4)}</DataRow>
         <DataRow label="Longitude">{formatLongitude(site.coordinate.longitude_deg, 4)}</DataRow>
         <DataRow label="Frame">{site.coordinate.frame}</DataRow>
+        {site.origin === "published" && (
+          <DataRow label="Source">
+            <span
+              className="min-w-0 text-2xs whitespace-normal text-muted-foreground"
+              data-testid="selected-site-source"
+            >
+              {site.reference ?? "Published catalogue"} · {TILE_CENTRE_NOTE}
+            </span>
+          </DataRow>
+        )}
         <DataRow label="Body-fixed (km)">
           <EvidenceBadge
             kind="calculation"

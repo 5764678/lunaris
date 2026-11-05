@@ -71,6 +71,22 @@ EphemerisServiceDep = Annotated[EphemerisService, Depends(get_ephemeris_service)
 __all__ += ["EphemerisServiceDep"]
 
 
+# ── Horizon masks (S-TERRAIN, T-16) ──────────────────────────────────────────
+from lunaris_api.services.horizon import HorizonMaskService  # noqa: E402
+
+
+def get_horizon_mask_service(
+    request: Request, sites: Annotated[SiteService, Depends(get_site_service)]
+) -> HorizonMaskService:
+    return HorizonMaskService(
+        request.app.state.dataset_registry, request.app.state.data_layout, sites
+    )
+
+
+HorizonMaskServiceDep = Annotated[HorizonMaskService, Depends(get_horizon_mask_service)]
+__all__ += ["HorizonMaskServiceDep"]
+
+
 def get_catalog_service(
     sites: Annotated[SiteService, Depends(get_site_service)],
 ) -> CatalogService:

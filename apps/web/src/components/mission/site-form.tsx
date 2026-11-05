@@ -117,8 +117,8 @@ export function SiteForm({ disabled }: { disabled?: boolean }) {
         </p>
       )}
       <p className="text-3xs leading-relaxed text-dim">
-        Planetocentric latitude, east longitude (−180…360 accepted, stored 0…360), frame MOON_ME. Coordinates
-        are user-defined; LUNARIS ships no curated site list until each site can be cited.
+        Planetocentric latitude, east longitude (−180…360 accepted, stored 0…360), frame MOON_ME. Sites added
+        here are user-defined (USER); cited sites come only from the published catalogue (CITED).
       </p>
     </form>
   );

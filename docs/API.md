@@ -270,6 +270,32 @@ Response **200** (`SiteEphemeris`, abridged):
 | 503 | `kernels_unavailable` | Kernels not acquired or failing SHA-256 verification; run `uv run lunaris-data acquire naif-generic-kernels-lunar` |
 >>>>>>> origin/main
 
+### `GET /api/v1/sites/{site_id}/horizon`
+
+Terrain horizon mask of a registered site (T-16; owner S-TERRAIN). It is computed with
+`compute_horizon_mask` from LOLA `LDEM_75S_240M`: 0.25° step, 200 km range, great-circle
+ray march with curvature (docs/SCIENCE.md §5.3).
+
+Query: `observer_height_m` (default 2, max 100; the default is stated as an assumption).
+The response carries the C1 fields as lists of 1440 values: `azimuth_deg`,
+`elevation_deg` and `truncated`. Also returned: `truncated_count`, `max_range_m`,
+`surface_height_m`, `method`, `dem` (dataset, SHA-256, resolution, URL, citation),
+`evidence` (`calculation` on a `derived_product` source) and `limitations`. When any ray
+leaves coverage before 200 km (sites north of about 82° S), the first limitation states
+how many azimuths are truncated (lower bounds).
+
+Masks are computed once and cached as files under
+`data/processed/lola-ldem-75s-240m/horizon-masks/`. The cache key covers the DEM SHA-256,
+the site coordinates, the observer height, the step, the range and the method version; a
+hit never recomputes. Measured with the real DEM: 2.0 s for the first request (including
+reading and hashing the DEM), 0.01 s from the cache, about 49 kB of JSON. **404** for an
+unknown site, **422** `out_of_coverage` (no LDEM height at the site, about north of 75° S)
+or an invalid height, **503** `dataset_unavailable`.
+
+In-process interface for other services (`lunaris_api.services.horizon`):
+`HorizonMaskService.get_site_mask(site_id, *, observer_height_m=2.0)` and
+`get_mask(*, latitude_deg, longitude_deg, observer_height_m=2.0)`, both returning
+`HorizonMask`; the dependency provider is `HorizonMaskServiceDep`.
 ### `GET /api/v1/catalog/sites` · `POST /api/v1/catalog/sites/{catalog_site_id}/register` · `POST /api/v1/catalog/demo-trio/register`
 
 The cited south-pole candidate-site catalogue (T-03; data from T-02,
