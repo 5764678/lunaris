@@ -21,6 +21,11 @@ import type {
   components,
 } from "@lunaris/shared-types";
 
+/** T-17 site comparison (generated contract). */
+export type SiteComparison = components["schemas"]["SiteComparison"];
+export type CompareCell = components["schemas"]["CompareCell"];
+export type CompareRow = components["schemas"]["CompareRow"];
+
 /** C4 timeline analysis (T-24, generated contract). */
 export type TimelineAnalysis = components["schemas"]["TimelineAnalysis"];
 
@@ -200,6 +205,13 @@ const isTimelineAnalysis: Guard<TimelineAnalysis> = (v): v is TimelineAnalysis =
   isObject(v.earth_visibility) &&
   Array.isArray(v.earth_visibility.samples);
 
+const isSiteComparison: Guard<SiteComparison> = (v): v is SiteComparison =>
+  isObject(v) &&
+  Array.isArray(v.columns) &&
+  v.columns.every((c) => isObject(c) && typeof c.key === "string" && typeof c.unit === "string") &&
+  Array.isArray(v.rows) &&
+  v.rows.every((r) => isObject(r) && typeof r.site_id === "string" && typeof r.name === "string");
+
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, "");
@@ -311,6 +323,12 @@ export function createApiClient(options: ApiClientOptions) {
       }),
     deleteSite: (siteId: string) =>
       request<undefined>("DELETE", `/api/v1/sites/${encodeURIComponent(siteId)}`),
+    siteComparison: (siteIds: readonly string[], signal?: AbortSignal) =>
+      request<SiteComparison>(
+        "GET",
+        `/api/v1/analysis/site-comparison?${new URLSearchParams({ site_ids: siteIds.join(",") }).toString()}`,
+        { signal, guard: isSiteComparison },
+      ),
     analysisTimeline: (
       siteId: string,
       window: { startUtc: string; endUtc: string; stepS: number },
