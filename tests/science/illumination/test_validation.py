@@ -18,6 +18,7 @@ import pytest
 
 from lunaris_science.geometry import Body
 from lunaris_science.illumination.analysis import body_timeline
+from lunaris_science.illumination.timeline import sample_weights
 from lunaris_science.illumination.validation import (
     PublishedReference,
     ValidationError,
@@ -113,7 +114,7 @@ def test_comparison_states_differences_and_judges_against_the_local_spread() -> 
         product_url="https://example.invalid/product",
         product_sha256="3" * 64,
     )
-    # Synthetic Sun crossing a 0.5° terrain horizon: visible in 22 of 51 samples.
+    # Synthetic Sun crossing a 0.5° terrain horizon.
     elevation = np.linspace(-1.0, 1.5, 51)
     timeline = body_timeline(_geometry(Body.SUN, elevation, 0.27), _mask(0.5))
     assert timeline.terrain is not None
@@ -125,7 +126,11 @@ def test_comparison_states_differences_and_judges_against_the_local_spread() -> 
         dem_resolution_m=240.0,
         observer_height_m=2.0,
     )
-    expected = float(np.mean(timeline.terrain.disk.visible_fraction > 0.0))
+    # Interval-weighted share of the window (the last sample of an end-inclusive grid
+    # weighs 0; docs/SCIENCE.md §5.3).
+    weights = sample_weights(timeline.geometry.epochs_et_s)
+    visible = timeline.terrain.disk.visible_fraction > 0.0
+    expected = float(np.sum(weights * visible) / np.sum(weights))
     assert result.computed_value == expected
     assert result.difference == pytest.approx(expected - 0.5)
     assert result.within_local_spread is (0.4 <= expected <= 0.6)
