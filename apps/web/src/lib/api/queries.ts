@@ -16,6 +16,8 @@ export const queryKeys = {
   runtime: ["system", "runtime"] as const,
   datasets: ["datasets"] as const,
   sites: ["sites"] as const,
+  ephemeris: (siteId: string, startMs: number, endMs: number, stepS: number) =>
+    ["sites", siteId, "ephemeris", startMs, endMs, stepS] as const,
   terrainScene: (sceneId: string, gridSize: number) => ["terrain", "scene", sceneId, gridSize] as const,
   catalog: ["catalog", "sites"] as const,
 };
@@ -130,6 +132,33 @@ export function useDeleteSite() {
     mutationFn: (siteId: string) => api.deleteSite(siteId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sites }),
   });
+}
+
+/** Sample spacing for the timeline lanes: 30 d × 1 h = 721 samples per body (cap 10 000). */
+export const EPHEMERIS_STEP_S = 3_600;
+
+/** C2 Sun/Earth geometry for a site over the analysis window (SPICE, computed by the API). */
+export function useSiteEphemeris(siteId: string | null, startMs: number | null, endMs: number | null) {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.ephemeris(siteId ?? "", startMs ?? 0, endMs ?? 0, EPHEMERIS_STEP_S),
+      enabled: siteId !== null && startMs !== null && endMs !== null,
+      staleTime: Infinity,
+      retry: 1,
+      queryFn: ({ signal }) =>
+        api
+          .siteEphemeris(
+            siteId!,
+            {
+              startUtc: new Date(startMs!).toISOString(),
+              endUtc: new Date(endMs!).toISOString(),
+              stepS: EPHEMERIS_STEP_S,
+            },
+            signal,
+          )
+          .then((r) => r.data),
+    }),
+  );
 }
 
 /**

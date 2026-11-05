@@ -14,7 +14,7 @@ const DATA_DEPENDENCY_ALIASES: Record<string, string[]> = {
 
 /**
  * For each analysis module: implementation status and whether its input datasets are in
- * the local store. Makes it explicit why no analysis values are shown.
+ * the local store. Only modules whose output is actually served and shown are "available".
  */
 export function AnalysisReadiness() {
   const datasets = useDatasetsQuery();
@@ -47,9 +47,22 @@ export function AnalysisReadiness() {
                   {datasets.isError && <span className="font-mono text-3xs text-dim">inputs unknown</span>}
                 </p>
               </div>
-              <span className="hatch rounded-sm border border-hairline px-1.5 py-px font-mono text-3xs uppercase tracking-wider text-dim">
-                {module.milestone} · planned
-              </span>
+              {module.status === "available" ? (
+                <span
+                  className="rounded-sm border border-ev-model/40 bg-ev-model/10 px-1.5 py-px font-mono text-3xs uppercase tracking-wider text-ev-model"
+                  title={module.availableIn}
+                  data-testid={`readiness-${module.id}`}
+                >
+                  {module.milestone} · available
+                </span>
+              ) : (
+                <span
+                  className="hatch rounded-sm border border-hairline px-1.5 py-px font-mono text-3xs uppercase tracking-wider text-dim"
+                  data-testid={`readiness-${module.id}`}
+                >
+                  {module.milestone} · planned
+                </span>
+              )}
             </li>
           );
         })}

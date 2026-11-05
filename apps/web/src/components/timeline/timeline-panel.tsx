@@ -1,15 +1,18 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Pause, Play, RotateCcw } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DAY_MS, HOUR_MS, PLAYBACK_RATES, formatOffset, formatUtc } from "@/lib/time/time";
+import { describeError } from "@/lib/api/client";
+import { useSitesQuery, useSiteEphemeris } from "@/lib/api/queries";
+import { SeriesError, seriesFromEphemeris } from "@/lib/timeline/series";
 import { useMissionStore } from "@/store/mission-store";
 
-import { TimelineTrack } from "./timeline-track";
+import { TimelineTrack, type LaneData } from "./timeline-track";
 
 /** Drives playback with requestAnimationFrame while playing. */
 function usePlayback() {
@@ -67,6 +70,7 @@ export function TimelinePanel() {
   useEffect(() => initializeTime(Date.now()), [initializeTime]);
   usePlayback();
   const ready = epochMs !== null && startMs !== null && endMs !== null;
+  const { lanes, geometryNote, siteName } = useGeometryLanes(startMs, endMs);
 
   return (
     <section aria-label="Timeline" className="border-t border-border bg-panel px-4 pt-2.5 pb-3">
@@ -135,11 +139,32 @@ export function TimelinePanel() {
           </ToggleGroup>
         </div>
       </div>
-      <TimelineTrack />
-      <p className="mt-2 text-3xs text-dim">
-        The epoch is the analysis time for future geometry modules. No time series is computed in Milestone
-        01; the lanes above are intentionally empty.
+      <TimelineTrack lanes={lanes} geometryNote={geometryNote} />
+      <p className="mt-2 text-3xs text-dim" data-testid="timeline-note">
+        {siteName
+          ? `Sun and Earth elevation for ${siteName}: SPICE apparent direction (CN+S) above the local horizontal plane of the 1737.4 km sphere, hourly. Astronomical horizon only (dotted line); the terrain horizon arrives with the illumination lanes.`
+          : "Select a candidate site to compute its Sun and Earth elevation over the window."}
       </p>
     </section>
   );
+}
+
+/** Sun/Earth elevation lanes for the selected site (C2), or the reason they are empty. */
+function useGeometryLanes(startMs: number | null, endMs: number | null) {
+  const selectedSiteId = useMissionStore((s) => s.selectedSiteId);
+  const site = useSitesQuery().data?.sites.find((s) => s.id === selectedSiteId) ?? null;
+  const query = useSiteEphemeris(site?.id ?? null, startMs, endMs);
+  return useMemo((): { lanes: LaneData; geometryNote: string; siteName: string | null } => {
+    if (!site) return { lanes: {}, geometryNote: "Not computed · select a site", siteName: null };
+    if (query.isError) {
+      return { lanes: {}, geometryNote: `Not computed · ${describeError(query.error)}`, siteName: site.name };
+    }
+    if (!query.data) return { lanes: {}, geometryNote: "Computing · SPICE geometry", siteName: site.name };
+    try {
+      return { lanes: seriesFromEphemeris(query.data), geometryNote: "", siteName: site.name };
+    } catch (error) {
+      const reason = error instanceof SeriesError ? error.message : "invalid ephemeris";
+      return { lanes: {}, geometryNote: `Not computed · ${reason}`, siteName: site.name };
+    }
+  }, [site, query.isError, query.error, query.data]);
 }
