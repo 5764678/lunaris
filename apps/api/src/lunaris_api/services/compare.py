@@ -22,9 +22,11 @@ from lunaris_api.errors import ApiError
 from lunaris_api.schemas.common import ErrorDetail, EvidenceSchema, SourceReferenceSchema
 from lunaris_api.schemas.compare import CompareCell, CompareColumn, CompareRow, SiteComparison
 from lunaris_api.schemas.ephemeris import MAX_EPHEMERIS_SAMPLES
+from lunaris_api.schemas.illumination import TimelineRequest
 from lunaris_api.schemas.sites import CandidateSite
 from lunaris_api.schemas.terrain import SiteTerrainResponse
 from lunaris_api.services.horizon import HorizonMaskService
+from lunaris_api.services.illumination import TimelineService
 from lunaris_api.services.sites import SiteService
 from lunaris_api.services.terrain import SiteTerrainService
 from lunaris_science.geometry import sample_count
@@ -376,6 +378,80 @@ def _terrain_cell(
     )
 
 
+def timeline_provider(timelines: TimelineService) -> IlluminationProvider:
+    """Illumination/Earth cells from S-GEOMETRY's TimelineService (terrain horizon only).
+
+    While the timeline has no terrain horizon for the site, the cells stay null with
+    :data:`ILLUMINATION_UNAVAILABLE`; astronomical-only numbers are not substituted.
+    """
+
+    def provide(
+        site_id: str, start: datetime, end: datetime, step_s: float, observer_height_m: float
+    ) -> dict[str, CompareCell]:
+        del observer_height_m  # the timeline places its observer itself (C2)
+        analysis = timelines.timeline(
+            TimelineRequest(site_id=site_id, start_utc=start, end_utc=end, step_s=step_s)
+        )
+        sun, earth = analysis.illumination.terrain, analysis.earth_visibility.terrain
+        units = {c.key: c.unit for c in COLUMNS}
+        if not analysis.terrain_horizon_available or sun is None or earth is None:
+            return {k: _null(units[k], ILLUMINATION_UNAVAILABLE) for k in ILLUMINATION_KEYS}
+        period = (
+            f"Period {start.isoformat()} to {end.isoformat()} at {step_s:g} s steps "
+            f"({analysis.sample_count} samples); published values use other periods."
+        )
+        sun_lim = [period, *analysis.illumination.limitations]
+        earth_lim = [period, *analysis.earth_visibility.limitations]
+
+        def cell(
+            value: float, key: str, evidence: EvidenceSchema, lim: list[str], censored: bool
+        ) -> CompareCell:
+            extra = ["Longest run touches the window edge: a lower bound."] if censored else []
+            return CompareCell(
+                value=value, unit=units[key], evidence=evidence, limitations=[*lim, *extra]
+            )
+
+        return {
+            "sun_mean_visible_disk_fraction": cell(
+                sun.mean_visible_disk_fraction,
+                "sun_mean_visible_disk_fraction",
+                analysis.illumination.evidence,
+                sun_lim,
+                False,
+            ),
+            "sun_illuminated_fraction": cell(
+                sun.illuminated_fraction,
+                "sun_illuminated_fraction",
+                analysis.illumination.evidence,
+                sun_lim,
+                False,
+            ),
+            "sun_longest_hidden_s": cell(
+                sun.longest_darkness_s,
+                "sun_longest_hidden_s",
+                analysis.illumination.evidence,
+                sun_lim,
+                sun.longest_darkness_censored,
+            ),
+            "earth_visible_fraction": cell(
+                earth.visible_fraction,
+                "earth_visible_fraction",
+                analysis.earth_visibility.evidence,
+                earth_lim,
+                False,
+            ),
+            "earth_longest_outage_s": cell(
+                earth.longest_outage_s,
+                "earth_longest_outage_s",
+                analysis.earth_visibility.evidence,
+                earth_lim,
+                earth.longest_outage_censored,
+            ),
+        }
+
+    return provide
+
+
 __all__ = [
     "COLUMNS",
     "DEFAULT_FOOTPRINT_RADIUS_M",
@@ -383,4 +459,5 @@ __all__ = [
     "MAX_COMPARE_SITES",
     "CompareService",
     "IlluminationProvider",
+    "timeline_provider",
 ]

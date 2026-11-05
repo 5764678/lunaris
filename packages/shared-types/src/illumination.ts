@@ -1,54 +1,30 @@
-import type { IsoUtcTimestamp, TimeWindow } from "./conventions";
-import type { Evidence } from "./api";
-import type { DatasetProvenance, SoftwareProvenance } from "./provenance";
-
 /**
- * Illumination model used for a result.
- * - `geometric`: Sun above the local horizontal plane of the reference sphere.
- * - `terrain_horizon`: Sun above the terrain horizon derived from a DEM, accounting for
- *   the finite solar disk.
- */
-export type IlluminationModel = "geometric" | "terrain_horizon";
-
-/**
- * Solar geometry at one epoch as seen from a site.
+ * Illumination results (contract C4), served by `POST /api/v1/analysis/timeline`.
  *
- * @status draft — contract for Milestones 03/04.
+ * These are aliases of the generated OpenAPI types: the Pydantic schemas in
+ * `apps/api/src/lunaris_api/schemas/illumination.py` are the single source of truth.
+ * Definitions of every summary statistic: docs/SCIENCE.md §5.3.
  */
-export interface SolarGeometrySample {
-  epoch_utc: IsoUtcTimestamp;
-  azimuth_deg: number;
-  elevation_deg: number;
-  /** Apparent angular radius of the solar disk, degrees. */
-  solar_radius_deg: number;
-  /** Terrain horizon elevation at the solar azimuth, degrees (terrain model only). */
-  horizon_elevation_deg: number | null;
-  /** Fraction of the solar disk above the horizon, [0, 1]. */
-  visible_disk_fraction: number;
-}
+import type { components } from "./generated/lunaris-api";
+
+type Schemas = components["schemas"];
+
+/** Which horizon a summary is computed against. Both are always reported separately. */
+export type HorizonKind = Schemas["IlluminationSummary"]["horizon"];
+
+/** Solar geometry and visible disk fractions at one epoch. */
+export type SolarGeometrySample = Schemas["SolarGeometrySample"];
 
 /**
- * Illumination time series and summary for one site over a window.
- *
- * @status draft — contract for Milestone 04.
+ * Summary against one horizon. `mean_visible_disk_fraction` (time average of the disk
+ * fraction) is the quantity comparable to published polar illumination studies;
+ * `illuminated_fraction` is the share of samples with any part of the disk visible.
  */
-export interface IlluminationResult {
-  site_id: string;
-  model: IlluminationModel;
-  window: TimeWindow;
-  time_step_s: number;
-  samples: SolarGeometrySample[];
-  summary: {
-    /** Fraction of samples with any part of the solar disk visible, [0, 1]. */
-    illuminated_fraction: number;
-    longest_darkness_s: number;
-    longest_illumination_s: number;
-  };
-  ephemeris: DatasetProvenance;
-  /** Present for `terrain_horizon` results. */
-  dem: DatasetProvenance | null;
-  evidence: Evidence;
-  limitations: string[];
-  computed_at_utc: IsoUtcTimestamp;
-  software: SoftwareProvenance;
-}
+export type IlluminationSummary = Schemas["IlluminationSummary"];
+
+/** Illumination time series and summaries for one site; `terrain` is null without a mask. */
+export type IlluminationResult = Schemas["IlluminationResult"];
+
+/** Request and response of the timeline analysis endpoint. */
+export type TimelineRequest = Schemas["TimelineRequest"];
+export type TimelineAnalysis = Schemas["TimelineAnalysis"];

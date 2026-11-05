@@ -9,6 +9,7 @@ from lunaris_api.routers import (
     ephemeris,
     health,
     horizon,
+    illumination,
     sites,
     system,
     terrain,
@@ -24,5 +25,6 @@ api_v1.include_router(terrain.router)
 api_v1.include_router(terrain.site_router)
 api_v1.include_router(horizon.router)
 api_v1.include_router(ephemeris.router)
+api_v1.include_router(illumination.router)
 
 __all__ = ["api_v1", "health"]

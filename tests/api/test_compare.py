@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -34,8 +35,9 @@ def compare_client(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> Itera
     with TestClient(create_app(settings)) as client:
         _install_synthetic(client, settings.data_dir)
         synthetic_ldem = client.app.state.dataset_registry.get("lola-ldem-75s-240m")  # type: ignore[attr-defined]
-        pgda = DatasetRegistry.load_builtin().get("pgda-lola-20mpp-80s")
-        client.app.state.dataset_registry = DatasetRegistry([synthetic_ldem, pgda])  # type: ignore[attr-defined]
+        builtin = DatasetRegistry.load_builtin()
+        others = [builtin.get("pgda-lola-20mpp-80s"), builtin.get("naif-generic-kernels-lunar")]
+        client.app.state.dataset_registry = DatasetRegistry([synthetic_ldem, *others])  # type: ignore[attr-defined]
         yield client
     CACHE.clear()
 
@@ -83,7 +85,7 @@ def test_compare_rows_cells_and_evidence(compare_client: TestClient) -> None:
     assert row["roughness_rms_m"]["baseline_m"] == 100.0  # default 50 m footprint
     for key in ILLUMINATION_KEYS:
         assert row[key]["value"] is None  # never 0
-        assert row[key]["reason"] == ILLUMINATION_UNAVAILABLE
+        assert row[key]["reason"].startswith(ILLUMINATION_UNAVAILABLE)
 
 
 def test_uncomputable_cells_are_null_with_reason(compare_client: TestClient) -> None:
@@ -139,3 +141,41 @@ def test_live_demo_trio_full_table() -> None:
                 cell = row[column["key"]]
                 assert cell["value"] is not None, (row["name"], column["key"], cell["reason"])
                 assert cell["evidence"]["sources"], (row["name"], column["key"])
+
+
+def test_timeline_provider_maps_terrain_summaries() -> None:
+    """The adapter takes the *terrain*-horizon summaries and states the period."""
+    from types import SimpleNamespace  # noqa: PLC0415
+
+    from lunaris_api.schemas.common import EvidenceSchema  # noqa: PLC0415
+    from lunaris_api.services.compare import timeline_provider  # noqa: PLC0415
+
+    ev = EvidenceSchema(kind="calculation", statement="t", method="m")
+    sun = SimpleNamespace(
+        mean_visible_disk_fraction=0.71,
+        illuminated_fraction=0.83,
+        longest_darkness_s=360000.0,
+        longest_darkness_censored=True,
+    )
+    earth = SimpleNamespace(
+        visible_fraction=0.42, longest_outage_s=1.2e6, longest_outage_censored=False
+    )
+    analysis = SimpleNamespace(
+        terrain_horizon_available=True,
+        sample_count=8761,
+        illumination=SimpleNamespace(terrain=sun, evidence=ev, limitations=["L1"]),
+        earth_visibility=SimpleNamespace(terrain=earth, evidence=ev, limitations=["no radio link"]),
+    )
+    fake = SimpleNamespace(timeline=lambda request: analysis)
+    start, end = datetime(2027, 1, 1, tzinfo=UTC), datetime(2028, 1, 1, tzinfo=UTC)
+    cells = timeline_provider(fake)("s1", start, end, 3600.0, 2.0)  # type: ignore[arg-type]
+    assert cells["sun_mean_visible_disk_fraction"].value == 0.71
+    assert cells["sun_illuminated_fraction"].value == 0.83
+    assert cells["earth_visible_fraction"].value == 0.42
+    assert cells["earth_longest_outage_s"].unit == "s"
+    assert cells["sun_longest_hidden_s"].limitations[0].startswith("Period 2027-01-01")
+    assert "lower bound" in cells["sun_longest_hidden_s"].limitations[-1]
+    assert "no radio link" in cells["earth_visible_fraction"].limitations
+    analysis.terrain_horizon_available = False
+    cells = timeline_provider(fake)("s1", start, end, 3600.0, 2.0)  # type: ignore[arg-type]
+    assert all(c.value is None and c.reason == ILLUMINATION_UNAVAILABLE for c in cells.values())
