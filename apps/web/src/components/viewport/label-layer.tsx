@@ -14,18 +14,22 @@ export interface LabelSpec {
   position: Vec3;
   offset: LabelAnchorOffset;
   className: string;
+  /** Local "up" for the horizon test; defaults to radial from the scene origin. */
+  normal?: Vec3;
 }
 
 function Label({ registry, spec }: { registry: LabelRegistry; spec: LabelSpec }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [x, y, z] = spec.position;
+  const [nx, ny, nz] = spec.normal ?? [Number.NaN, Number.NaN, Number.NaN];
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    registry.register(spec.id, [x, y, z], element, spec.offset);
+    const normal: Vec3 | undefined = Number.isNaN(nx) ? undefined : [nx, ny, nz];
+    registry.register(spec.id, [x, y, z], element, spec.offset, normal);
     return () => registry.unregister(spec.id, element);
-  }, [registry, spec.id, spec.offset, x, y, z]);
+  }, [registry, spec.id, spec.offset, x, y, z, nx, ny, nz]);
 
   return (
     <span

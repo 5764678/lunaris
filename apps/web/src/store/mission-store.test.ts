@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { DAY_MS, DEFAULT_WINDOW_MS, HOUR_MS, MINUTE_MS } from "@/lib/time/time";
 
-import { useMissionStore } from "./mission-store";
+import { TERRAIN_DESCENT_DISTANCE, useMissionStore } from "./mission-store";
 
 const NOW = Date.UTC(2026, 10, 4, 9, 30, 42);
 const START = Date.UTC(2026, 10, 4, 9, 30);
@@ -62,5 +62,36 @@ describe("mission store timeline", () => {
     const first = useMissionStore.getState().view.requestId;
     store.requestView("south-pole");
     expect(useMissionStore.getState().view.requestId).toBe(first + 1);
+  });
+});
+
+describe("mission store scene transition", () => {
+  beforeEach(() => useMissionStore.setState({ scene: "globe", sceneTransition: "idle" }));
+
+  it("descends to the pole before showing the terrain", () => {
+    const before = useMissionStore.getState().view.requestId;
+    useMissionStore.getState().enterTerrain();
+    let s = useMissionStore.getState();
+    expect(s.scene).toBe("globe");
+    expect(s.sceneTransition).toBe("descending");
+    expect(s.view).toMatchObject({
+      preset: "south-pole",
+      requestId: before + 1,
+      distance: TERRAIN_DESCENT_DISTANCE,
+    });
+    useMissionStore.getState().enterTerrain(); // ignored while descending
+    expect(useMissionStore.getState().view.requestId).toBe(before + 1);
+    useMissionStore.getState().completeDescent();
+    s = useMissionStore.getState();
+    expect(s.scene).toBe("terrain");
+    expect(s.sceneTransition).toBe("idle");
+  });
+
+  it("ignores a stray completeDescent and returns to the globe on exit", () => {
+    useMissionStore.getState().completeDescent();
+    expect(useMissionStore.getState().scene).toBe("globe");
+    useMissionStore.setState({ scene: "terrain" });
+    useMissionStore.getState().exitTerrain();
+    expect(useMissionStore.getState()).toMatchObject({ scene: "globe", view: { preset: "south-polar" } });
   });
 });

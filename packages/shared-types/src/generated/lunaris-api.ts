@@ -191,6 +191,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/terrain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Terrain analysis at a site (height, slope, roughness, hazards)
+         * @description Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness
+         *     and footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every
+         *     slope and roughness carries its baseline. Hazard flags appear only when thresholds
+         *     are supplied; they are the caller's assumptions.
+         */
+        get: operations["get_site_terrain_api_v1_sites__site_id__terrain_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/runtime": {
         parameters: {
             query?: never;
@@ -601,6 +624,35 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** DemWindowSchema */
+        DemWindowSchema: {
+            /** Bytes Requested */
+            bytes_requested: number;
+            /** Citation */
+            citation: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Etag */
+            etag: string | null;
+            /** Http Retries */
+            http_retries: number;
+            /** Last Modified */
+            last_modified: string | null;
+            /** Read At Utc */
+            read_at_utc: string;
+            /** Resolution M */
+            resolution_m: number;
+            /** Served From Cache */
+            served_from_cache: boolean;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Window Col Row Width Height */
+            window_col_row_width_height: number[];
+            /** Window Map Bounds M */
+            window_map_bounds_m: number[];
+        };
         /** EarthGeometrySample */
         EarthGeometrySample: {
             /**
@@ -827,6 +879,59 @@ export interface components {
             sources: components["schemas"]["SourceReferenceSchema"][];
             /** Statement */
             statement: string;
+        };
+        /** FootprintSchema */
+        FootprintSchema: {
+            /** Cell Count */
+            cell_count: number;
+            /** Height Max M */
+            height_max_m: number;
+            /** Height Mean M */
+            height_mean_m: number;
+            /** Height Min M */
+            height_min_m: number;
+            /**
+             * Missing Cell Count
+             * @description Cells with no DEM value (never treated as 0).
+             */
+            missing_cell_count: number;
+            /** Radius M */
+            radius_m: number;
+            /**
+             * Roughness Baseline M
+             * @description Diameter of the plane-fit window, m.
+             */
+            roughness_baseline_m: number;
+            /** Roughness Rms M */
+            roughness_rms_m: number | null;
+            /** Slope Baseline M */
+            slope_baseline_m: number;
+            /** Slope Max Deg */
+            slope_max_deg: number | null;
+            /** Slope Mean Deg */
+            slope_mean_deg: number | null;
+            /** Slope P95 Deg */
+            slope_p95_deg: number | null;
+        };
+        /** HazardSchema */
+        HazardSchema: {
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Max Roughness M
+             * @description Assumption supplied by the caller.
+             */
+            max_roughness_m: number | null;
+            /**
+             * Max Slope Deg
+             * @description Assumption supplied by the caller.
+             */
+            max_slope_deg: number | null;
+            /** Roughness Exceeds */
+            roughness_exceeds: boolean | null;
+            /** Slope Fraction Above */
+            slope_fraction_above: number | null;
+            /** Slope P95 Exceeds */
+            slope_p95_exceeds: boolean | null;
         };
         /**
          * HealthResponse
@@ -1107,6 +1212,46 @@ export interface components {
             start_utc: string;
             /** Step S */
             step_s: number;
+        };
+        /** SiteTerrainResponse */
+        SiteTerrainResponse: {
+            dem: components["schemas"]["DemWindowSchema"];
+            evidence: components["schemas"]["EvidenceSchema"];
+            footprint: components["schemas"]["FootprintSchema"];
+            /** @description Present only when thresholds were supplied; LUNARIS ships no default. */
+            hazard: components["schemas"]["HazardSchema"] | null;
+            /**
+             * Height M
+             * @description Bilinear DEM height above the 1 737 400 m sphere.
+             */
+            height_m: number;
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Limitations */
+            limitations: string[];
+            /** Longitude Deg */
+            longitude_deg: number;
+            /**
+             * Scale Factor
+             * @description Polar stereographic point scale factor k at the site.
+             */
+            scale_factor: number;
+            /** Site Id */
+            site_id: string;
+            slope_at_site: components["schemas"]["SlopeValueSchema"];
+        };
+        /** SlopeValueSchema */
+        SlopeValueSchema: {
+            /**
+             * Baseline M
+             * @description Ground distance between the pixel centres Horn's operator differences.
+             */
+            baseline_m: number;
+            /**
+             * Slope Deg
+             * @description Horn slope; null where the DEM has no value.
+             */
+            slope_deg: number | null;
         };
         /** SoftwareComponent */
         SoftwareComponent: {
@@ -1898,6 +2043,71 @@ export interface operations {
                 };
             };
             /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_site_terrain_api_v1_sites__site_id__terrain_get: {
+        parameters: {
+            query?: {
+                /** @description Footprint radius, m. */
+                footprint_radius_m?: number;
+                /** @description Hazard threshold (assumption). */
+                max_slope_deg?: number | null;
+                /** @description Hazard threshold (assumption). */
+                max_roughness_m?: number | null;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteTerrainResponse"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input or site outside coverage. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEM window could not be read. */
             503: {
                 headers: {
                     [name: string]: unknown;

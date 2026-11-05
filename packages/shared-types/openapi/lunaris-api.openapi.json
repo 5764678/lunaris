@@ -774,6 +774,99 @@
         "title": "DemProvenanceSchema",
         "type": "object"
       },
+      "DemWindowSchema": {
+        "properties": {
+          "bytes_requested": {
+            "title": "Bytes Requested",
+            "type": "integer"
+          },
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "etag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etag"
+          },
+          "http_retries": {
+            "title": "Http Retries",
+            "type": "integer"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified"
+          },
+          "read_at_utc": {
+            "title": "Read At Utc",
+            "type": "string"
+          },
+          "resolution_m": {
+            "title": "Resolution M",
+            "type": "number"
+          },
+          "served_from_cache": {
+            "title": "Served From Cache",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "window_col_row_width_height": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Window Col Row Width Height",
+            "type": "array"
+          },
+          "window_map_bounds_m": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Window Map Bounds M",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "title",
+          "url",
+          "etag",
+          "last_modified",
+          "resolution_m",
+          "window_col_row_width_height",
+          "window_map_bounds_m",
+          "bytes_requested",
+          "http_retries",
+          "served_from_cache",
+          "read_at_utc",
+          "citation"
+        ],
+        "title": "DemWindowSchema",
+        "type": "object"
+      },
       "EarthGeometrySample": {
         "properties": {
           "astronomical_visible_fraction": {
@@ -1230,6 +1323,178 @@
           "assumptions"
         ],
         "title": "EvidenceSchema",
+        "type": "object"
+      },
+      "FootprintSchema": {
+        "properties": {
+          "cell_count": {
+            "title": "Cell Count",
+            "type": "integer"
+          },
+          "height_max_m": {
+            "title": "Height Max M",
+            "type": "number"
+          },
+          "height_mean_m": {
+            "title": "Height Mean M",
+            "type": "number"
+          },
+          "height_min_m": {
+            "title": "Height Min M",
+            "type": "number"
+          },
+          "missing_cell_count": {
+            "description": "Cells with no DEM value (never treated as 0).",
+            "title": "Missing Cell Count",
+            "type": "integer"
+          },
+          "radius_m": {
+            "title": "Radius M",
+            "type": "number"
+          },
+          "roughness_baseline_m": {
+            "description": "Diameter of the plane-fit window, m.",
+            "title": "Roughness Baseline M",
+            "type": "number"
+          },
+          "roughness_rms_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roughness Rms M"
+          },
+          "slope_baseline_m": {
+            "title": "Slope Baseline M",
+            "type": "number"
+          },
+          "slope_max_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Max Deg"
+          },
+          "slope_mean_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Mean Deg"
+          },
+          "slope_p95_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope P95 Deg"
+          }
+        },
+        "required": [
+          "radius_m",
+          "cell_count",
+          "missing_cell_count",
+          "height_min_m",
+          "height_max_m",
+          "height_mean_m",
+          "slope_mean_deg",
+          "slope_p95_deg",
+          "slope_max_deg",
+          "slope_baseline_m",
+          "roughness_rms_m",
+          "roughness_baseline_m"
+        ],
+        "title": "FootprintSchema",
+        "type": "object"
+      },
+      "HazardSchema": {
+        "properties": {
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "max_roughness_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Assumption supplied by the caller.",
+            "title": "Max Roughness M"
+          },
+          "max_slope_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Assumption supplied by the caller.",
+            "title": "Max Slope Deg"
+          },
+          "roughness_exceeds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roughness Exceeds"
+          },
+          "slope_fraction_above": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Fraction Above"
+          },
+          "slope_p95_exceeds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope P95 Exceeds"
+          }
+        },
+        "required": [
+          "max_slope_deg",
+          "max_roughness_m",
+          "slope_fraction_above",
+          "slope_p95_exceeds",
+          "roughness_exceeds",
+          "evidence"
+        ],
+        "title": "HazardSchema",
         "type": "object"
       },
       "HealthResponse": {
@@ -1765,6 +2030,104 @@
           "limitations"
         ],
         "title": "SiteEphemeris",
+        "type": "object"
+      },
+      "SiteTerrainResponse": {
+        "properties": {
+          "dem": {
+            "$ref": "#/components/schemas/DemWindowSchema"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "footprint": {
+            "$ref": "#/components/schemas/FootprintSchema"
+          },
+          "hazard": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HazardSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when thresholds were supplied; LUNARIS ships no default."
+          },
+          "height_m": {
+            "description": "Bilinear DEM height above the 1 737 400 m sphere.",
+            "title": "Height M",
+            "type": "number"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          },
+          "scale_factor": {
+            "description": "Polar stereographic point scale factor k at the site.",
+            "title": "Scale Factor",
+            "type": "number"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "slope_at_site": {
+            "$ref": "#/components/schemas/SlopeValueSchema"
+          }
+        },
+        "required": [
+          "site_id",
+          "latitude_deg",
+          "longitude_deg",
+          "height_m",
+          "scale_factor",
+          "slope_at_site",
+          "footprint",
+          "hazard",
+          "dem",
+          "evidence",
+          "limitations"
+        ],
+        "title": "SiteTerrainResponse",
+        "type": "object"
+      },
+      "SlopeValueSchema": {
+        "properties": {
+          "baseline_m": {
+            "description": "Ground distance between the pixel centres Horn's operator differences.",
+            "title": "Baseline M",
+            "type": "number"
+          },
+          "slope_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Horn slope; null where the DEM has no value.",
+            "title": "Slope Deg"
+          }
+        },
+        "required": [
+          "slope_deg",
+          "baseline_m"
+        ],
+        "title": "SlopeValueSchema",
         "type": "object"
       },
       "SoftwareComponent": {
@@ -3061,6 +3424,135 @@
         "summary": "Sun and Earth geometry for a site",
         "tags": [
           "ephemeris"
+        ]
+      }
+    },
+    "/api/v1/sites/{site_id}/terrain": {
+      "get": {
+        "description": "Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness\nand footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every\nslope and roughness carries its baseline. Hazard flags appear only when thresholds\nare supplied; they are the caller's assumptions.",
+        "operationId": "get_site_terrain_api_v1_sites__site_id__terrain_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9-]+$",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Footprint radius, m.",
+            "in": "query",
+            "name": "footprint_radius_m",
+            "required": false,
+            "schema": {
+              "default": 50.0,
+              "description": "Footprint radius, m.",
+              "exclusiveMinimum": 0,
+              "maximum": 2000.0,
+              "title": "Footprint Radius M",
+              "type": "number"
+            }
+          },
+          {
+            "description": "Hazard threshold (assumption).",
+            "in": "query",
+            "name": "max_slope_deg",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 90,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hazard threshold (assumption).",
+              "title": "Max Slope Deg"
+            }
+          },
+          {
+            "description": "Hazard threshold (assumption).",
+            "in": "query",
+            "name": "max_roughness_m",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hazard threshold (assumption).",
+              "title": "Max Roughness M"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteTerrainResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input or site outside coverage."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "DEM window could not be read."
+          }
+        },
+        "summary": "Terrain analysis at a site (height, slope, roughness, hazards)",
+        "tags": [
+          "terrain"
         ]
       }
     },
