@@ -381,6 +381,187 @@
         "title": "CatalogTileSchema",
         "type": "object"
       },
+      "CompareCell": {
+        "properties": {
+          "baseline_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Measurement baseline for slope and roughness, m.",
+            "title": "Baseline M"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the value is null.",
+            "title": "Reason"
+          },
+          "unit": {
+            "description": "Unit of `value`: m, deg, s, fraction or count.",
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when not computed; see `reason`.",
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "unit",
+          "baseline_m",
+          "reason",
+          "evidence",
+          "limitations"
+        ],
+        "title": "CompareCell",
+        "type": "object"
+      },
+      "CompareColumn": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "unit",
+          "description"
+        ],
+        "title": "CompareColumn",
+        "type": "object"
+      },
+      "CompareRow": {
+        "properties": {
+          "earth_longest_outage_s": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "earth_visible_fraction": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "horizon_max_deg": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "horizon_min_deg": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "horizon_truncated_azimuths": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "roughness_rms_m": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "slope_at_site_deg": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "slope_p95_deg": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "sun_illuminated_fraction": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "sun_longest_hidden_s": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "sun_mean_visible_disk_fraction": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
+          "surface_height_m": {
+            "$ref": "#/components/schemas/CompareCell"
+          }
+        },
+        "required": [
+          "site_id",
+          "name",
+          "origin",
+          "latitude_deg",
+          "longitude_deg",
+          "surface_height_m",
+          "slope_at_site_deg",
+          "slope_p95_deg",
+          "roughness_rms_m",
+          "horizon_min_deg",
+          "horizon_max_deg",
+          "horizon_truncated_azimuths",
+          "sun_mean_visible_disk_fraction",
+          "sun_illuminated_fraction",
+          "sun_longest_hidden_s",
+          "earth_visible_fraction",
+          "earth_longest_outage_s"
+        ],
+        "title": "CompareRow",
+        "type": "object"
+      },
       "ComponentCheck": {
         "properties": {
           "detail": {
@@ -2096,6 +2277,70 @@
         "title": "SiteCatalogResponse",
         "type": "object"
       },
+      "SiteComparison": {
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/CompareColumn"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "end_utc": {
+            "format": "date-time",
+            "title": "End Utc",
+            "type": "string"
+          },
+          "footprint_radius_m": {
+            "title": "Footprint Radius M",
+            "type": "number"
+          },
+          "observer_height_m": {
+            "title": "Observer Height M",
+            "type": "number"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CompareRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "sample_count": {
+            "title": "Sample Count",
+            "type": "integer"
+          },
+          "start_utc": {
+            "format": "date-time",
+            "title": "Start Utc",
+            "type": "string"
+          },
+          "step_s": {
+            "title": "Step S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "start_utc",
+          "end_utc",
+          "step_s",
+          "sample_count",
+          "observer_height_m",
+          "footprint_radius_m",
+          "columns",
+          "rows",
+          "assumptions"
+        ],
+        "title": "SiteComparison",
+        "type": "object"
+      },
       "SiteEphemeris": {
         "description": "Sun and Earth geometry time series for one site (C2).",
         "properties": {
@@ -2931,6 +3176,134 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/analysis/site-comparison": {
+      "get": {
+        "description": "One row per site; every cell carries its own evidence (kind, method, sources with\nmanifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be\ncomputed is null with a `reason`, never 0. The default window is calendar year 2027\nat a 1 h step (8 761 samples, within the ephemeris sample cap).",
+        "operationId": "compare_sites_api_v1_analysis_site_comparison_get",
+        "parameters": [
+          {
+            "description": "Comma-separated site ids (1–10).",
+            "in": "query",
+            "name": "site_ids",
+            "required": true,
+            "schema": {
+              "description": "Comma-separated site ids (1–10).",
+              "title": "Site Ids",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window start, ISO 8601 UTC.",
+            "in": "query",
+            "name": "start_utc",
+            "required": false,
+            "schema": {
+              "default": "2027-01-01T00:00:00Z",
+              "description": "Window start, ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "Start Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window end, ISO 8601 UTC.",
+            "in": "query",
+            "name": "end_utc",
+            "required": false,
+            "schema": {
+              "default": "2028-01-01T00:00:00Z",
+              "description": "Window end, ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "End Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Time step, s.",
+            "in": "query",
+            "name": "step_s",
+            "required": false,
+            "schema": {
+              "default": 3600.0,
+              "description": "Time step, s.",
+              "exclusiveMinimum": 0,
+              "title": "Step S",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "observer_height_m",
+            "required": false,
+            "schema": {
+              "default": 2.0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Observer Height M",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "footprint_radius_m",
+            "required": false,
+            "schema": {
+              "default": 50.0,
+              "exclusiveMinimum": 0,
+              "maximum": 2000,
+              "title": "Footprint Radius M",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteComparison"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Compare sites: terrain, horizon, illumination and Earth visibility",
+        "tags": [
+          "compare"
+        ]
+      }
+    },
     "/api/v1/analysis/timeline": {
       "post": {
         "description": "Visible fraction of the solar and Earth disks at every step from ``start_utc`` to\n``end_utc``, against the astronomical horizon and, when a horizon mask exists, the\nterrain horizon (reported separately). Summaries: mean visible disk fraction,\nilluminated / visible fraction, longest illumination and darkness (or visibility and\noutage) with censoring, and windows. Same window rules, cap (10 000 samples) and error\ncodes as the ephemeris endpoint. Earth results are geometric line of sight only and do\nnot imply a radio link.",

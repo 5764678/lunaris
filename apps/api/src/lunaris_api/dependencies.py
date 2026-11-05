@@ -108,3 +108,25 @@ def get_timeline_service(
 
 TimelineServiceDep = Annotated[TimelineService, Depends(get_timeline_service)]
 __all__ += ["TimelineServiceDep"]
+
+
+# ── Site comparison (S-TERRAIN, T-17) ────────────────────────────────────────
+from lunaris_api.services.compare import CompareService, timeline_provider  # noqa: E402
+
+
+def get_compare_service(
+    request: Request,
+    sites: Annotated[SiteService, Depends(get_site_service)],
+    timelines: Annotated[TimelineService, Depends(get_timeline_service)],
+) -> CompareService:
+    registry, layout = request.app.state.dataset_registry, request.app.state.data_layout
+    return CompareService(
+        sites,
+        HorizonMaskService(registry, layout, sites),
+        SiteTerrainService(registry, layout),
+        timeline_provider(timelines),
+    )
+
+
+CompareServiceDep = Annotated[CompareService, Depends(get_compare_service)]
+__all__ += ["CompareServiceDep"]

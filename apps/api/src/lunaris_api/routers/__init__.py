@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from lunaris_api.routers import (
     catalog,
+    compare,
     datasets,
     ephemeris,
     health,
@@ -24,5 +25,6 @@ api_v1.include_router(terrain.site_router)
 api_v1.include_router(horizon.router)
 api_v1.include_router(ephemeris.router)
 api_v1.include_router(illumination.router)
+api_v1.include_router(compare.router)
 
 __all__ = ["api_v1", "health"]
