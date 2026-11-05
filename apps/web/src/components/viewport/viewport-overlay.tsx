@@ -10,6 +10,7 @@ import { useMissionStore, type LayerVisibility, type ViewPreset } from "@/store/
 
 import { VIEW_PRESETS } from "./camera-rig";
 import type { SurfaceSource, TextureLoadState } from "./surface-source";
+import { SceneSwitch } from "./scene-switch";
 import { TextureProvenance } from "./texture-provenance";
 import { useViewTelemetry } from "./view-telemetry";
 
@@ -66,6 +67,7 @@ export function ViewportOverlay({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+        <SceneSwitch />
       </div>
 
       {/* Layers */}
