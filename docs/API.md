@@ -244,6 +244,65 @@ Response **200** (`SiteEphemeris`, abridged):
 | 422 | `validation_error` | Malformed query (missing field, naive timestamp, `step_s` out of range) |
 | 503 | `kernels_unavailable` | Kernels not acquired or failing SHA-256 verification; run `uv run lunaris-data acquire naif-generic-kernels-lunar` |
 
+### `POST /api/v1/analysis/timeline`
+
+Illumination and Earth-visibility timelines for a registered site (contract C4,
+`docs/SCIENCE.md` §5.3–5.4).
+
+Request (`TimelineRequest`; unknown fields are rejected):
+
+```json
+{ "site_id": "…", "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T00:00:00Z", "step_s": 3600 }
+```
+
+Window rules, the 10 000-sample cap and the error codes are those of the ephemeris
+endpoint. Validation errors point at the body, for example `["body", "step_s"]`.
+
+Response **200** (`TimelineAnalysis`, abridged):
+
+```json
+{
+  "site_id": "…", "site_name": "…", "observer": { "…": "…" },
+  "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T00:00:00Z", "step_s": 3600.0,
+  "sample_count": 25, "max_samples": 10000, "terrain_horizon_available": false,
+  "illumination": {
+    "body": "sun",
+    "samples": [ { "epoch_utc": "…", "azimuth_deg": 248.586138, "elevation_deg": 1.304694,
+                   "solar_radius_deg": 0.268933, "astronomical_visible_fraction": 1.0,
+                   "terrain_horizon_elevation_deg": null, "terrain_visible_fraction": null,
+                   "terrain_truncated": null } ],
+    "astronomical": { "horizon": "astronomical", "mean_visible_disk_fraction": 1.0,
+                      "illuminated_fraction": 1.0, "fully_lit_fraction": 1.0,
+                      "longest_illumination_s": 90000.0, "longest_illumination_censored": true,
+                      "longest_darkness_s": 0.0, "longest_darkness_censored": false,
+                      "resolution_s": 3600.0, "any_truncated": false,
+                      "sunlit_windows": [ { "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T01:00:00Z",
+                                            "duration_s": 90000.0, "censored_start": true, "censored_end": true } ] },
+    "terrain": null,
+    "evidence": { "kind": "calculation", "…": "…" },
+    "limitations": [ "…", "Terrain horizon not available for this site: …" ]
+  },
+  "earth_visibility": {
+    "body": "earth",
+    "samples": [ { "…": "…", "earth_radius_deg": 0.961446, "line_of_sight": "below_geometric_horizon" } ],
+    "astronomical": { "horizon": "astronomical", "visible_fraction": 0.0, "windows": [], "…": "…" },
+    "terrain": null,
+    "evidence": { "…": "…" },
+    "limitations": [ "Geometric line of sight only: Earth visibility does not imply a radio link. …", "…" ]
+  },
+  "computed_at_utc": "…",
+  "software": { "service_version": "0.1.0", "components": [ { "name": "cspice", "version": "CSPICE_N0067" } ] }
+}
+```
+
+- Each sample carries the astronomical **and** the terrain fraction. The terrain fields are
+  `null` when no horizon mask exists for the site (`terrain_horizon_available: false`;
+  masks arrive with S-TERRAIN T-15).
+- `*_censored: true` means the run touches the analysis window edge, so its duration is a
+  lower bound. Window edges are known to ± `resolution_s`.
+- `terrain_truncated: true` means the mask ray left DEM coverage. There the terrain
+  fraction is an upper bound.
+
 ## Changing the contract
 
 1. Edit the Pydantic schemas in `apps/api/src/lunaris_api/schemas/`.

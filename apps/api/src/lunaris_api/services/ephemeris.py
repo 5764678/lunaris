@@ -6,6 +6,7 @@ The verified kernel set and the per-process SPICE context come from
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from lunaris_api.errors import ApiError
@@ -69,7 +70,7 @@ LIMITATIONS = (
 )
 
 
-def _evidence_schema(evidence: Evidence) -> EvidenceSchema:
+def evidence_schema(evidence: Evidence) -> EvidenceSchema:
     return EvidenceSchema(
         kind=evidence.kind.value,
         statement=evidence.statement,
@@ -115,7 +116,30 @@ def _body_schema(series: BodyGeometrySeries, epochs: tuple[datetime, ...]) -> Bo
         body_radius_m=series.body_radius_m,
         body_radii_m=list(series.body_radii_m),
         samples=samples,
-        evidence=_evidence_schema(series.evidence),
+        evidence=evidence_schema(series.evidence),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class SiteGeometry:
+    """Validated window plus Sun and Earth geometry for one site."""
+
+    site_id: str
+    site_name: str
+    observer: ObserverSite
+    epochs: tuple[datetime, ...]
+    series: dict[Body, BodyGeometrySeries]
+
+
+def observer_schema(observer: ObserverSite) -> EphemerisObserver:
+    return EphemerisObserver(
+        latitude_deg=observer.coordinate.latitude_deg,
+        longitude_deg=observer.coordinate.longitude_deg,
+        frame="MOON_ME",
+        reference_radius_m=LOLA_REFERENCE_SPHERE_RADIUS.value,
+        surface_height_m=observer.coordinate.height_m,
+        observer_height_m=observer.observer_height_m,
+        radius_m=observer.radius_m,
     )
 
 
@@ -127,6 +151,10 @@ class EphemerisService:
         self._registry = registry
         self._layout = layout
 
+    @property
+    def registry(self) -> DatasetRegistry:
+        return self._registry
+
     def _context(self) -> SpiceContext:
         try:
             return get_spice_context(self._registry.get(KERNEL_DATASET_ID), self._layout)
@@ -136,28 +164,43 @@ class EphemerisService:
                 f"An operator must run `uv run lunaris-data acquire {KERNEL_DATASET_ID}`."
             ) from exc
 
-    def site_ephemeris(
-        self, site_id: str, start_utc: datetime, end_utc: datetime, step_s: float
-    ) -> SiteEphemeris:
+    def compute_geometry(
+        self,
+        site_id: str,
+        start_utc: datetime,
+        end_utc: datetime,
+        step_s: float,
+        *,
+        location: str = "query",
+    ) -> SiteGeometry:
+        """Validate a window and compute Sun and Earth geometry for a registered site.
+
+        ``location`` is the request part the window came from (``"query"`` or ``"body"``),
+        used in error details. Raises the typed 404 / 422 / 503 errors documented in
+        docs/API.md.
+        """
         for name, value in (("start_utc", start_utc), ("end_utc", end_utc)):
             if value.utcoffset() != timedelta(0):
                 raise EphemerisRequestError(
-                    f"{name} must be UTC (suffix Z or +00:00)", ["query", name], "utc_required"
+                    f"{name} must be UTC (suffix Z or +00:00)", [location, name], "utc_required"
                 )
         if end_utc < start_utc:
             raise EphemerisRequestError(
-                "end_utc must not be earlier than start_utc", ["query", "end_utc"], "window_order"
+                "end_utc must not be earlier than start_utc", [location, "end_utc"], "window_order"
             )
         count = sample_count(start_utc, end_utc, step_s)
         if count > MAX_EPHEMERIS_SAMPLES:
             raise EphemerisRequestError(
                 f"the window and step give {count} samples; at most {MAX_EPHEMERIS_SAMPLES} "
                 "are allowed per request. Increase step_s or shorten the window.",
-                ["query", "step_s"],
+                [location, "step_s"],
                 "sample_cap_exceeded",
             )
 
         site = self._sites.get_site(site_id)  # 404 for unknown ids
+        site_location: list[str | int] = (
+            ["path", "site_id"] if location == "query" else [location, "site_id"]
+        )
         try:
             observer = ObserverSite(
                 SelenographicCoordinate(
@@ -166,41 +209,47 @@ class EphemerisService:
             )
         except CoordinateError as exc:
             raise EphemerisRequestError(
-                str(exc), ["path", "site_id"], "topocentric_frame_undefined"
+                str(exc), site_location, "topocentric_frame_undefined"
             ) from exc
 
         context = self._context()
         epochs = uniform_utc_grid(start_utc, end_utc, step_s)
         ets = utc_to_et(context, epochs)
         try:
-            series = [body_geometry(context, body, observer, ets) for body in Body]
+            series = {body: body_geometry(context, body, observer, ets) for body in Body}
         except GeometryError as exc:
             raise EphemerisRequestError(
-                f"{exc}. Kernel coverage: see docs/API.md.", ["query"], "outside_kernel_coverage"
+                f"{exc}. Kernel coverage: see docs/API.md.", [location], "outside_kernel_coverage"
             ) from exc
+        return SiteGeometry(
+            site_id=site.id, site_name=site.name, observer=observer, epochs=epochs, series=series
+        )
 
+    def site_ephemeris(
+        self, site_id: str, start_utc: datetime, end_utc: datetime, step_s: float
+    ) -> SiteEphemeris:
+        geometry = self.compute_geometry(site_id, start_utc, end_utc, step_s)
         return SiteEphemeris(
-            site_id=site.id,
-            site_name=site.name,
-            observer=EphemerisObserver(
-                latitude_deg=observer.coordinate.latitude_deg,
-                longitude_deg=observer.coordinate.longitude_deg,
-                frame="MOON_ME",
-                reference_radius_m=LOLA_REFERENCE_SPHERE_RADIUS.value,
-                surface_height_m=observer.coordinate.height_m,
-                observer_height_m=observer.observer_height_m,
-                radius_m=observer.radius_m,
-            ),
+            site_id=geometry.site_id,
+            site_name=geometry.site_name,
+            observer=observer_schema(geometry.observer),
             start_utc=start_utc,
             end_utc=end_utc,
             step_s=step_s,
-            sample_count=len(epochs),
+            sample_count=len(geometry.epochs),
             max_samples=MAX_EPHEMERIS_SAMPLES,
             frame="MOON_ME",
             aberration_correction=APPARENT_CORRECTION,
-            bodies=[_body_schema(s, epochs) for s in series],
+            bodies=[_body_schema(s, geometry.epochs) for s in geometry.series.values()],
             limitations=list(LIMITATIONS),
         )
 
 
-__all__ = ["EphemerisRequestError", "EphemerisService", "KernelsUnavailableError"]
+__all__ = [
+    "EphemerisRequestError",
+    "EphemerisService",
+    "KernelsUnavailableError",
+    "SiteGeometry",
+    "evidence_schema",
+    "observer_schema",
+]

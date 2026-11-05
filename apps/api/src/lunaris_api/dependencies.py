@@ -61,3 +61,17 @@ def get_ephemeris_service(
 
 EphemerisServiceDep = Annotated[EphemerisService, Depends(get_ephemeris_service)]
 __all__ += ["EphemerisServiceDep"]
+
+
+# ── Illumination and visibility timelines (S-GEOMETRY, T-24) ───────────────
+from lunaris_api.services.illumination import TimelineService  # noqa: E402
+
+
+def get_timeline_service(
+    ephemeris: Annotated[EphemerisService, Depends(get_ephemeris_service)],
+) -> TimelineService:
+    return TimelineService(ephemeris)
+
+
+TimelineServiceDep = Annotated[TimelineService, Depends(get_timeline_service)]
+__all__ += ["TimelineServiceDep"]
