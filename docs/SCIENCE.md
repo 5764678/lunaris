@@ -331,6 +331,30 @@ vectors, not a flat-Earth approximation). The DEM extent bounds the farthest obs
 considered — a stated limitation, important at the poles where distant ridges set the
 horizon.
 
+**Horizon mask, implemented (T-15: `lunaris_science.terrain.horizon.compute_horizon_mask`).**
+Each azimuth A is marched along the great circle leaving the site in direction
+d = cos A · north + sin A · east (C0 frame, radial "up"). The ground point at sphere
+distance s is P̂ = cos(s/R) û + sin(s/R) d, so distances are measured on the sphere and need
+no map scale-factor correction. Heights h(s) are bilinear LDEM_75S_240M samples. The exact
+elevation above the site's radial plane is e(s) = atan2((R+h)cos(s/R) − r_O, (R+h)sin(s/R)),
+with r_O = R + h_site + h_observer, and the horizon is max over s of e(s). Defaults: 0.25°
+azimuth step, 200 km range, 120 m ray step (half a DEM cell), first sample at 240 m (one
+cell, so the cell under the observer is not an obstruction). A ray that meets missing
+coverage is flagged `truncated`, and its value is a lower bound.
+
+Validation (`tests/science/test_horizon.py`):
+- On a zero-height sphere the mask equals −acos(R/(R+h_obs)) to < 0.01° for h_obs = 2,
+  100 and 1000 m.
+- On an axisymmetric bowl (rim 2 km high at 20 km) it equals the closed form maximised over
+  s to < 0.01°. The curvature term moves that maximum inside the bowl, more than 0.05° from
+  the flat-Moon rim angle.
+- A wall toward local east raises only the eastern horizon.
+- A site at 78° S is truncated toward the north (±15° of north) and not toward the pole.
+
+On the real LDEM a full mask (1440 azimuths × 1667 samples) takes ≈ 2 s. The connecting
+ridge (89.45° S, 222.69° E, h_obs = 2 m) gives a horizon of −2.7° … +0.1°; Shackleton's
+floor (89.67° S, 129.2° E) gives 19.8° … 23.4°.
+
 **Visible disk fraction (implemented: T-23).** `lunaris_science.illumination.disk_fraction`.
 For a disk of apparent angular radius α centred at (A, e) and a horizon profile H(az),
 the visible fraction f is the share of the disk's area above H. It is computed for the

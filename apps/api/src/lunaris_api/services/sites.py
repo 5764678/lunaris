@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import uuid
 
-from lunaris_api.db.repositories import DuplicateSiteNameError, SiteEntity, SiteRepository
+from lunaris_api.db.repositories import (
+    DuplicateSiteNameError,
+    SiteEntity,
+    SiteRepository,
+    name_key,
+)
 from lunaris_api.errors import ConflictError, NotFoundError
 from lunaris_api.schemas.common import EvidenceSchema, SourceReferenceSchema
 from lunaris_api.schemas.sites import (
@@ -24,6 +29,7 @@ MAX_SITES = 250
 """Upper bound on registry size: keeps list responses bounded in Milestone 01."""
 
 ORIGIN_USER_DEFINED = "user_defined"
+ORIGIN_PUBLISHED = "published"
 
 _REFERENCE_RADIUS_SOURCE = SourceReference(
     source_id="constant:lola-reference-sphere-radius",
@@ -70,7 +76,10 @@ def body_fixed_position(entity: SiteEntity) -> BodyFixedPositionSchema:
         method="lunaris_science.coordinates.spherical_to_cartesian (planetocentric → MOON_ME)",
         assumptions=(
             "Height above the reference sphere not sampled; h = 0 m assumed.",
-            "Coordinates are user-defined planetocentric MOON_ME values.",
+            "Coordinates are user-defined planetocentric MOON_ME values."
+            if entity.origin == ORIGIN_USER_DEFINED
+            else "Coordinates are the published catalogue reference point (planetocentric, "
+            "MOON_ME); see the site's reference and notes.",
         ),
     )
     return BodyFixedPositionSchema(
@@ -92,7 +101,7 @@ def to_schema(entity: SiteEntity) -> CandidateSite:
             longitude_deg=entity.longitude_deg,
             frame="MOON_ME",
         ),
-        origin="user_defined",
+        origin=ORIGIN_PUBLISHED if entity.origin == ORIGIN_PUBLISHED else ORIGIN_USER_DEFINED,
         reference=entity.reference,
         notes=entity.notes,
         created_at_utc=entity.created_at_utc,
@@ -115,19 +124,58 @@ class SiteService:
         return to_schema(entity)
 
     def create_site(self, payload: CandidateSiteCreate) -> CandidateSite:
-        if self._repository.count() >= MAX_SITES:
-            raise ConflictError(f"The site registry is limited to {MAX_SITES} sites.")
-        # Validation + normalization by the scientific core (longitude → [0, 360)).
-        coordinate = SelenographicCoordinate(payload.latitude_deg, payload.longitude_deg)
-        entity = SiteEntity(
-            id=str(uuid.uuid4()),
-            name=" ".join(payload.name.split()),
-            latitude_deg=coordinate.latitude_deg,
-            longitude_deg=coordinate.longitude_deg,
-            frame=CANONICAL_FRAME.value,
+        return self._add(
+            name=payload.name,
+            latitude_deg=payload.latitude_deg,
+            longitude_deg=payload.longitude_deg,
             origin=ORIGIN_USER_DEFINED,
             reference=payload.reference or None,
             notes=payload.notes or None,
+        )
+
+    def create_published_site(
+        self, *, name: str, latitude_deg: float, longitude_deg: float, reference: str, notes: str
+    ) -> CandidateSite:
+        """Register a site from the cited catalogue (origin ``published``)."""
+        return self._add(
+            name=name,
+            latitude_deg=latitude_deg,
+            longitude_deg=longitude_deg,
+            origin=ORIGIN_PUBLISHED,
+            reference=reference,
+            notes=notes,
+        )
+
+    def find_by_name(self, name: str) -> CandidateSite | None:
+        key = name_key(name)
+        for entity in self._repository.list_all():
+            if name_key(entity.name) == key:
+                return to_schema(entity)
+        return None
+
+    def _add(
+        self,
+        *,
+        name: str,
+        latitude_deg: float,
+        longitude_deg: float,
+        origin: str,
+        reference: str | None,
+        notes: str | None,
+    ) -> CandidateSite:
+        if self._repository.count() >= MAX_SITES:
+            raise ConflictError(f"The site registry is limited to {MAX_SITES} sites.")
+        # Validation + normalization by the scientific core (longitude → [0, 360)).
+        coordinate = SelenographicCoordinate(latitude_deg, longitude_deg)
+        entity = SiteEntity(
+            id=str(uuid.uuid4()),
+            name=" ".join(name.split()),
+            latitude_deg=coordinate.latitude_deg,
+            longitude_deg=coordinate.longitude_deg,
+            frame=CANONICAL_FRAME.value,
+            origin=origin,
+            reference=reference,
+            notes=notes,
             created_at_utc=utc_now(),
         )
         try:
