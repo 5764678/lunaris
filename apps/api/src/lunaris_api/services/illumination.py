@@ -8,7 +8,9 @@ report the astronomical horizon only and say so (``terrain_horizon_available: fa
 
 from __future__ import annotations
 
+import threading
 from datetime import datetime, timedelta
+from typing import Protocol
 
 from lunaris_api import __version__
 from lunaris_api.schemas.ephemeris import MAX_EPHEMERIS_SAMPLES
@@ -28,15 +30,20 @@ from lunaris_api.schemas.visibility import (
     VisibilityWindow,
 )
 from lunaris_api.services.ephemeris import EphemerisService, evidence_schema, observer_schema
+from lunaris_api.services.sites import SiteService
+from lunaris_data.readers.ldem import read_ldem_polar
 from lunaris_data.registry import DatasetRegistry
 from lunaris_data.runtime import data_runtime
-from lunaris_data.store import utc_now
+from lunaris_data.store import DataLayout, utc_now
+from lunaris_data.validation.integrity import verify_dataset
 from lunaris_science.geometry import Body
 from lunaris_science.horizon_mask import HorizonMask
 from lunaris_science.illumination.analysis import BodyTimeline, HorizonTimeline, body_timeline
 from lunaris_science.illumination.timeline import Window
 from lunaris_science.provenance import SourceReference
 from lunaris_science.runtime import scientific_runtime
+from lunaris_science.terrain.dem import PolarDem
+from lunaris_science.terrain.horizon import HorizonError, compute_horizon_mask
 from lunaris_science.visibility import classify_line_of_sight
 
 
@@ -225,34 +232,123 @@ def _software() -> SoftwareProvenance:
     )
 
 
+DEFAULT_OBSERVER_HEIGHT_M = 2.0
+"""Eye height above the DEM surface for terrain horizons (S-TERRAIN's service default)."""
+
+
+class TerrainUnavailableError(Exception):
+    """No terrain horizon can be produced for the site; the reason is user-facing."""
+
+
+class HorizonMaskProvider(Protocol):
+    """Source of C1 horizon masks. S-TERRAIN's ``HorizonMaskService`` (T-16) satisfies it."""
+
+    def get_site_mask(
+        self, site_id: str, *, observer_height_m: float = DEFAULT_OBSERVER_HEIGHT_M
+    ) -> HorizonMask: ...
+
+
+_dem_lock = threading.Lock()
+_dem_cache: dict[tuple[str, str], PolarDem] = {}
+_mask_cache: dict[tuple[str, float, float, float], HorizonMask] = {}
+_MASK_CACHE_LIMIT = 256
+
+
+class LocalHorizonMaskProvider:
+    """Interim provider: T-15's ``compute_horizon_mask`` on the checksum-verified
+    LDEM_75S_240M, cached in memory per process. Replaced by S-TERRAIN's file-cached
+    ``HorizonMaskService`` when it lands (same interface)."""
+
+    def __init__(self, registry: DatasetRegistry, layout: DataLayout, sites: SiteService) -> None:
+        self._registry = registry
+        self._layout = layout
+        self._sites = sites
+
+    def _dem(self) -> PolarDem:
+        manifest = self._registry.get(LDEM_DATASET_ID)
+        key = (str(self._layout.root), manifest.fingerprint())
+        with _dem_lock:
+            dem = _dem_cache.get(key)
+            if dem is None:
+                if not verify_dataset(manifest, self._layout).ok:
+                    raise TerrainUnavailableError(
+                        f"the {LDEM_DATASET_ID} DEM is not acquired or fails checksum "
+                        "verification on this server"
+                    )
+                label = self._layout.dataset_dir(manifest) / "LDEM_75S_240M.LBL"
+                dem = read_ldem_polar(label, LDEM_DATASET_ID)
+                _dem_cache.clear()
+                _dem_cache[key] = dem
+            return dem
+
+    def get_site_mask(
+        self, site_id: str, *, observer_height_m: float = DEFAULT_OBSERVER_HEIGHT_M
+    ) -> HorizonMask:
+        site = self._sites.get_site(site_id)
+        lat, lon = site.coordinate.latitude_deg, site.coordinate.longitude_deg
+        dem = self._dem()
+        key = (LDEM_DATASET_ID, lat, lon, observer_height_m)
+        with _dem_lock:
+            cached = _mask_cache.get(key)
+        if cached is not None:
+            return cached
+        try:
+            mask = compute_horizon_mask(dem, lat, lon, observer_height_m=observer_height_m)
+        except HorizonError as exc:
+            raise TerrainUnavailableError(
+                f"no terrain horizon for this site: {exc} (LDEM_75S_240M covers 75°–90° S)"
+            ) from exc
+        with _dem_lock:
+            if len(_mask_cache) >= _MASK_CACHE_LIMIT:
+                _mask_cache.clear()
+            _mask_cache[key] = mask
+        return mask
+
+
 class TimelineService:
     """Illumination and Earth-visibility timelines (contract C4)."""
 
-    def __init__(self, ephemeris: EphemerisService) -> None:
+    def __init__(
+        self, ephemeris: EphemerisService, masks: HorizonMaskProvider | None = None
+    ) -> None:
         self._ephemeris = ephemeris
+        self._masks = masks
 
-    def _terrain_mask(self, site_id: str) -> HorizonMask | None:
-        """Horizon mask for the site. None until S-TERRAIN's mask service (T-15) exists."""
-        del site_id
-        return None
+    def _terrain_mask(self, site_id: str) -> tuple[HorizonMask | None, str | None]:
+        """The site's horizon mask, or None and the reason none is available."""
+        if self._masks is None:
+            return None, "no horizon mask provider is configured"
+        try:
+            return self._masks.get_site_mask(site_id), None
+        except TerrainUnavailableError as exc:
+            return None, str(exc)
 
     def timeline(self, request: TimelineRequest) -> TimelineAnalysis:
+        self._ephemeris.site(request.site_id)  # 404 before any terrain work
+        mask, unavailable_reason = self._terrain_mask(request.site_id)
         geometry = self._ephemeris.compute_geometry(
-            request.site_id, request.start_utc, request.end_utc, request.step_s, location="body"
+            request.site_id,
+            request.start_utc,
+            request.end_utc,
+            request.step_s,
+            location="body",
+            surface_height_m=mask.surface_height_m if mask is not None else None,
+            observer_height_m=mask.observer_height_m if mask is not None else 0.0,
         )
-        mask = self._terrain_mask(geometry.site_id)
         source = dem_source(mask, self._ephemeris.registry) if mask is not None else None
         sun = body_timeline(
             geometry.series[Body.SUN],
             mask,
             dem_source=source,
             window_end_et_s=geometry.window_end_et_s,
+            terrain_unavailable_reason=unavailable_reason,
         )
         earth = body_timeline(
             geometry.series[Body.EARTH],
             mask,
             dem_source=source,
             window_end_et_s=geometry.window_end_et_s,
+            terrain_unavailable_reason=unavailable_reason,
         )
         return TimelineAnalysis(
             site_id=geometry.site_id,
@@ -271,4 +367,12 @@ class TimelineService:
         )
 
 
-__all__ = ["TimelineService", "dem_source"]
+LDEM_DATASET_ID = "lola-ldem-75s-240m"
+
+__all__ = [
+    "HorizonMaskProvider",
+    "LocalHorizonMaskProvider",
+    "TerrainUnavailableError",
+    "TimelineService",
+    "dem_source",
+]

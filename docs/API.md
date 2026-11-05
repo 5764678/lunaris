@@ -316,9 +316,11 @@ Response **200** (`TimelineAnalysis`, abridged):
 }
 ```
 
-- Each sample carries the astronomical **and** the terrain fraction. The terrain fields are
-  `null` when no horizon mask exists for the site (`terrain_horizon_available: false`;
-  masks arrive with S-TERRAIN T-15).
+- Each sample carries the astronomical **and** the terrain fraction. Terrain uses the
+  site's C1 horizon mask from LDEM_75S_240M (0.25°, 200 km, eye 2 m above the DEM
+  surface), and the observer is placed at that height. The terrain fields are `null`
+  when no mask can be produced (`terrain_horizon_available: false`, reason in
+  `limitations`): DEM not acquired, or site outside 75°–90° S.
 - Each sample's interval [t, t + step) is clipped to the requested window, so durations
   and fractions never extend past `end_utc` (the last sample of an end-inclusive grid has
   weight 0).
