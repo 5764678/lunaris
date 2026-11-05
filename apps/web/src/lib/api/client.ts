@@ -17,6 +17,7 @@ import type {
   ErrorResponse,
   HealthResponse,
   RuntimeReport,
+  SiteEphemeris,
 } from "@lunaris/shared-types";
 
 export type ApiErrorKind = "network" | "timeout" | "http" | "invalid_response";
@@ -104,6 +105,29 @@ const isCandidateSite: Guard<CandidateSite> = (v): v is CandidateSite =>
 
 const isCandidateSiteList: Guard<CandidateSiteList> = (v): v is CandidateSiteList =>
   isObject(v) && Array.isArray(v.sites) && v.sites.every(isCandidateSite);
+
+const isEphemerisSample = (v: unknown): boolean =>
+  isObject(v) &&
+  typeof v.epoch_utc === "string" &&
+  typeof v.elevation_deg === "number" &&
+  typeof v.angular_radius_deg === "number" &&
+  Array.isArray(v.direction_moon_me) &&
+  v.direction_moon_me.length === 3;
+
+/** C2 ephemeris: bodies are "sun" / "earth", each with evidence and samples. */
+export const isSiteEphemeris: Guard<SiteEphemeris> = (v): v is SiteEphemeris =>
+  isObject(v) &&
+  typeof v.site_id === "string" &&
+  Array.isArray(v.bodies) &&
+  v.bodies.every(
+    (b) =>
+      isObject(b) &&
+      (b.body === "sun" || b.body === "earth") &&
+      isObject(b.evidence) &&
+      typeof b.evidence.kind === "string" &&
+      Array.isArray(b.samples) &&
+      b.samples.every(isEphemerisSample),
+  );
 
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
@@ -210,6 +234,22 @@ export function createApiClient(options: ApiClientOptions) {
       request<CandidateSite>("POST", "/api/v1/sites", { body: input, guard: isCandidateSite }),
     deleteSite: (siteId: string) =>
       request<undefined>("DELETE", `/api/v1/sites/${encodeURIComponent(siteId)}`),
+    siteEphemeris: (
+      siteId: string,
+      window: { startUtc: string; endUtc: string; stepS: number },
+      signal?: AbortSignal,
+    ) => {
+      const query = new URLSearchParams({
+        start_utc: window.startUtc,
+        end_utc: window.endUtc,
+        step_s: String(window.stepS),
+      });
+      return request<SiteEphemeris>(
+        "GET",
+        `/api/v1/sites/${encodeURIComponent(siteId)}/ephemeris?${query.toString()}`,
+        { signal, guard: isSiteEphemeris },
+      );
+    },
   };
 }
 

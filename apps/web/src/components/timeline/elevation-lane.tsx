@@ -105,9 +105,23 @@ export function ElevationLane({
     };
   }, []);
 
+  const [, yMax] = elevationRange(series);
   return (
     <div className="relative h-full w-full" data-plot-state={state}>
       <div ref={ref} className="absolute inset-0" aria-hidden="true" />
+      {state === "ready" && (
+        <>
+          <span className="pointer-events-none absolute top-0.5 right-1 font-mono text-[9px] leading-none text-dim">
+            +{yMax.toFixed(1)}°
+          </span>
+          <span className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 font-mono text-[9px] leading-none text-dim">
+            0°
+          </span>
+          <span className="pointer-events-none absolute right-1 bottom-0.5 font-mono text-[9px] leading-none text-dim">
+            −{yMax.toFixed(1)}°
+          </span>
+        </>
+      )}
       {state === "error" && (
         <span className="absolute inset-0 flex items-center justify-center font-mono text-3xs text-warn">
           Plot unavailable (chart library failed to load)

@@ -36,7 +36,7 @@ function formatElevation(deg: number | null): string {
  * Time axis + analysis lanes with a draggable epoch cursor. Exposed to assistive
  * technology as a slider (arrows ±1 h, PageUp/PageDown ±1 d, Home/End).
  */
-export function TimelineTrack({ lanes = {} }: { lanes?: LaneData }) {
+export function TimelineTrack({ lanes = {}, geometryNote }: { lanes?: LaneData; geometryNote?: string }) {
   const epochMs = useMissionStore((s) => s.epochMs);
   const startMs = useMissionStore((s) => s.windowStartMs);
   const endMs = useMissionStore((s) => s.windowEndMs);
@@ -92,7 +92,7 @@ export function TimelineTrack({ lanes = {} }: { lanes?: LaneData }) {
   }
 
   return (
-    <div className="grid grid-cols-[9.5rem_minmax(0,1fr)] gap-x-3">
+    <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-x-3">
       {/* Axis */}
       <div className="label-caps flex h-6 items-end pb-1">Window · 30 d UTC</div>
       <div
@@ -153,8 +153,10 @@ export function TimelineTrack({ lanes = {} }: { lanes?: LaneData }) {
               className="hatch relative mt-1 flex items-center justify-center rounded-[3px] border border-hairline"
               style={{ height: EMPTY_LANE_HEIGHT_PX }}
             >
-              <span className="rounded-sm bg-panel-sunken/90 px-1.5 font-mono text-3xs uppercase tracking-[0.12em] text-dim">
-                Not computed · {lane.milestone} · {lane.note}
+              <span className="max-w-full truncate rounded-sm bg-panel-sunken/90 px-1.5 font-mono text-3xs uppercase tracking-[0.12em] text-dim">
+                {(lane.id === "sun" || lane.id === "earth") && geometryNote
+                  ? geometryNote
+                  : `Not computed · ${lane.milestone} · ${lane.note}`}
               </span>
             </div>
           );

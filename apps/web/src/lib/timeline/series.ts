@@ -1,17 +1,7 @@
-import type { Evidence } from "@lunaris/shared-types";
+import type { Evidence, SiteEphemeris, components } from "@lunaris/shared-types";
 
-/**
- * One C2 body-geometry sample (docs/TASKS.md §2, C2). Field names follow the contract;
- * the generated type replaces this one when the ephemeris endpoint (T-22) lands.
- */
-export interface BodyGeometrySample {
-  epoch_utc: string;
-  azimuth_deg: number;
-  elevation_deg: number;
-  range_m: number;
-  angular_radius_deg: number;
-  direction_moon_me: [number, number, number];
-}
+/** One C2 sample from `GET /api/v1/sites/{id}/ephemeris` (generated contract). */
+export type BodyGeometrySample = components["schemas"]["EphemerisSample"];
 
 export type BodyId = "sun" | "earth";
 
@@ -97,4 +87,14 @@ export function elevationRange(series: ElevationSeries, minSpanDeg = 1): [number
   }
   const half = Math.max(minSpanDeg / 2, max * 1.1);
   return [-half, half];
+}
+
+/** Elevation series per body from an ephemeris response; bodies without samples are omitted. */
+export function seriesFromEphemeris(ephemeris: SiteEphemeris): Partial<Record<BodyId, ElevationSeries>> {
+  const out: Partial<Record<BodyId, ElevationSeries>> = {};
+  for (const body of ephemeris.bodies) {
+    if (body.samples.length === 0) continue;
+    out[body.body] = toElevationSeries(body.body, body.samples, body.evidence);
+  }
+  return out;
 }

@@ -6,6 +6,7 @@ import {
   elevationAt,
   elevationRange,
   parseUtc,
+  seriesFromEphemeris,
   toElevationSeries,
   type BodyGeometrySample,
 } from "./series";
@@ -91,5 +92,26 @@ describe("elevationRange", () => {
     expect(hi).toBeCloseTo((1 + 0.27) * 1.1, 12);
     const flat = toElevationSeries("sun", [sample("2026-11-04T00:00:00Z", 0, 0.01)], EVIDENCE);
     expect(elevationRange(flat)).toEqual([-0.5, 0.5]);
+  });
+});
+
+describe("seriesFromEphemeris", () => {
+  it("maps each body with samples and keeps its evidence", () => {
+    const ephemeris = {
+      site_id: "s",
+      bodies: [
+        { body: "sun", evidence: EVIDENCE, samples: SAMPLES, body_radius_m: 6.96e8, body_radii_m: [] },
+        {
+          body: "earth",
+          evidence: { ...EVIDENCE, kind: "model" },
+          samples: [],
+          body_radius_m: 6.4e6,
+          body_radii_m: [],
+        },
+      ],
+    } as unknown as Parameters<typeof seriesFromEphemeris>[0];
+    const lanes = seriesFromEphemeris(ephemeris);
+    expect(lanes.sun?.elevationDeg).toEqual([-1, 1, 0.5]);
+    expect(lanes.earth).toBeUndefined();
   });
 });
