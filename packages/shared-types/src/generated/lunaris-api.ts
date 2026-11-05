@@ -4,6 +4,29 @@
  */
 
 export interface paths {
+    "/api/v1/analysis/site-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Compare sites: terrain, horizon, illumination and Earth visibility
+         * @description One row per site; every cell carries its own evidence (kind, method, sources with
+         *     manifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be
+         *     computed is null with a `reason`, never 0. The default window is calendar year 2027
+         *     at a 1 h step (8 761 samples, within the ephemeris sample cap).
+         */
+        get: operations["compare_sites_api_v1_analysis_site_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/analysis/timeline": {
         parameters: {
             query?: never;
@@ -501,6 +524,68 @@ export interface components {
             url: string;
             /** Width Px */
             width_px: number;
+        };
+        /** CompareCell */
+        CompareCell: {
+            /**
+             * Baseline M
+             * @description Measurement baseline for slope and roughness, m.
+             */
+            baseline_m: number | null;
+            evidence: components["schemas"]["EvidenceSchema"] | null;
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Reason
+             * @description Why the value is null.
+             */
+            reason: string | null;
+            /**
+             * Unit
+             * @description Unit of `value`: m, deg, s, fraction or count.
+             */
+            unit: string;
+            /**
+             * Value
+             * @description null when not computed; see `reason`.
+             */
+            value: number | null;
+        };
+        /** CompareColumn */
+        CompareColumn: {
+            /** Description */
+            description: string;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+        };
+        /** CompareRow */
+        CompareRow: {
+            earth_longest_outage_s: components["schemas"]["CompareCell"];
+            earth_visible_fraction: components["schemas"]["CompareCell"];
+            horizon_max_deg: components["schemas"]["CompareCell"];
+            horizon_min_deg: components["schemas"]["CompareCell"];
+            horizon_truncated_azimuths: components["schemas"]["CompareCell"];
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Longitude Deg */
+            longitude_deg: number;
+            /** Name */
+            name: string;
+            /** Origin */
+            origin: string;
+            roughness_rms_m: components["schemas"]["CompareCell"];
+            /** Site Id */
+            site_id: string;
+            slope_at_site_deg: components["schemas"]["CompareCell"];
+            slope_p95_deg: components["schemas"]["CompareCell"];
+            sun_illuminated_fraction: components["schemas"]["CompareCell"];
+            sun_longest_hidden_s: components["schemas"]["CompareCell"];
+            sun_mean_visible_disk_fraction: components["schemas"]["CompareCell"];
+            surface_height_m: components["schemas"]["CompareCell"];
         };
         /** ComponentCheck */
         ComponentCheck: {
@@ -1260,6 +1345,33 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** SiteComparison */
+        SiteComparison: {
+            /** Assumptions */
+            assumptions: string[];
+            /** Columns */
+            columns: components["schemas"]["CompareColumn"][];
+            /**
+             * End Utc
+             * Format: date-time
+             */
+            end_utc: string;
+            /** Footprint Radius M */
+            footprint_radius_m: number;
+            /** Observer Height M */
+            observer_height_m: number;
+            /** Rows */
+            rows: components["schemas"]["CompareRow"][];
+            /** Sample Count */
+            sample_count: number;
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+            /** Step S */
+            step_s: number;
+        };
         /**
          * SiteEphemeris
          * @description Sun and Earth geometry time series for one site (C2).
@@ -1640,6 +1752,64 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    compare_sites_api_v1_analysis_site_comparison_get: {
+        parameters: {
+            query: {
+                /** @description Comma-separated site ids (1–10). */
+                site_ids: string;
+                /** @description Window start, ISO 8601 UTC. */
+                start_utc?: string;
+                /** @description Window end, ISO 8601 UTC. */
+                end_utc?: string;
+                /** @description Time step, s. */
+                step_s?: number;
+                observer_height_m?: number;
+                footprint_radius_m?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteComparison"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     post_timeline_api_v1_analysis_timeline_post: {
         parameters: {
             query?: never;
