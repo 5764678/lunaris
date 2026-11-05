@@ -13,6 +13,10 @@ export interface MissionModule {
   icon: LucideIcon;
   /** Present only for modules with a working view. */
   href?: string;
+  /** "available" once the module's computation is served and shown somewhere in the UI. */
+  status?: "planned" | "available";
+  /** Where an available module's output appears. */
+  availableIn?: string;
 }
 
 export const MISSION_MODULES: readonly MissionModule[] = [
@@ -37,6 +41,8 @@ export const MISSION_MODULES: readonly MissionModule[] = [
     description: "Sun and Earth azimuth/elevation from SPICE ephemerides.",
     milestone: "M03",
     icon: Orbit,
+    status: "available",
+    availableIn: "Sun/Earth elevation lanes in the timeline (select a site).",
   },
   {
     id: "illumination",

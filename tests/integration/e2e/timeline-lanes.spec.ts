@@ -156,3 +156,11 @@ test.describe("timeline lanes", () => {
     }
   });
 });
+
+test("readiness lists Celestial Geometry as available and the rest as planned", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByTestId("readiness-geometry")).toHaveText(/M03 · available/i);
+  for (const id of ["terrain", "illumination", "visibility", "analysis"]) {
+    await expect(page.getByTestId(`readiness-${id}`)).toHaveText(/planned/i);
+  }
+});
