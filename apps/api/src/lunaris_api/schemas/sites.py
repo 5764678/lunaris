@@ -63,7 +63,10 @@ class CandidateSite(Schema):
     id: str
     name: str
     coordinate: SelenographicCoordinateSchema
-    origin: Literal["user_defined"]
+    origin: Literal["user_defined", "published"] = Field(
+        description="user_defined: entered by a user; published: added from the cited site "
+        "catalogue (GET /api/v1/catalog/sites), with its citation in `reference`."
+    )
     reference: str | None = None
     notes: str | None = None
     created_at_utc: AwareDatetime

@@ -129,6 +129,15 @@ stereographic inverse.
   `origin_moon_me_m`), then `height_m` (for colouring).
 - The response must be cacheable (`ETag` derived from DEM checksum + parameters).
 
+Accepted with T-12 (#8):
+- Both endpoints take `grid_size` (vertices per side, 2–1024, default 512). It is part of
+  the `ETag`, and a matching `If-None-Match` returns `304`.
+- Grid orientation: row 0 lies toward 0° E, rows advance toward 180° E, and columns
+  advance toward 90° E. The web uses the `MOON_ME` positions and does not infer
+  orientation from the index.
+- The metadata may carry additional fields beyond the list above. Consumers ignore
+  fields they don't use.
+
 ### C4 — Illumination and visibility results
 
 `packages/shared-types/src/illumination.ts` and `visibility.ts` hold the draft wire
@@ -141,6 +150,27 @@ contracts. S-GEOMETRY finalises them with these changes:
 - Results report the **astronomical** horizon (body above the C0 plane) and the
   **terrain** horizon (C1 mask) separately.
 - Earth results state that geometric line of sight does not imply a radio link.
+
+Accepted with T-24 (#14):
+- Each sample carries `astronomical_visible_fraction` and `terrain_visible_fraction`.
+  The terrain fraction is null when no mask is available, and the result then says
+  `terrain_horizon_available: false`. Samples also carry
+  `terrain_horizon_elevation_deg` and `terrain_truncated`.
+- Each result carries an `astronomical` summary and a `terrain` summary.
+  - Sun: `illuminated_fraction`, `mean_visible_disk_fraction`, `fully_lit_fraction`.
+  - Earth: `visible_fraction`, `longest_outage_s`, `fully_visible_fraction`.
+  - Longest runs and windows that touch the analysis-window edge are flagged
+    `*_censored`.
+- Earth line-of-sight state per sample:
+  - `clear`: f > 0 against the terrain horizon. This can happen below 0° when the site
+    is on a peak.
+  - `terrain_obstructed`: visible above the astronomical horizon only.
+  - `below_geometric_horizon`: visible above neither.
+  Each state is reported together with its fractions. The radio-link disclaimer is the
+  first limitation on every Earth result.
+- Provenance goes in `evidence.sources`. Each entry gives the dataset manifest id, the
+  source URL and the SHA-256, plus `software` versions. This replaces the draft's
+  `ephemeris`/`dem` `DatasetProvenance` fields.
 
 ---
 
@@ -168,7 +198,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 |---|---|---|---|---|
 | T-01 | Review and merge Milestone 01 (PR #2) | TD re-ran `npm run check` (117 pytest, 42 Vitest, strict mypy/tsc), `next build`, live API + web smoke, real NAIF acquisition + verify; CI green | — | done |
 | T-02 | Cited candidate-site list: PGDA product 78's 27 named 5 m sites and NASA's Artemis III candidate regions, each with coordinates and a citation | Every site has a source a reader can check; nothing uncited ships. Delivered as `packages/data/src/lunaris_data/catalogs/south-pole-candidate-sites.json` (27 sites; all 13 Artemis III 2022 regions matched; reference point = DEM tile centre, cross-checked with PROJ) | — | in review |
-| T-03 | Serve the site catalogue: `GET /api/v1/catalog/sites`, and let a catalogue site be added to the registry with `origin: "published"` plus its citation (wire-contract change to `CandidateSite.origin`) | Contract generated; catalogue sites show their source and the "tile centre, not a landing point" definition in the UI; the demo trio (`demo_trio: true`) can be added in one action | T-02 | todo; TD assigns to the first free session |
+| T-03 | Serve the site catalogue: `GET /api/v1/catalog/sites`, and let a catalogue site be added to the registry with `origin: "published"` plus its citation (wire-contract change to `CandidateSite.origin`) | Contract generated; catalogue sites show their source and the "tile centre, not a landing point" definition in the UI; the demo trio (`demo_trio: true`) can be added in one action | T-02 | in review (API half, S-TERRAIN; UI: S-WEB) |
 
 ### S-TERRAIN
 
@@ -177,9 +207,9 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-10 | `HorizonMask` type (C1) + south polar stereographic forward/inverse on the sphere + point scale factor | Round trip < 1e-9° over the 75–90°S domain; k = 2/(1 + sin\|φ\|) with k(75°S) ≈ 1.0173; consistency with the LDEM_75S_240M label grid (offsets 1905.5 px, 240 m/px); **merged first, small PR** | M01 | in review |
 | T-11 | PDS3 label parser + LDEM_75S_240M reader | Label values reproduced (3812², HEIGHT = DN × 0.5 m, DN range −15529…14049); heights in metres, NaN nodata; refuses a product whose projection or frame doesn't match | T-10 | in review |
 | T-12 | Terrain scene export (C3), `south-pole` scene | Endpoint + contract generated; byte layout tested; vertex positions spot-checked against `spherical_to_cartesian` at 5 vertices; ETag; size cap | T-11 | in review |
-| T-13 | Remote windowed source + PGDA 20 m `/vsicurl/` reader | 1000 × 1000 window around a test site read without full download (bytes transferred logged, well under 100 MB); provenance per read (URL, validators, window bounds); documented fallback | T-11 | todo |
+| T-13 | Remote windowed source + PGDA 20 m `/vsicurl/` reader | 1000 × 1000 window around a test site read without full download (bytes transferred logged, well under 100 MB); provenance per read (URL, validators, window bounds); documented fallback | T-11 | in review |
 | T-14 | Terrain analysis + `GET /api/v1/sites/{id}/terrain` | Height (bilinear), Horn slope with scale-corrected spacing, defined roughness, footprint stats, hazard thresholds as config; every slope/roughness value carries `baseline_m`; synthetic plane/cone slopes within 0.1°; cross-check against `gdaldem slope` on a real window | T-11, T-13 | todo |
-| T-15 | Horizon mask computation (C1) from LDEM_75S_240M | Curvature-corrected ray march, scale-corrected distance, truncation flags. Tests: zero-height DEM on the sphere gives horizon = −acos(R/(R+h_obs)) within 0.01°; an axisymmetric synthetic crater rim gives its analytical angle; a site at 78°S flags truncation toward the north. One mask at 0.25° step, 200 km range in < 30 s | T-10, T-11 | todo |
+| T-15 | Horizon mask computation (C1) from LDEM_75S_240M | Curvature-corrected ray march, scale-corrected distance, truncation flags. Tests: zero-height DEM on the sphere gives horizon = −acos(R/(R+h_obs)) within 0.01°; an axisymmetric synthetic crater rim gives its analytical angle; a site at 78°S flags truncation toward the north. One mask at 0.25° step, 200 km range in < 30 s | T-10, T-11 | in review |
 
 ### S-GEOMETRY
 

@@ -76,3 +76,9 @@ def test_unknown_dataset_404(client: TestClient) -> None:
 
 def test_invalid_dataset_id_422(client: TestClient) -> None:
     assert client.get("/api/v1/datasets/BAD_ID").status_code == 422
+
+
+def test_remote_window_dataset_has_no_acquire_command(client: TestClient) -> None:
+    body = client.get("/api/v1/datasets/pgda-lola-20mpp-80s").json()
+    assert body["local"]["status"] == "remote_window"
+    assert body["acquire_command"] is None

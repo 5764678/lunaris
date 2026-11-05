@@ -35,6 +35,12 @@ export const DATASET_STATUS: Record<
     text: "text-ok",
     hint: "All files present and consistent with the acquisition record.",
   },
+  remote_window: {
+    label: "Remote",
+    dot: "bg-ok",
+    text: "text-muted-foreground",
+    hint: "Read as windows over HTTP byte ranges; never downloaded whole.",
+  },
 };
 
 export function DatasetStatusPill({ status, className }: { status: DatasetStatus; className?: string }) {
