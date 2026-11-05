@@ -4,6 +4,64 @@
  */
 
 export interface paths {
+    "/api/v1/catalog/demo-trio/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add the three demo sites (demo_trio) to the registry in one action
+         * @description Idempotent: sites already registered under the same name are returned, not duplicated.
+         */
+        post: operations["register_demo_trio_api_v1_catalog_demo_trio_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cited south-pole candidate-site catalogue
+         * @description The 27 PGDA product 78 sites with their sources, method, limitations and the
+         *     definition of the reference point (the DEM tile centre, not a landing point).
+         */
+        get: operations["get_site_catalog_api_v1_catalog_sites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/sites/{catalog_site_id}/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a catalogue site to the registry (origin: published) */
+        post: operations["register_catalog_site_api_v1_catalog_sites__catalog_site_id__register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/datasets": {
         parameters: {
             query?: never;
@@ -271,9 +329,10 @@ export interface components {
             notes: string | null;
             /**
              * Origin
-             * @constant
+             * @description user_defined: entered by a user; published: added from the cited site catalogue (GET /api/v1/catalog/sites), with its citation in `reference`.
+             * @enum {string}
              */
-            origin: "user_defined";
+            origin: "user_defined" | "published";
             /** Reference */
             reference: string | null;
         };
@@ -313,6 +372,64 @@ export interface components {
             limit: number;
             /** Sites */
             sites: components["schemas"]["CandidateSite"][];
+        };
+        /** CatalogReferencePointSchema */
+        CatalogReferencePointSchema: {
+            /**
+             * Frame
+             * @constant
+             */
+            frame: "MOON_ME";
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Longitude Deg */
+            longitude_deg: number;
+        };
+        /** CatalogSiteSchema */
+        CatalogSiteSchema: {
+            /** Artemis Iii 2022 Region */
+            artemis_iii_2022_region: string | null;
+            /** Demo Trio */
+            demo_trio: boolean;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Pgda Site Id */
+            pgda_site_id: string;
+            reference_point: components["schemas"]["CatalogReferencePointSchema"];
+            /**
+             * Register Url
+             * @description POST here to add this site to the registry.
+             */
+            register_url: string;
+            tile: components["schemas"]["CatalogTileSchema"];
+        };
+        /** CatalogSourceSchema */
+        CatalogSourceSchema: {
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Use */
+            use: string;
+        };
+        /** CatalogTileSchema */
+        CatalogTileSchema: {
+            /** Centre X M */
+            centre_x_m: number;
+            /** Centre Y M */
+            centre_y_m: number;
+            /** Extent Km */
+            extent_km: number;
+            /** Height Px */
+            height_px: number;
+            /** Pixel Size M */
+            pixel_size_m: number;
+            /** Url */
+            url: string;
+            /** Width Px */
+            width_px: number;
         };
         /** ComponentCheck */
         ComponentCheck: {
@@ -616,6 +733,21 @@ export interface components {
              */
             version: string;
         };
+        /** RegisteredCatalogSites */
+        RegisteredCatalogSites: {
+            /**
+             * Already Registered
+             * @description Catalogue ids whose site (same name) was already in the registry.
+             */
+            already_registered: string[];
+            /**
+             * Created
+             * @description Catalogue ids registered by this request.
+             */
+            created: string[];
+            /** Sites */
+            sites: components["schemas"]["CandidateSite"][];
+        };
         /** RuntimeComponentSchema */
         RuntimeComponentSchema: {
             /** Available */
@@ -703,6 +835,39 @@ export interface components {
              * @description East longitude, degrees, [0, 360).
              */
             longitude_deg: number;
+        };
+        /** SiteCatalogResponse */
+        SiteCatalogResponse: {
+            /** Citation */
+            citation: string;
+            /** Count */
+            count: number;
+            /** Demo Trio Register Url */
+            demo_trio_register_url: string;
+            /**
+             * Evidence Kind
+             * @constant
+             */
+            evidence_kind: "derived_product";
+            /** Id */
+            id: string;
+            /** Limitations */
+            limitations: string[];
+            /** Method */
+            method: string;
+            /**
+             * Reference Point Definition
+             * @description What the coordinates mean: the DEM tile centre, NOT a landing point.
+             */
+            reference_point_definition: string;
+            /** Retrieved On */
+            retrieved_on: string;
+            /** Sites */
+            sites: components["schemas"]["CatalogSiteSchema"][];
+            /** Sources */
+            sources: components["schemas"]["CatalogSourceSchema"][];
+            /** Title */
+            title: string;
         };
         /**
          * SiteEphemeris
@@ -901,6 +1066,131 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    register_demo_trio_api_v1_catalog_demo_trio_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisteredCatalogSites"];
+                };
+            };
+            /** @description Registry full. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_site_catalog_api_v1_catalog_sites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteCatalogResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    register_catalog_site_api_v1_catalog_sites__catalog_site_id__register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalog_site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateSite"];
+                };
+            };
+            /** @description Unknown catalogue site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Already registered, or registry full. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_datasets_api_v1_datasets_get: {
         parameters: {
             query?: never;

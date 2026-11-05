@@ -198,7 +198,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 |---|---|---|---|---|
 | T-01 | Review and merge Milestone 01 (PR #2) | TD re-ran `npm run check` (117 pytest, 42 Vitest, strict mypy/tsc), `next build`, live API + web smoke, real NAIF acquisition + verify; CI green | — | done |
 | T-02 | Cited candidate-site list: PGDA product 78's 27 named 5 m sites and NASA's Artemis III candidate regions, each with coordinates and a citation | Every site has a source a reader can check; nothing uncited ships. Delivered as `packages/data/src/lunaris_data/catalogs/south-pole-candidate-sites.json` (27 sites; all 13 Artemis III 2022 regions matched; reference point = DEM tile centre, cross-checked with PROJ) | — | in review |
-| T-03 | Serve the site catalogue: `GET /api/v1/catalog/sites`, and let a catalogue site be added to the registry with `origin: "published"` plus its citation (wire-contract change to `CandidateSite.origin`) | Contract generated; catalogue sites show their source and the "tile centre, not a landing point" definition in the UI; the demo trio (`demo_trio: true`) can be added in one action | T-02 | todo; TD assigns to the first free session |
+| T-03 | Serve the site catalogue: `GET /api/v1/catalog/sites`, and let a catalogue site be added to the registry with `origin: "published"` plus its citation (wire-contract change to `CandidateSite.origin`) | Contract generated; catalogue sites show their source and the "tile centre, not a landing point" definition in the UI; the demo trio (`demo_trio: true`) can be added in one action | T-02 | in review (API half, S-TERRAIN; UI: S-WEB) |
 
 ### S-TERRAIN
 

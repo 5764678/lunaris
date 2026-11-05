@@ -10,10 +10,12 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
 from lunaris_api.db.repositories import SqlAlchemySiteRepository
+from lunaris_api.services.catalog import CatalogService
 from lunaris_api.services.datasets import DatasetService
 from lunaris_api.services.sites import SiteService
 from lunaris_api.services.terrain import TerrainSceneService
 from lunaris_api.settings import Settings
+from lunaris_data.catalogs.sites import load_site_catalog
 
 
 def get_app_settings(request: Request) -> Settings:
@@ -61,3 +63,12 @@ def get_ephemeris_service(
 
 EphemerisServiceDep = Annotated[EphemerisService, Depends(get_ephemeris_service)]
 __all__ += ["EphemerisServiceDep"]
+
+
+def get_catalog_service(
+    sites: Annotated[SiteService, Depends(get_site_service)],
+) -> CatalogService:
+    return CatalogService(load_site_catalog(), sites)
+
+
+CatalogServiceDep = Annotated[CatalogService, Depends(get_catalog_service)]
