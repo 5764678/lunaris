@@ -14,6 +14,7 @@ export const queryKeys = {
   runtime: ["system", "runtime"] as const,
   datasets: ["datasets"] as const,
   sites: ["sites"] as const,
+  catalog: ["catalog", "sites"] as const,
 };
 
 /**
@@ -117,6 +118,26 @@ export function useDeleteSite() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (siteId: string) => api.deleteSite(siteId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sites }),
+  });
+}
+
+/** The cited south-pole site catalogue (static on the server). */
+export function useSiteCatalog() {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.catalog,
+      queryFn: ({ signal }) => api.siteCatalog(signal).then((r) => r.data),
+      staleTime: Infinity,
+    }),
+  );
+}
+
+/** Adds the cited demo trio to the registry in one request (idempotent on the server). */
+export function useRegisterDemoTrio() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.registerDemoTrio().then((r) => r.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sites }),
   });
 }
