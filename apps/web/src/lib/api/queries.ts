@@ -6,7 +6,9 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tan
 import { config } from "@/lib/config";
 import { useHydrated } from "@/lib/use-hydrated";
 
-import { ApiError } from "./client";
+import { decodeTerrainScene, type DecodedTerrain } from "@/lib/terrain/scene-data";
+
+import { ApiError, type TerrainSceneMetadata } from "./client";
 import { api } from "./instance";
 
 export const queryKeys = {
@@ -16,7 +18,15 @@ export const queryKeys = {
   sites: ["sites"] as const,
   ephemeris: (siteId: string, startMs: number, endMs: number, stepS: number) =>
     ["sites", siteId, "ephemeris", startMs, endMs, stepS] as const,
+  terrainScene: (sceneId: string, gridSize: number) => ["terrain", "scene", sceneId, gridSize] as const,
 };
+
+export interface TerrainScene {
+  metadata: TerrainSceneMetadata;
+  terrain: DecodedTerrain;
+  /** Bytes transferred and wall time for the vertex buffer (304 revalidations are fast). */
+  dataLatencyMs: number;
+}
 
 /**
  * Report a query as pending until hydration has finished.
@@ -146,6 +156,28 @@ export function useSiteEphemeris(siteId: string | null, startMs: number | null, 
             signal,
           )
           .then((r) => r.data),
+    }),
+  );
+}
+
+/**
+ * C3 terrain scene: metadata, then the vertex buffer, decoded for display. Kept for the
+ * session (the scene is immutable for a given ETag; the browser revalidates the buffer).
+ */
+export function useTerrainScene(sceneId: string, gridSize: number, enabled: boolean) {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.terrainScene(sceneId, gridSize),
+      enabled,
+      staleTime: Infinity,
+      gcTime: 5 * 60_000,
+      retry: 1,
+      queryFn: async ({ signal }): Promise<TerrainScene> => {
+        const { data: metadata } = await api.terrainScene(sceneId, gridSize, signal);
+        const binary = await api.terrainSceneData(metadata, signal);
+        const terrain = decodeTerrainScene(binary.data, { width: metadata.width, height: metadata.height });
+        return { metadata, terrain, dataLatencyMs: binary.latencyMs };
+      },
     }),
   );
 }

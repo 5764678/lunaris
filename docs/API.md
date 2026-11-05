@@ -186,6 +186,31 @@ the SHA-256 pinned in its manifest. Measured locally with the real DEM: the firs
 request (reads and hashes the 29 MB DEM, builds the grid) takes ≈ 0.8 s; later requests
 are served from the in-process cache.
 
+<<<<<<< HEAD
+### `GET /api/v1/sites/{site_id}/terrain`
+
+Terrain analysis at a registered site (T-14; owner S-TERRAIN), computed from a window of
+the PGDA LOLA 20 m south-pole DEM read over HTTP byte ranges (`pgda-lola-20mpp-80s`).
+
+Query: `footprint_radius_m` (default 50, max 2000), and the optional hazard thresholds
+`max_slope_deg` (0–90) and `max_roughness_m` (> 0). The response holds:
+- `height_m`: bilinear, above the 1 737 400 m sphere;
+- `scale_factor`: k at the site;
+- `slope_at_site`: `slope_deg`, `baseline_m`;
+- `footprint`: cell counts including `missing_cell_count`, height range, slope mean / p95 /
+  max with `slope_baseline_m`, `roughness_rms_m` with `roughness_baseline_m`;
+- `hazard`: `null` unless thresholds are given; otherwise the flags plus `assumption`
+  evidence;
+- `dem`: window provenance (URL, ETag, Last-Modified, window, bytes requested, retries,
+  cache use);
+- `evidence`: `calculation`, with method and source;
+- `limitations`.
+
+**404** for an unknown site, **422** for invalid input or `out_of_coverage` (outside about
+80°S–90°S), **503** `dataset_unavailable` when the window cannot be read. The first
+request for a site reads the window remotely (≈ 10–15 s); repeats are served from the
+window cache under `data/processed/`.
+=======
 ### `GET /api/v1/sites/{site_id}/ephemeris`
 
 Apparent Sun and Earth geometry from a registered site (contract C2, `docs/SCIENCE.md`
@@ -243,6 +268,28 @@ Response **200** (`SiteEphemeris`, abridged):
 | 422 | `validation_error` / `topocentric_frame_undefined` | Site at latitude exactly ±90° (C0) |
 | 422 | `validation_error` | Malformed query (missing field, naive timestamp, `step_s` out of range) |
 | 503 | `kernels_unavailable` | Kernels not acquired or failing SHA-256 verification; run `uv run lunaris-data acquire naif-generic-kernels-lunar` |
+>>>>>>> origin/main
+
+### `GET /api/v1/catalog/sites` · `POST /api/v1/catalog/sites/{catalog_site_id}/register` · `POST /api/v1/catalog/demo-trio/register`
+
+The cited south-pole candidate-site catalogue (T-03; data from T-02,
+`packages/data/src/lunaris_data/catalogs/south-pole-candidate-sites.json`).
+
+- `GET /catalog/sites` returns the 27 PGDA product 78 sites, with `reference_point`
+  (planetocentric, MOON_ME), `tile`, `pgda_site_id`, `artemis_iii_2022_region` and
+  `demo_trio`. The catalogue-level `reference_point_definition` states what the
+  coordinates are: the DEM tile centre, **not a landing point**. Also returned: `method`,
+  `sources`, `citation` and `limitations`.
+- `POST /catalog/sites/{id}/register` adds that site to the registry and returns
+  **201** with a `CandidateSite` whose `origin` is `"published"`. Its `reference` holds the
+  citation (including the PGDA tile id); its `notes` hold the catalogue id, the Artemis
+  III region and the reference-point definition. **404** for an unknown catalogue id,
+  **409** if a site with that name is already registered.
+- `POST /catalog/demo-trio/register` adds the three `demo_trio` sites in one action. It
+  is idempotent: sites already registered under the same name are returned and listed
+  in `already_registered`.
+
+`CandidateSite.origin` is now `"user_defined" | "published"` (wire-contract change).
 
 ## Changing the contract
 

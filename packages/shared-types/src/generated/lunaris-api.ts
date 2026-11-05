@@ -4,6 +4,64 @@
  */
 
 export interface paths {
+    "/api/v1/catalog/demo-trio/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add the three demo sites (demo_trio) to the registry in one action
+         * @description Idempotent: sites already registered under the same name are returned, not duplicated.
+         */
+        post: operations["register_demo_trio_api_v1_catalog_demo_trio_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cited south-pole candidate-site catalogue
+         * @description The 27 PGDA product 78 sites with their sources, method, limitations and the
+         *     definition of the reference point (the DEM tile centre, not a landing point).
+         */
+        get: operations["get_site_catalog_api_v1_catalog_sites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/sites/{catalog_site_id}/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a catalogue site to the registry (origin: published) */
+        post: operations["register_catalog_site_api_v1_catalog_sites__catalog_site_id__register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/datasets": {
         parameters: {
             query?: never;
@@ -99,6 +157,29 @@ export interface paths {
          *     10 000 samples per request; more gives 422 ``sample_cap_exceeded``.
          */
         get: operations["get_site_ephemeris_api_v1_sites__site_id__ephemeris_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/terrain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Terrain analysis at a site (height, slope, roughness, hazards)
+         * @description Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness
+         *     and footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every
+         *     slope and roughness carries its baseline. Hazard flags appear only when thresholds
+         *     are supplied; they are the caller's assumptions.
+         */
+        get: operations["get_site_terrain_api_v1_sites__site_id__terrain_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -271,9 +352,10 @@ export interface components {
             notes: string | null;
             /**
              * Origin
-             * @constant
+             * @description user_defined: entered by a user; published: added from the cited site catalogue (GET /api/v1/catalog/sites), with its citation in `reference`.
+             * @enum {string}
              */
-            origin: "user_defined";
+            origin: "user_defined" | "published";
             /** Reference */
             reference: string | null;
         };
@@ -313,6 +395,64 @@ export interface components {
             limit: number;
             /** Sites */
             sites: components["schemas"]["CandidateSite"][];
+        };
+        /** CatalogReferencePointSchema */
+        CatalogReferencePointSchema: {
+            /**
+             * Frame
+             * @constant
+             */
+            frame: "MOON_ME";
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Longitude Deg */
+            longitude_deg: number;
+        };
+        /** CatalogSiteSchema */
+        CatalogSiteSchema: {
+            /** Artemis Iii 2022 Region */
+            artemis_iii_2022_region: string | null;
+            /** Demo Trio */
+            demo_trio: boolean;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Pgda Site Id */
+            pgda_site_id: string;
+            reference_point: components["schemas"]["CatalogReferencePointSchema"];
+            /**
+             * Register Url
+             * @description POST here to add this site to the registry.
+             */
+            register_url: string;
+            tile: components["schemas"]["CatalogTileSchema"];
+        };
+        /** CatalogSourceSchema */
+        CatalogSourceSchema: {
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Use */
+            use: string;
+        };
+        /** CatalogTileSchema */
+        CatalogTileSchema: {
+            /** Centre X M */
+            centre_x_m: number;
+            /** Centre Y M */
+            centre_y_m: number;
+            /** Extent Km */
+            extent_km: number;
+            /** Height Px */
+            height_px: number;
+            /** Pixel Size M */
+            pixel_size_m: number;
+            /** Url */
+            url: string;
+            /** Width Px */
+            width_px: number;
         };
         /** ComponentCheck */
         ComponentCheck: {
@@ -458,6 +598,35 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** DemWindowSchema */
+        DemWindowSchema: {
+            /** Bytes Requested */
+            bytes_requested: number;
+            /** Citation */
+            citation: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Etag */
+            etag: string | null;
+            /** Http Retries */
+            http_retries: number;
+            /** Last Modified */
+            last_modified: string | null;
+            /** Read At Utc */
+            read_at_utc: string;
+            /** Resolution M */
+            resolution_m: number;
+            /** Served From Cache */
+            served_from_cache: boolean;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Window Col Row Width Height */
+            window_col_row_width_height: number[];
+            /** Window Map Bounds M */
+            window_map_bounds_m: number[];
+        };
         /** EphemerisObserver */
         EphemerisObserver: {
             /**
@@ -575,6 +744,59 @@ export interface components {
             /** Statement */
             statement: string;
         };
+        /** FootprintSchema */
+        FootprintSchema: {
+            /** Cell Count */
+            cell_count: number;
+            /** Height Max M */
+            height_max_m: number;
+            /** Height Mean M */
+            height_mean_m: number;
+            /** Height Min M */
+            height_min_m: number;
+            /**
+             * Missing Cell Count
+             * @description Cells with no DEM value (never treated as 0).
+             */
+            missing_cell_count: number;
+            /** Radius M */
+            radius_m: number;
+            /**
+             * Roughness Baseline M
+             * @description Diameter of the plane-fit window, m.
+             */
+            roughness_baseline_m: number;
+            /** Roughness Rms M */
+            roughness_rms_m: number | null;
+            /** Slope Baseline M */
+            slope_baseline_m: number;
+            /** Slope Max Deg */
+            slope_max_deg: number | null;
+            /** Slope Mean Deg */
+            slope_mean_deg: number | null;
+            /** Slope P95 Deg */
+            slope_p95_deg: number | null;
+        };
+        /** HazardSchema */
+        HazardSchema: {
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Max Roughness M
+             * @description Assumption supplied by the caller.
+             */
+            max_roughness_m: number | null;
+            /**
+             * Max Slope Deg
+             * @description Assumption supplied by the caller.
+             */
+            max_slope_deg: number | null;
+            /** Roughness Exceeds */
+            roughness_exceeds: boolean | null;
+            /** Slope Fraction Above */
+            slope_fraction_above: number | null;
+            /** Slope P95 Exceeds */
+            slope_p95_exceeds: boolean | null;
+        };
         /**
          * HealthResponse
          * @description Service liveness and readiness. HTTP 200 when ``ok``, 503 when ``degraded``.
@@ -615,6 +837,21 @@ export interface components {
              * @description Release version of the API service.
              */
             version: string;
+        };
+        /** RegisteredCatalogSites */
+        RegisteredCatalogSites: {
+            /**
+             * Already Registered
+             * @description Catalogue ids whose site (same name) was already in the registry.
+             */
+            already_registered: string[];
+            /**
+             * Created
+             * @description Catalogue ids registered by this request.
+             */
+            created: string[];
+            /** Sites */
+            sites: components["schemas"]["CandidateSite"][];
         };
         /** RuntimeComponentSchema */
         RuntimeComponentSchema: {
@@ -704,6 +941,39 @@ export interface components {
              */
             longitude_deg: number;
         };
+        /** SiteCatalogResponse */
+        SiteCatalogResponse: {
+            /** Citation */
+            citation: string;
+            /** Count */
+            count: number;
+            /** Demo Trio Register Url */
+            demo_trio_register_url: string;
+            /**
+             * Evidence Kind
+             * @constant
+             */
+            evidence_kind: "derived_product";
+            /** Id */
+            id: string;
+            /** Limitations */
+            limitations: string[];
+            /** Method */
+            method: string;
+            /**
+             * Reference Point Definition
+             * @description What the coordinates mean: the DEM tile centre, NOT a landing point.
+             */
+            reference_point_definition: string;
+            /** Retrieved On */
+            retrieved_on: string;
+            /** Sites */
+            sites: components["schemas"]["CatalogSiteSchema"][];
+            /** Sources */
+            sources: components["schemas"]["CatalogSourceSchema"][];
+            /** Title */
+            title: string;
+        };
         /**
          * SiteEphemeris
          * @description Sun and Earth geometry time series for one site (C2).
@@ -747,6 +1017,46 @@ export interface components {
             start_utc: string;
             /** Step S */
             step_s: number;
+        };
+        /** SiteTerrainResponse */
+        SiteTerrainResponse: {
+            dem: components["schemas"]["DemWindowSchema"];
+            evidence: components["schemas"]["EvidenceSchema"];
+            footprint: components["schemas"]["FootprintSchema"];
+            /** @description Present only when thresholds were supplied; LUNARIS ships no default. */
+            hazard: components["schemas"]["HazardSchema"] | null;
+            /**
+             * Height M
+             * @description Bilinear DEM height above the 1 737 400 m sphere.
+             */
+            height_m: number;
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Limitations */
+            limitations: string[];
+            /** Longitude Deg */
+            longitude_deg: number;
+            /**
+             * Scale Factor
+             * @description Polar stereographic point scale factor k at the site.
+             */
+            scale_factor: number;
+            /** Site Id */
+            site_id: string;
+            slope_at_site: components["schemas"]["SlopeValueSchema"];
+        };
+        /** SlopeValueSchema */
+        SlopeValueSchema: {
+            /**
+             * Baseline M
+             * @description Ground distance between the pixel centres Horn's operator differences.
+             */
+            baseline_m: number;
+            /**
+             * Slope Deg
+             * @description Horn slope; null where the DEM has no value.
+             */
+            slope_deg: number | null;
         };
         /** SourceReferenceSchema */
         SourceReferenceSchema: {
@@ -901,6 +1211,131 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    register_demo_trio_api_v1_catalog_demo_trio_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisteredCatalogSites"];
+                };
+            };
+            /** @description Registry full. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_site_catalog_api_v1_catalog_sites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteCatalogResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    register_catalog_site_api_v1_catalog_sites__catalog_site_id__register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalog_site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateSite"];
+                };
+            };
+            /** @description Unknown catalogue site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Already registered, or registry full. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_datasets_api_v1_datasets_get: {
         parameters: {
             query?: never;
@@ -1210,6 +1645,71 @@ export interface operations {
                 };
             };
             /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_site_terrain_api_v1_sites__site_id__terrain_get: {
+        parameters: {
+            query?: {
+                /** @description Footprint radius, m. */
+                footprint_radius_m?: number;
+                /** @description Hazard threshold (assumption). */
+                max_slope_deg?: number | null;
+                /** @description Hazard threshold (assumption). */
+                max_roughness_m?: number | null;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteTerrainResponse"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input or site outside coverage. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEM window could not be read. */
             503: {
                 headers: {
                     [name: string]: unknown;
