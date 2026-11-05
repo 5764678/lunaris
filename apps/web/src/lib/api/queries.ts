@@ -16,6 +16,8 @@ export const queryKeys = {
   runtime: ["system", "runtime"] as const,
   datasets: ["datasets"] as const,
   sites: ["sites"] as const,
+  timeline: (siteId: string, startMs: number, endMs: number, stepS: number) =>
+    ["sites", siteId, "timeline", startMs, endMs, stepS] as const,
   ephemeris: (siteId: string, startMs: number, endMs: number, stepS: number) =>
     ["sites", siteId, "ephemeris", startMs, endMs, stepS] as const,
   terrainScene: (sceneId: string, gridSize: number) => ["terrain", "scene", sceneId, gridSize] as const,
@@ -178,6 +180,30 @@ export function useTerrainScene(sceneId: string, gridSize: number, enabled: bool
         const terrain = decodeTerrainScene(binary.data, { width: metadata.width, height: metadata.height });
         return { metadata, terrain, dataLatencyMs: binary.latencyMs };
       },
+    }),
+  );
+}
+
+/** C4 illumination and Earth visibility (astronomical and terrain horizons) for a site. */
+export function useSiteTimeline(siteId: string | null, startMs: number | null, endMs: number | null) {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.timeline(siteId ?? "", startMs ?? 0, endMs ?? 0, EPHEMERIS_STEP_S),
+      enabled: siteId !== null && startMs !== null && endMs !== null,
+      staleTime: Infinity,
+      retry: 1,
+      queryFn: ({ signal }) =>
+        api
+          .analysisTimeline(
+            siteId!,
+            {
+              startUtc: new Date(startMs!).toISOString(),
+              endUtc: new Date(endMs!).toISOString(),
+              stepS: EPHEMERIS_STEP_S,
+            },
+            signal,
+          )
+          .then((r) => r.data),
     }),
   );
 }

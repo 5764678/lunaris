@@ -348,6 +348,13 @@ test("T-33: the SPICE Sun lights the terrain at the epoch; shadows labelled illu
         body: JSON.stringify(syntheticSunEphemeris(route.request().url())),
       }),
     );
+    await page.route(/\/api\/v1\/analysis\/timeline$/, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(syntheticTimeline(route.request().postDataJSON() as TimelineRequest, null)),
+      }),
+    );
     await page.goto("/?terrain_grid=128");
     await expect(page.getByTestId("moon-canvas").locator("canvas")).toBeVisible();
 
@@ -367,7 +374,11 @@ test("T-33: the SPICE Sun lights the terrain at the epoch; shadows labelled illu
     await expect(view).toHaveAttribute("data-lighting", "spice");
     const disclosure = page.getByTestId("terrain-lighting-disclosure");
     await expect(disclosure).toContainText("Rendered shadows are illustrative");
-    await expect(page.getByTestId("terrain-site-illumination")).toContainText("not computed");
+    const illumination = page.getByTestId("terrain-site-illumination");
+    await expect(illumination).toHaveAttribute("data-state", "computed");
+    await expect(illumination).toContainText("terrain horizon not available");
+    await expect(illumination).toContainText("(astronomical)");
+    await expect(illumination).toContainText("Window (astronomical horizon)");
     await expect(page.getByTestId("selected-site-sun-azel")).toHaveText(/^\d+\.\d° \/ [+−]\d+\.\d{2}°$/);
 
     // Scrubbing the epoch moves the Sun.
@@ -377,6 +388,122 @@ test("T-33: the SPICE Sun lights the terrain at the epoch; shadows labelled illu
     for (let i = 0; i < 2; i++) await page.keyboard.press("PageUp");
     await expect(page.getByTestId("selected-site-sun-azel")).not.toHaveText(azBefore!);
     await expect(page.getByTestId("terrain-sun-elevation")).not.toHaveText(before!);
+  } finally {
+    await request.delete(`${api}/api/v1/sites/${id}`);
+  }
+});
+
+interface TimelineRequest {
+  site_id: string;
+  start_utc: string;
+  end_utc: string;
+  step_s: number;
+}
+
+/** SYNTHETIC C4 timeline (labelled). `terrain` null = no horizon mask served. */
+function syntheticTimeline(req: TimelineRequest, terrain: number | null) {
+  const start = Date.parse(req.start_utc);
+  const step = req.step_s * 1000;
+  const n = Math.floor((Date.parse(req.end_utc) - start) / step) + 1;
+  const summary = (mean: number, truncated: boolean) => ({
+    horizon: "x",
+    mean_visible_disk_fraction: mean,
+    illuminated_fraction: mean,
+    fully_lit_fraction: mean,
+    longest_darkness_s: 0,
+    longest_darkness_censored: false,
+    longest_illumination_s: 0,
+    longest_illumination_censored: true,
+    any_truncated: truncated,
+    resolution_s: req.step_s,
+    sunlit_windows: [],
+  });
+  return {
+    site_id: req.site_id,
+    site_name: "synthetic",
+    start_utc: req.start_utc,
+    end_utc: req.end_utc,
+    step_s: req.step_s,
+    sample_count: n,
+    max_samples: 10_000,
+    computed_at_utc: req.start_utc,
+    observer: {},
+    software: {},
+    terrain_horizon_available: terrain !== null,
+    illumination: {
+      body: "sun",
+      evidence: {
+        kind: "calculation",
+        statement: "SYNTHETIC E2E FIXTURE.",
+        sources: [],
+        method: "x",
+        assumptions: [],
+      },
+      limitations: [],
+      astronomical: summary(1, false),
+      terrain: terrain === null ? null : summary(terrain, true),
+      samples: Array.from({ length: n }, (_, i) => ({
+        epoch_utc: new Date(start + i * step).toISOString(),
+        azimuth_deg: 0,
+        elevation_deg: 1.5,
+        solar_radius_deg: 0.27,
+        astronomical_visible_fraction: 1,
+        terrain_horizon_elevation_deg: terrain === null ? null : 1,
+        terrain_visible_fraction: terrain,
+        terrain_truncated: terrain === null ? null : true,
+      })),
+    },
+    earth_visibility: {
+      body: "earth",
+      evidence: {},
+      limitations: [],
+      astronomical: {},
+      terrain: null,
+      samples: [],
+    },
+  };
+}
+
+test("T-33: a served terrain fraction is shown, truncated values as an upper bound", async ({
+  page,
+  request,
+}) => {
+  const api = "http://localhost:8100";
+  const name = `E2E masked site ${Date.now()}`;
+  const created = await request.post(`${api}/api/v1/sites`, {
+    data: { name, latitude_deg: -89.5, longitude_deg: 45, notes: "e2e lighting" },
+  });
+  const { id } = (await created.json()) as { id: string };
+  try {
+    await serve(page, syntheticScene(64));
+    await page.route(/\/api\/v1\/sites\/[^/]+\/ephemeris\?/, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(syntheticSunEphemeris(route.request().url())),
+      }),
+    );
+    await page.route(/\/api\/v1\/analysis\/timeline$/, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(syntheticTimeline(route.request().postDataJSON() as TimelineRequest, 0.42)),
+      }),
+    );
+    await page.goto("/?terrain_grid=64");
+    await page
+      .getByTestId("site-list")
+      .locator("li", { hasText: name })
+      .locator("button[aria-pressed]")
+      .click();
+    await page.getByRole("radio", { name: "South-pole terrain" }).click();
+    await expect(page.getByTestId("terrain-view")).toHaveAttribute("data-lighting", "spice", {
+      timeout: 60_000,
+    });
+    await expect(page.getByTestId("terrain-site-illumination-terrain")).toHaveText(
+      "≤ 42 % (terrain horizon)",
+    );
+    await expect(page.getByTestId("terrain-site-illumination")).toContainText("Window (terrain horizon)");
   } finally {
     await request.delete(`${api}/api/v1/sites/${id}`);
   }

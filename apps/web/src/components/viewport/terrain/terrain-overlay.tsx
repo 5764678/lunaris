@@ -8,7 +8,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { TerrainScene } from "@/lib/api/queries";
 import { heightColor } from "@/lib/terrain/scene-data";
 
+import { describeError } from "@/lib/api/client";
+import { useSiteTimeline } from "@/lib/api/queries";
 import { formatUtc } from "@/lib/time/time";
+import { siteIlluminationAt } from "@/lib/timeline/illumination";
+import { useMissionStore } from "@/store/mission-store";
 
 import { isHttpsUrl } from "../surface-source";
 import type { TerrainSun } from "./use-terrain-sun";
@@ -201,16 +205,71 @@ function LightingDisclosure({ sun }: { sun: TerrainSun }) {
         />
         <span className="font-mono text-3xs text-muted-foreground">Rendered shadows are illustrative</span>
       </div>
-      <div className="flex items-center gap-2" data-testid="terrain-site-illumination">
-        <EvidenceBadge
-          kind="not_computed"
-          label="N/C · M04"
-          detail="The selected site's illumination against the terrain horizon (visible solar-disk fraction, D4) comes from the timeline analysis, which is not served yet."
-        />
-        <span className="font-mono text-3xs text-dim">
-          {sun.siteName}: illumination vs terrain horizon not computed yet
+      <SiteIllumination siteName={sun.siteName} />
+    </div>
+  );
+}
+
+const pct = (f: number) => `${(f * 100).toFixed(0)} %`;
+
+/**
+ * The selected site's computed illumination (C4, D4) at the epoch, in the 3D view: the
+ * visible solar-disk fraction above the terrain horizon (or "terrain horizon not
+ * available"), the astronomical fraction, and the window summary. Never a rendered value.
+ */
+function SiteIllumination({ siteName }: { siteName: string }) {
+  const siteId = useMissionStore((s) => s.selectedSiteId);
+  const epochMs = useMissionStore((s) => s.epochMs);
+  const startMs = useMissionStore((s) => s.windowStartMs);
+  const endMs = useMissionStore((s) => s.windowEndMs);
+  const query = useSiteTimeline(siteId, startMs, endMs);
+  const value = query.data && epochMs !== null ? siteIlluminationAt(query.data, epochMs) : null;
+
+  if (!query.data || !value) {
+    const reason = query.isError
+      ? describeError(query.error)
+      : query.isPending
+        ? "computing the illumination timeline…"
+        : "epoch outside the computed window";
+    return (
+      <div
+        className="flex items-center gap-2"
+        data-testid="terrain-site-illumination"
+        data-state="not-computed"
+      >
+        <EvidenceBadge kind="not_computed" label="N/C" detail={reason} />
+        <span className="truncate font-mono text-3xs text-dim">
+          {siteName}: illumination not computed — {reason}
         </span>
       </div>
+    );
+  }
+  const ev = query.data.illumination.evidence;
+  const s = value.summary;
+  return (
+    <div className="flex items-start gap-2" data-testid="terrain-site-illumination" data-state="computed">
+      <EvidenceBadge
+        kind={ev.kind}
+        label="CALC"
+        detail={`${ev.statement} ${query.data.illumination.limitations.join(" ")}`.trim()}
+        className="mt-px"
+      />
+      <span className="min-w-0 font-mono text-3xs text-muted-foreground">
+        <span className="text-foreground">{siteName}</span> · Sun disk visible{" "}
+        {value.terrain === null ? (
+          <span data-testid="terrain-site-illumination-terrain">terrain horizon not available</span>
+        ) : (
+          <span className="numeric text-foreground" data-testid="terrain-site-illumination-terrain">
+            {value.terrainUpperBound ? "≤ " : ""}
+            {pct(value.terrain)} (terrain horizon)
+          </span>
+        )}{" "}
+        · {pct(value.astronomical)} (astronomical) at {formatUtc(value.sampleMs, false)} UTC
+        <br />
+        Window ({s.horizon} horizon): mean disk {pct(s.meanVisibleDiskFraction)} · any part lit{" "}
+        {pct(s.illuminatedFraction)}
+        {s.anyTruncated ? " · some rays truncated (bounds)" : ""}
+      </span>
     </div>
   );
 }
