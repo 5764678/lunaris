@@ -78,3 +78,17 @@ def get_catalog_service(
 
 
 CatalogServiceDep = Annotated[CatalogService, Depends(get_catalog_service)]
+
+
+# ── Illumination and visibility timelines (S-GEOMETRY, T-24) ───────────────
+from lunaris_api.services.illumination import TimelineService  # noqa: E402
+
+
+def get_timeline_service(
+    ephemeris: Annotated[EphemerisService, Depends(get_ephemeris_service)],
+) -> TimelineService:
+    return TimelineService(ephemeris)
+
+
+TimelineServiceDep = Annotated[TimelineService, Depends(get_timeline_service)]
+__all__ += ["TimelineServiceDep"]
