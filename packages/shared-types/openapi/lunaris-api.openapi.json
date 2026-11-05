@@ -1351,6 +1351,149 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "HorizonDemSchema": {
+        "properties": {
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "resolution_m": {
+            "title": "Resolution M",
+            "type": "number"
+          },
+          "sha256": {
+            "description": "SHA-256 of the DEM file the mask was computed from.",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "title",
+          "sha256",
+          "resolution_m",
+          "source_url",
+          "citation"
+        ],
+        "title": "HorizonDemSchema",
+        "type": "object"
+      },
+      "HorizonMaskResponse": {
+        "properties": {
+          "azimuth_deg": {
+            "description": "Uniform, from 0, clockwise from local north.",
+            "items": {
+              "type": "number"
+            },
+            "title": "Azimuth Deg",
+            "type": "array"
+          },
+          "azimuth_step_deg": {
+            "title": "Azimuth Step Deg",
+            "type": "number"
+          },
+          "dem": {
+            "$ref": "#/components/schemas/HorizonDemSchema"
+          },
+          "elevation_deg": {
+            "description": "Horizon elevation above the site's radial horizontal plane (C0).",
+            "items": {
+              "type": "number"
+            },
+            "title": "Elevation Deg",
+            "type": "array"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "frame": {
+            "default": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          },
+          "max_range_m": {
+            "title": "Max Range M",
+            "type": "number"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "observer_height_m": {
+            "description": "Eye height above the DEM surface, m.",
+            "title": "Observer Height M",
+            "type": "number"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "surface_height_m": {
+            "description": "DEM height at the site above the 1 737 400 m sphere.",
+            "title": "Surface Height M",
+            "type": "number"
+          },
+          "truncated": {
+            "description": "True where the ray left DEM coverage before max_range_m: the elevation there is only a lower bound.",
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Truncated",
+            "type": "array"
+          },
+          "truncated_count": {
+            "title": "Truncated Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "site_id",
+          "latitude_deg",
+          "longitude_deg",
+          "frame",
+          "observer_height_m",
+          "surface_height_m",
+          "azimuth_step_deg",
+          "azimuth_deg",
+          "elevation_deg",
+          "truncated",
+          "truncated_count",
+          "max_range_m",
+          "method",
+          "dem",
+          "evidence",
+          "limitations"
+        ],
+        "title": "HorizonMaskResponse",
+        "type": "object"
+      },
       "RegisteredCatalogSites": {
         "properties": {
           "already_registered": {
@@ -2741,6 +2884,96 @@
         "summary": "Sun and Earth geometry for a site",
         "tags": [
           "ephemeris"
+        ]
+      }
+    },
+    "/api/v1/sites/{site_id}/horizon": {
+      "get": {
+        "description": "Horizon elevation versus azimuth computed by ray marching LDEM_75S_240M (curvature\nincluded, distances on the sphere). Computed once per site and parameters, then served\nfrom a file cache. Truncated azimuths are lower bounds.",
+        "operationId": "get_site_horizon_api_v1_sites__site_id__horizon_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9-]+$",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Eye height above the surface, m.",
+            "in": "query",
+            "name": "observer_height_m",
+            "required": false,
+            "schema": {
+              "default": 2.0,
+              "description": "Eye height above the surface, m.",
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Observer Height M",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HorizonMaskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input or site outside LDEM coverage."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "LDEM not acquired or not verified."
+          }
+        },
+        "summary": "Terrain horizon mask of a site (LOLA 240 m, 0.25° step, 200 km)",
+        "tags": [
+          "terrain"
         ]
       }
     },
