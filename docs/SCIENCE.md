@@ -509,9 +509,36 @@ containing the reference point, and the 3 × 3 (720 m) spread.
   Point values from the paper tables of Mazarico et al. (2011), Gläser et al. (2014) and
   Barker et al. (2021) are recorded as **unavailable**: the publishers, doi.org and NTRS
   are not reachable from the development environment. No value is quoted from memory.
-- *Status.* The harness is tested against synthetic masks. The comparison of LUNARIS's
-  terrain-horizon results with these references needs real horizon masks (S-TERRAIN
-  T-15).
+- *Comparison (T-25 part 2).* LUNARIS terrain-horizon results (T-15 mask from
+  LDEM_75S_240M, 0.25°, 200 km; DE440; eye 2 m) over the published period,
+  2001-01-01 → 2018-08-08, hourly (154 273 samples), against the published pixel
+  (3 × 3 range):
+
+  | Site | Body | LUNARIS (eye 2 m) | LUNARIS (eye 0 m) | Published | Published 3 × 3 |
+  | --- | --- | ---: | ---: | ---: | --- |
+  | Site01 Connecting ridge | Sun | 0.730 | 0.661 | 0.768 | 0.415–0.768 |
+  | Site01 Connecting ridge | Earth | 0.558 | 0.535 | 0.562 | 0.239–0.582 |
+  | Site23 Malapert massif | Sun | 0.458 | 0.410 | 0.461 | 0.220–0.557 |
+  | Site23 Malapert massif | Earth | 0.523 | 0.501 | 0.565 | 0.457–0.645 |
+  | Site07 Peak near Shackleton | Sun | 0.881 | 0.855 | 0.841 | 0.555–0.841 |
+  | Site07 Peak near Shackleton | Earth | 0.607 | 0.607 | 0.605 | 0.439–0.606 |
+
+  With the eye at 2 m, every difference is ≤ 0.042, and four of the six values lie
+  within the published local spread. Site07 is slightly above its spread (Sun +0.040,
+  Earth +0.001). Stated causes:
+  1. *Observer height.* The labels state none. It matters at the 0.1 level (Site01 Sun:
+     0.730 at 2 m, 0.661 at 0 m), and 2 m agrees better overall (mean absolute
+     difference 0.022, against 0.044 at 0 m).
+  2. *Point vs pixel.* LUNARIS evaluates the exact catalogue point. The published value
+     is the 240 m pixel containing it. On a peak a pixel averages lower ground.
+  3. *DEM version.* The labels do not name the DEM. LUNARIS uses LDEM_75S_240M.
+  4. *Ephemeris and method details.* DE440 here; the published method and horizon
+     range are not stated in the labels, and the paper is not reachable from this
+     environment.
+
+  Tested in `tests/science/illumination/test_published_comparison.py` at a 7 h step,
+  which reproduces the hourly values to within 6e-4: |difference| < 0.05 for all six,
+  and Site01 and Site23 within the published spread.
 
 ---
 
