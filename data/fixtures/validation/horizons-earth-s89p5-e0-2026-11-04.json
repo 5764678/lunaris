@@ -1,0 +1,235 @@
+{
+  "schema_version": 2,
+  "id": "horizons-earth-s89p5-e0-2026-11-04",
+  "purpose": "Validation reference for Milestone 03 celestial geometry (T-21): apparent Earth azimuth and elevation from a lunar south-polar surface site, 25 hourly samples.",
+  "evidence_kind": "model",
+  "source": {
+    "provider": "JPL Solar System Dynamics Group — Horizons system (API version 1.2)",
+    "api_url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+    "request_url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27399%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40301%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2c-89.5%2c0%27&START_TIME=%272026-11-04+00%3a00%27&STOP_TIME=%272026-11-05+00%3a00%27&STEP_SIZE=%271+h%27&QUANTITIES=%274%27&CSV_FORMAT=%27YES%27&ANG_FORMAT=%27DEG%27&EXTRA_PREC=%27YES%27",
+    "query": {
+      "format": "text",
+      "COMMAND": "'399'",
+      "OBJ_DATA": "'NO'",
+      "MAKE_EPHEM": "'YES'",
+      "EPHEM_TYPE": "'OBSERVER'",
+      "CENTER": "'coord@301'",
+      "COORD_TYPE": "'GEODETIC'",
+      "SITE_COORD": "'0,-89.5,0'",
+      "START_TIME": "'2026-11-04 00:00'",
+      "STOP_TIME": "'2026-11-05 00:00'",
+      "STEP_SIZE": "'1 h'",
+      "QUANTITIES": "'4'",
+      "CSV_FORMAT": "'YES'",
+      "ANG_FORMAT": "'DEG'",
+      "EXTRA_PREC": "'YES'"
+    },
+    "http_date": "Wed, 04 Nov 2026 11:18:13 GMT",
+    "retrieved_on": "2026-11-04",
+    "retrieved_by": "LUNARIS S-GEOMETRY development session, direct HTTPS request to ssd.jpl.nasa.gov (reachable from the development environment).",
+    "ephemeris_reported": "DE441",
+    "body_frame_reported": "MEAN_ME (high precision)"
+  },
+  "observer": {
+    "center_body": "Moon (301)",
+    "latitude_deg": -89.5,
+    "east_longitude_deg": 0.0,
+    "height_m": 0.0,
+    "reference_surface": "Sphere of radius 1737.4 km as reported by Horizons ('Center radii'); geodetic and planetocentric latitude coincide on a sphere."
+  },
+  "target": "Earth (399)",
+  "quantities": "QUANTITIES='4': airless apparent azimuth (clockwise from north) and elevation of the target centre; Horizons corrects for light time, gravitational light deflection and stellar aberration.",
+  "header_verbatim": [
+    "Ephemeris / API_USER Wed Nov  4 03:18:13 2026 Pasadena, USA      / Horizons    ",
+    "*******************************************************************************",
+    "Target body name: Earth (399)                     {source: DE441}",
+    "Center body name: Moon (301)                      {source: DE441}",
+    "Center-site name: (user defined site below)",
+    "*******************************************************************************",
+    "Start time      : A.D. 2026-Nov-04 00:00:00.0000 UT      ",
+    "Stop  time      : A.D. 2026-Nov-05 00:00:00.0000 UT      ",
+    "Step-size       : 60 minutes",
+    "*******************************************************************************",
+    "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+    "Target radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}       ",
+    "Center geodetic : 0.0, -89.5, 0.0                 {E-lon(deg),Lat(deg),Alt(km)}",
+    "Center cylindric: 0.0, 15.16148, -1737.334        {E-lon(deg),Dxy(km),Dz(km)}",
+    "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+    "Center radii    : 1737.4, 1737.4, 1737.4 km       {Equator_a, b, pole_c}       ",
+    "Target primary  : Sun",
+    "Vis. interferer : EARTH (R_eq= 6378.137) km       {source: DE441}",
+    "Rel. light bend : Sun, EARTH                      {source: DE441}",
+    "Rel. lght bnd GM: 1.3271E+11, 3.9860E+05 km^3/s^2                              ",
+    "Atmos refraction: NO (AIRLESS)",
+    "RA format       : DEG",
+    "Time format     : CAL ",
+    "Calendar mode   : Mixed Julian/Gregorian",
+    "EOP file        : eop.261103.p270130                                           ",
+    "EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-NOV-03. PREDICTS-> 2027-JAN-29",
+    "Units conversion: 1 au= 149597870.700 km, c= 299792.458 km/s, 1 day= 86400.0 s ",
+    "Table cut-offs 1: Elevation (-90.0deg=NO ),Airmass     n.a.    , Daylight (NO )",
+    "Table cut-offs 2: Solar elongation (  0.0,180.0=NO ),Local Hour Angle( 0.0=NO )",
+    "Table cut-offs 3: RA/DEC angular rate (     0.0=NO )                           ",
+    "Table format    : Comma Separated Values (spreadsheet)"
+  ],
+  "columns_verbatim": "Date__(UT)__HR:MN, , ,Azimuth_(a-app), Elevation_(a-app),",
+  "soe_block_verbatim": "$$SOE\n 2026-Nov-04 00:00,*, ,    5.573420768,      -1.162282776,\n 2026-Nov-04 01:00,*, ,    5.580637162,      -1.225030329,\n 2026-Nov-04 02:00,*, ,    5.587489604,      -1.287593889,\n 2026-Nov-04 03:00,*, ,    5.593980252,      -1.349967886,\n 2026-Nov-04 04:00,*, ,    5.600111252,      -1.412146788,\n 2026-Nov-04 05:00,*, ,    5.605884727,      -1.474125097,\n 2026-Nov-04 06:00,*, ,    5.611302786,      -1.535897356,\n 2026-Nov-04 07:00,*, ,    5.616367515,      -1.597458143,\n 2026-Nov-04 08:00,*, ,    5.621080981,      -1.658802073,\n 2026-Nov-04 09:00,*, ,    5.625445229,      -1.719923800,\n 2026-Nov-04 10:00,*, ,    5.629462284,      -1.780818015,\n 2026-Nov-04 11:00,*, ,    5.633134144,      -1.841479449,\n 2026-Nov-04 12:00,*, ,    5.636462787,      -1.901902870,\n 2026-Nov-04 13:00,*, ,    5.639450166,      -1.962083083,\n 2026-Nov-04 14:00,*, ,    5.642098207,      -2.022014936,\n 2026-Nov-04 15:00,*, ,    5.644408814,      -2.081693312,\n 2026-Nov-04 16:00,*, ,    5.646383859,      -2.141113136,\n 2026-Nov-04 17:00,*, ,    5.648025192,      -2.200269370,\n 2026-Nov-04 18:00,*, ,    5.649334633,      -2.259157019,\n 2026-Nov-04 19:00,*, ,    5.650313974,      -2.317771123,\n 2026-Nov-04 20:00,*, ,    5.650964978,      -2.376106768,\n 2026-Nov-04 21:00,*, ,    5.651289380,      -2.434159075,\n 2026-Nov-04 22:00,*, ,    5.651288883,      -2.491923209,\n 2026-Nov-04 23:00,*, ,    5.650965162,      -2.549394374,\n 2026-Nov-05 00:00,*, ,    5.650319859,      -2.606567816,\n$$EOE",
+  "samples": [
+    {
+      "time_utc": "2026-11-04T00:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.573420768,
+      "elevation_deg": -1.162282776
+    },
+    {
+      "time_utc": "2026-11-04T01:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.580637162,
+      "elevation_deg": -1.225030329
+    },
+    {
+      "time_utc": "2026-11-04T02:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.587489604,
+      "elevation_deg": -1.287593889
+    },
+    {
+      "time_utc": "2026-11-04T03:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.593980252,
+      "elevation_deg": -1.349967886
+    },
+    {
+      "time_utc": "2026-11-04T04:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.600111252,
+      "elevation_deg": -1.412146788
+    },
+    {
+      "time_utc": "2026-11-04T05:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.605884727,
+      "elevation_deg": -1.474125097
+    },
+    {
+      "time_utc": "2026-11-04T06:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.611302786,
+      "elevation_deg": -1.535897356
+    },
+    {
+      "time_utc": "2026-11-04T07:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.616367515,
+      "elevation_deg": -1.597458143
+    },
+    {
+      "time_utc": "2026-11-04T08:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.621080981,
+      "elevation_deg": -1.658802073
+    },
+    {
+      "time_utc": "2026-11-04T09:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.625445229,
+      "elevation_deg": -1.7199238
+    },
+    {
+      "time_utc": "2026-11-04T10:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.629462284,
+      "elevation_deg": -1.780818015
+    },
+    {
+      "time_utc": "2026-11-04T11:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.633134144,
+      "elevation_deg": -1.841479449
+    },
+    {
+      "time_utc": "2026-11-04T12:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.636462787,
+      "elevation_deg": -1.90190287
+    },
+    {
+      "time_utc": "2026-11-04T13:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.639450166,
+      "elevation_deg": -1.962083083
+    },
+    {
+      "time_utc": "2026-11-04T14:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.642098207,
+      "elevation_deg": -2.022014936
+    },
+    {
+      "time_utc": "2026-11-04T15:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.644408814,
+      "elevation_deg": -2.081693312
+    },
+    {
+      "time_utc": "2026-11-04T16:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.646383859,
+      "elevation_deg": -2.141113136
+    },
+    {
+      "time_utc": "2026-11-04T17:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.648025192,
+      "elevation_deg": -2.20026937
+    },
+    {
+      "time_utc": "2026-11-04T18:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.649334633,
+      "elevation_deg": -2.259157019
+    },
+    {
+      "time_utc": "2026-11-04T19:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.650313974,
+      "elevation_deg": -2.317771123
+    },
+    {
+      "time_utc": "2026-11-04T20:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.650964978,
+      "elevation_deg": -2.376106768
+    },
+    {
+      "time_utc": "2026-11-04T21:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.65128938,
+      "elevation_deg": -2.434159075
+    },
+    {
+      "time_utc": "2026-11-04T22:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.651288883,
+      "elevation_deg": -2.491923209
+    },
+    {
+      "time_utc": "2026-11-04T23:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.650965162,
+      "elevation_deg": -2.549394374
+    },
+    {
+      "time_utc": "2026-11-05T00:00:00Z",
+      "solar_presence": "*",
+      "azimuth_deg": 5.650319859,
+      "elevation_deg": -2.606567816
+    }
+  ],
+  "comparison": {
+    "tolerance_arcsec": 0.01,
+    "metric": "|Δazimuth|·cos(elevation) and |Δelevation|, arcseconds",
+    "justification": "docs/SCIENCE.md §5.2 (Horizons validation tolerance)",
+    "test": "tests/science/geometry/test_horizons_validation.py"
+  }
+}

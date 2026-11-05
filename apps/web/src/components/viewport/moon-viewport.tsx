@@ -7,7 +7,7 @@ import { Component, useCallback, useState, type ErrorInfo, type ReactNode } from
 import { LabelLayer } from "./label-layer";
 import { LabelRegistry } from "./label-registry";
 import { useSurfaceLabels } from "./surface-labels";
-import { useSurfaceSource, type SurfaceSource } from "./surface-source";
+import { useSurfaceSource, type SurfaceSource, type TextureLoadState } from "./surface-source";
 import { ViewportOverlay } from "./viewport-overlay";
 
 const MoonCanvas = dynamic(() => import("./moon-canvas"), {
@@ -63,7 +63,9 @@ class RendererBoundary extends Component<{ children: ReactNode }, { error: Error
 export function MoonViewport() {
   const resolved = useSurfaceSource();
   const [textureError, setTextureError] = useState<string | null>(null);
+  const [textureState, setTextureState] = useState<TextureLoadState>("loading");
   const onSurfaceError = useCallback((reason: string) => setTextureError(reason), []);
+  const onSurfaceLoaded = useCallback(() => setTextureState("loaded"), []);
   const [labelRegistry] = useState(() => new LabelRegistry());
   const labels = useSurfaceLabels();
   const surface: SurfaceSource =
@@ -77,11 +79,16 @@ export function MoonViewport() {
         {surface.kind === "resolving" ? (
           <ViewportMessage title="Initializing renderer" detail="Resolving surface source…" pulse />
         ) : (
-          <MoonCanvas surface={surface} onSurfaceError={onSurfaceError} labelRegistry={labelRegistry} />
+          <MoonCanvas
+            surface={surface}
+            onSurfaceError={onSurfaceError}
+            onSurfaceLoaded={onSurfaceLoaded}
+            labelRegistry={labelRegistry}
+          />
         )}
       </RendererBoundary>
       <LabelLayer registry={labelRegistry} labels={labels} />
-      <ViewportOverlay surface={surface} />
+      <ViewportOverlay surface={surface} textureState={textureState} />
     </section>
   );
 }

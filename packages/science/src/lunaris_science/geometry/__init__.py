@@ -1,18 +1,57 @@
-"""Celestial geometry — planned for Milestone 03. Not implemented.
+"""Celestial geometry (Milestone 03): Sun and Earth seen from a lunar surface site.
 
-Responsibility (when implemented):
-    Time-dependent positions of the Sun and the Earth as seen from a lunar
-    surface point: topocentric azimuth (clockwise from local north) and
-    elevation above the local horizontal plane, in a consistent body-fixed
-    frame (MOON_ME), using NAIF SPICE kernels via SpiceyPy.
+Implemented:
 
-Planned method notes (see docs/SCIENCE.md § Celestial geometry):
-    * Kernel set: leap seconds (LSK), planetary/lunar ephemeris (SPK, e.g.
-      DE440), lunar orientation (binary PCK) and lunar frames (FK).
-    * Aberration corrections are explicit parameters and recorded in outputs.
-    * Validation against JPL Horizons topocentric ephemerides for reference
-      sites and epochs, with stated tolerances.
+* :mod:`~lunaris_science.geometry.spice` — the process-wide SPICE kernel context: loads
+  one checksum-verified kernel set from explicit paths, checks that ``MOON_ME`` resolves
+  to ``MOON_ME_DE440_ME421``, and serializes every CSPICE call through one lock (C2).
+* :mod:`~lunaris_science.geometry.epochs` — UTC grids and UTC → ET conversion.
+* :mod:`~lunaris_science.geometry.bodies` — apparent azimuth, elevation, range, angular
+  radius and ``MOON_ME`` direction of the Sun and the Earth (contract C2), validated
+  against JPL Horizons (``docs/SCIENCE.md`` §5.2).
 
-This module deliberately exposes no functions until those computations are
-implemented and validated.
+Conventions are those of contract C0 in ``docs/TASKS.md``.
 """
+
+from lunaris_science.geometry.bodies import (
+    APPARENT_CORRECTION,
+    Body,
+    BodyGeometrySeries,
+    GeometryError,
+    ObserverSite,
+    body_geometry,
+    enu_basis,
+    topocentric_az_el,
+)
+from lunaris_science.geometry.epochs import EpochError, sample_count, uniform_utc_grid, utc_to_et
+from lunaris_science.geometry.spice import (
+    SPICE_LOCK,
+    KernelFile,
+    KernelRole,
+    KernelSet,
+    SpiceContext,
+    SpiceKernelError,
+    TimeCoverage,
+)
+
+__all__ = [
+    "APPARENT_CORRECTION",
+    "SPICE_LOCK",
+    "Body",
+    "BodyGeometrySeries",
+    "EpochError",
+    "GeometryError",
+    "KernelFile",
+    "KernelRole",
+    "KernelSet",
+    "ObserverSite",
+    "SpiceContext",
+    "SpiceKernelError",
+    "TimeCoverage",
+    "body_geometry",
+    "enu_basis",
+    "sample_count",
+    "topocentric_az_el",
+    "uniform_utc_grid",
+    "utc_to_et",
+]

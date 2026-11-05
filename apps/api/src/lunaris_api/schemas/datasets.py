@@ -7,7 +7,7 @@ from pydantic import AwareDatetime, Field
 
 from lunaris_api.schemas.common import EvidenceKindLiteral, Schema
 
-DatasetStatusLiteral = Literal["missing", "incomplete", "untracked", "acquired"]
+DatasetStatusLiteral = Literal["missing", "incomplete", "untracked", "acquired", "remote_window"]
 
 
 class SpatialMetadataSchema(Schema):
@@ -69,7 +69,10 @@ class DatasetSummary(Schema):
     notes: list[str]
     files: list[DatasetFileSchema]
     local: DatasetLocalSchema
-    acquire_command: str
+    acquire_command: str | None = Field(
+        description="Command that acquires the dataset; null for remote-window datasets, which "
+        "are read as windows over HTTP and never downloaded whole."
+    )
 
 
 class DatasetListResponse(Schema):

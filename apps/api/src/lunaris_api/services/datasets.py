@@ -60,14 +60,16 @@ def summarize(manifest: DatasetManifest, state: DatasetLocalState) -> DatasetSum
         notes=list(manifest.notes),
         files=files,
         local=DatasetLocalSchema(
-            status=state.status.value,
+            status="remote_window" if manifest.is_remote_window else state.status.value,
             files_present=state.files_present,
             files_expected=len(manifest.files),
             bytes_on_disk=state.bytes_on_disk,
             acquired_at_utc=state.record.acquired_at_utc if state.record else None,
             manifest_changed=state.manifest_changed,
         ),
-        acquire_command=f"uv run lunaris-data acquire {manifest.id}",
+        acquire_command=None
+        if manifest.is_remote_window
+        else f"uv run lunaris-data acquire {manifest.id}",
     )
 
 

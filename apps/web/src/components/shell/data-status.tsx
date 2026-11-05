@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useDatasetsQuery } from "@/lib/api/queries";
 import { cn } from "@/lib/utils";
 
-/** Compact "acquired / registered" dataset indicator for the top bar. */
+/** Compact "acquired / downloadable" dataset indicator for the top bar. Remote-window
+ * datasets are read over HTTP and never acquired, so they are not counted. */
 export function DataStatusIndicator() {
   const { data, isError, isPending } = useDatasetsQuery();
   const acquired = data?.datasets.filter((d) => d.local.status === "acquired").length ?? 0;
-  const total = data?.count ?? 0;
+  const total = data?.datasets.filter((d) => d.local.status !== "remote_window").length ?? 0;
   const tone = isError
     ? "text-critical"
     : isPending

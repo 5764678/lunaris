@@ -53,3 +53,17 @@ def get_site_terrain_service(request: Request) -> SiteTerrainService:
 
 
 SiteTerrainServiceDep = Annotated[SiteTerrainService, Depends(get_site_terrain_service)]
+# ── Ephemeris (S-GEOMETRY, T-22) ────────────────────────────────────────────
+from lunaris_api.services.ephemeris import EphemerisService  # noqa: E402
+
+
+def get_ephemeris_service(
+    request: Request, sites: Annotated[SiteService, Depends(get_site_service)]
+) -> EphemerisService:
+    return EphemerisService(
+        sites, request.app.state.dataset_registry, request.app.state.data_layout
+    )
+
+
+EphemerisServiceDep = Annotated[EphemerisService, Depends(get_ephemeris_service)]
+__all__ += ["EphemerisServiceDep"]

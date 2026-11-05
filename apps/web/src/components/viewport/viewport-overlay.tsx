@@ -9,7 +9,8 @@ import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { useMissionStore, type LayerVisibility, type ViewPreset } from "@/store/mission-store";
 
 import { VIEW_PRESETS } from "./camera-rig";
-import type { SurfaceSource } from "./surface-source";
+import type { SurfaceSource, TextureLoadState } from "./surface-source";
+import { TextureProvenance } from "./texture-provenance";
 import { useViewTelemetry } from "./view-telemetry";
 
 function Corner({ className }: { className: string }) {
@@ -21,7 +22,13 @@ function Corner({ className }: { className: string }) {
   );
 }
 
-export function ViewportOverlay({ surface }: { surface: SurfaceSource }) {
+export function ViewportOverlay({
+  surface,
+  textureState,
+}: {
+  surface: SurfaceSource;
+  textureState: TextureLoadState;
+}) {
   const view = useMissionStore((s) => s.view);
   const requestView = useMissionStore((s) => s.requestView);
   const layers = useMissionStore((s) => s.layers);
@@ -78,7 +85,7 @@ export function ViewportOverlay({ surface }: { surface: SurfaceSource }) {
 
       {/* Disclosures */}
       <div className="pointer-events-auto absolute right-3 bottom-3 left-3 flex flex-col gap-1.5 rounded-md border border-hairline bg-[#05070a]/80 p-2 backdrop-blur-sm sm:right-auto sm:bottom-5 sm:left-6 sm:max-w-[min(34rem,calc(100%-16rem))]">
-        <SurfaceDisclosure surface={surface} />
+        <SurfaceDisclosure surface={surface} textureState={textureState} />
         <div className="flex items-center gap-2" data-testid="lighting-disclosure">
           <EvidenceBadge
             kind="placeholder"
@@ -110,22 +117,15 @@ export function ViewportOverlay({ surface }: { surface: SurfaceSource }) {
   );
 }
 
-function SurfaceDisclosure({ surface }: { surface: SurfaceSource }) {
-  if (surface.kind === "texture") {
-    const m = surface.manifest;
-    return (
-      <div className="flex items-center gap-2" data-testid="surface-disclosure" data-surface="texture">
-        <EvidenceBadge
-          kind="derived_product"
-          label="NASA SVS"
-          detail={`${m.source.dataset_title}. ${m.credit} ${m.usage} SHA-256 ${m.source.sha256.slice(0, 12)}…`}
-        />
-        <span className="truncate font-mono text-3xs text-muted-foreground">
-          Surface: {m.source.file} · visualization only, not an analysis input
-        </span>
-      </div>
-    );
-  }
+function SurfaceDisclosure({
+  surface,
+  textureState,
+}: {
+  surface: SurfaceSource;
+  textureState: TextureLoadState;
+}) {
+  if (surface.kind === "texture")
+    return <TextureProvenance manifest={surface.manifest} state={textureState} />;
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -147,9 +147,10 @@ function SurfaceDisclosure({ surface }: { surface: SurfaceSource }) {
         <p className="font-medium text-foreground">Procedural placeholder surface</p>
         <p className="text-muted-foreground">
           Generated from noise and a synthetic crater field. Run{" "}
-          <code className="text-foreground">uv run lunaris-data acquire nasa-svs-cgi-moon-kit</code> and{" "}
-          <code className="text-foreground">uv run lunaris-data build-web-texture</code> to display the NASA
-          SVS CGI Moon Kit color map instead.
+          <code className="text-foreground">npm run setup:texture -w @lunaris/web</code> (it acquires{" "}
+          <code className="text-foreground">nasa-svs-cgi-moon-kit</code> and runs{" "}
+          <code className="text-foreground">build-web-texture</code>) to display the NASA SVS CGI Moon Kit
+          color map instead.
         </p>
         {surface.kind === "procedural" && <p className="mt-1 text-dim">{surface.reason}</p>}
       </TooltipContent>

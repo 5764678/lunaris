@@ -82,6 +82,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             {"name": "system", "description": "Runtime and toolchain information."},
             {"name": "datasets", "description": "Dataset registry and local provenance status."},
             {"name": "sites", "description": "User-defined candidate landing sites."},
+            {"name": "ephemeris", "description": "Sun and Earth geometry from a site (SPICE)."},
         ],
     )
     app.state.api_version = API_VERSION

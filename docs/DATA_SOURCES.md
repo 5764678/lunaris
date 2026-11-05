@@ -161,7 +161,12 @@ requirements.
 
 | File | Content | Status |
 | --- | --- | --- |
-| `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json` | JPL Horizons apparent Sun az/el from 89.5° S, 0° E (DE441, MEAN_ME, 1737.4 km sphere) at 2026-11-04 00:00 and 2026-11-05 00:00 UTC; records a SPICE cross-check (< 0.05″) | Partial: re-capture full hourly table and request URL before use as a regression fixture (M03) |
+| `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json` | JPL Horizons (API 1.2, DE441, MEAN_ME, 1737.4 km sphere) apparent Sun az/el from 89.5° S, 0° E, h = 0: 25 hourly samples, 2026-11-04 00:00 → 11-05 00:00 UTC; exact request URL and verbatim `$$SOE…$$EOE` block | Regression fixture (T-21); tolerance 0.01″, `docs/SCIENCE.md` §5.2 |
+| `data/fixtures/validation/horizons-earth-s89p5-e0-2026-11-04.json` | Same query for the Earth (`COMMAND='399'`) | Regression fixture (T-21) |
+
+Both were requested on 2026-11-04 directly from `ssd.jpl.nasa.gov`, which is reachable from
+the development environment. They replace a two-sample Sun fixture relayed second-hand,
+which wrongly stated that NASA/JPL hosts were blocked.
 
 ## 5. Future sources (not yet registered)
 

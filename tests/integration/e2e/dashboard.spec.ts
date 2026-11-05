@@ -83,7 +83,7 @@ test("client-side validation mirrors the API rules", async ({ page }) => {
 test("data sources page shows provenance and toolchain", async ({ page }) => {
   const problems = collectUnexpectedConsole(page);
   await page.goto("/data");
-  await expect(page.getByTestId("dataset-card")).toHaveCount(3);
+  await expect(page.getByTestId("dataset-card")).toHaveCount(4);
   await expect(page.getByText("uv run lunaris-data acquire naif-generic-kernels-lunar")).toBeVisible();
   const runtime = page.getByTestId("runtime-table");
   await expect(runtime).toContainText("cspice");

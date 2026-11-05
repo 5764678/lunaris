@@ -67,7 +67,7 @@ def test_plane_slope_near_pole(theta_deg: float) -> None:
 
 
 def test_scale_correction_far_from_pole() -> None:
-    """At ρ = 400 km (k ≈ 1.0133) a 30° ground slope reads 29.77° without the correction."""
+    """At ρ = 400 km (k ≈ 1.01325) a 30° slope reads atan(tan 30° / k) = 29.67° uncorrected."""
     cx = 400_000.0
     k = float(PROJ.scale_factor_at_map(cx, 0.0))
     t = math.tan(math.radians(30.0))

@@ -84,6 +84,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/ephemeris": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sun and Earth geometry for a site
+         * @description Apparent azimuth, elevation, range, angular radius and MOON_ME direction of the Sun
+         *     and the Earth from the site, every ``step_s`` seconds from ``start_utc`` to
+         *     ``end_utc``. Computed locally with NAIF SPICE (DE440, corrections CN+S). At most
+         *     10 000 samples per request; more gives 422 ``sample_cap_exceeded``.
+         */
+        get: operations["get_site_ephemeris_api_v1_sites__site_id__ephemeris_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{site_id}/terrain": {
         parameters: {
             query?: never;
@@ -216,6 +239,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BodyEphemeris */
+        BodyEphemeris: {
+            /**
+             * Body
+             * @enum {string}
+             */
+            body: "sun" | "earth";
+            /**
+             * Body Radii M
+             * @description PCK radii (a, b, c) of the body.
+             */
+            body_radii_m: number[];
+            /**
+             * Body Radius M
+             * @description Radius used for angular_radius_deg.
+             */
+            body_radius_m: number;
+            evidence: components["schemas"]["EvidenceSchema"];
+            /** Samples */
+            samples: components["schemas"]["EphemerisSample"][];
+        };
         /** BodyFixedPositionSchema */
         BodyFixedPositionSchema: {
             evidence: components["schemas"]["EvidenceSchema"];
@@ -355,12 +399,15 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "missing" | "incomplete" | "untracked" | "acquired";
+            status: "missing" | "incomplete" | "untracked" | "acquired" | "remote_window";
         };
         /** DatasetSummary */
         DatasetSummary: {
-            /** Acquire Command */
-            acquire_command: string;
+            /**
+             * Acquire Command
+             * @description Command that acquires the dataset; null for remote-window datasets, which are read as windows over HTTP and never downloaded whole.
+             */
+            acquire_command: string | null;
             /**
              * Category
              * @enum {string}
@@ -462,6 +509,68 @@ export interface components {
             window_col_row_width_height: number[];
             /** Window Map Bounds M */
             window_map_bounds_m: number[];
+        };
+        /** EphemerisObserver */
+        EphemerisObserver: {
+            /**
+             * Frame
+             * @constant
+             */
+            frame: "MOON_ME";
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Longitude Deg */
+            longitude_deg: number;
+            /** Observer Height M */
+            observer_height_m: number;
+            /**
+             * Radius M
+             * @description Distance of the eye point from the Moon's centre.
+             */
+            radius_m: number;
+            /** Reference Radius M */
+            reference_radius_m: number;
+            /**
+             * Surface Height M
+             * @description DEM height above the reference sphere; null when not sampled (h = 0 used).
+             */
+            surface_height_m: number | null;
+        };
+        /**
+         * EphemerisSample
+         * @description Apparent geometry of one body at one epoch, seen from the site.
+         */
+        EphemerisSample: {
+            /**
+             * Angular Radius Deg
+             * @description asin(R_body / range).
+             */
+            angular_radius_deg: number;
+            /**
+             * Azimuth Deg
+             * @description Clockwise from local north, [0, 360) (C0).
+             */
+            azimuth_deg: number;
+            /**
+             * Direction Moon Me
+             * @description Apparent unit direction [x, y, z] in MOON_ME (lights the 3D scene, D5).
+             */
+            direction_moon_me: number[];
+            /**
+             * Elevation Deg
+             * @description Above the local horizontal plane of the reference sphere (C0); astronomical horizon, not terrain.
+             */
+            elevation_deg: number;
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Range M
+             * @description Observer–body distance (apparent, light-time corrected).
+             */
+            range_m: number;
         };
         /** ErrorBody */
         ErrorBody: {
@@ -699,6 +808,50 @@ export interface components {
              * @description East longitude, degrees, [0, 360).
              */
             longitude_deg: number;
+        };
+        /**
+         * SiteEphemeris
+         * @description Sun and Earth geometry time series for one site (C2).
+         */
+        SiteEphemeris: {
+            /**
+             * Aberration Correction
+             * @constant
+             */
+            aberration_correction: "CN+S";
+            /** Bodies */
+            bodies: components["schemas"]["BodyEphemeris"][];
+            /**
+             * End Utc
+             * Format: date-time
+             */
+            end_utc: string;
+            /**
+             * Frame
+             * @constant
+             */
+            frame: "MOON_ME";
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Max Samples
+             * @description Cap on samples per request.
+             */
+            max_samples: number;
+            observer: components["schemas"]["EphemerisObserver"];
+            /** Sample Count */
+            sample_count: number;
+            /** Site Id */
+            site_id: string;
+            /** Site Name */
+            site_name: string;
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+            /** Step S */
+            step_s: number;
         };
         /** SiteTerrainResponse */
         SiteTerrainResponse: {
@@ -1138,6 +1291,71 @@ export interface operations {
             };
             /** @description Unexpected server error. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_site_ephemeris_api_v1_sites__site_id__ephemeris_get: {
+        parameters: {
+            query: {
+                /** @description Window start, ISO 8601 UTC. */
+                start_utc: string;
+                /** @description Window end (inclusive when on a step), ISO 8601 UTC. */
+                end_utc: string;
+                /** @description Sample spacing in seconds. */
+                step_s: number;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteEphemeris"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

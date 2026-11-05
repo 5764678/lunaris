@@ -13,6 +13,10 @@ export interface TextureManifest {
   width: number;
   height: number;
   projection: "equirectangular";
+  longitude_min_deg?: number;
+  longitude_max_deg?: number;
+  latitude_min_deg?: number;
+  latitude_max_deg?: number;
   source: {
     dataset_id: string;
     dataset_title: string;
@@ -33,8 +37,36 @@ export type SurfaceSource =
   | { kind: "procedural"; reason: string }
   | { kind: "texture"; url: string; manifest: TextureManifest };
 
+/** Whether the image behind a `texture` source has reached the GPU yet. */
+export type TextureLoadState = "loading" | "loaded";
+
 export const TEXTURE_BASE = "/textures/moon";
 
+const SAFE_FILE = /^[A-Za-z0-9._-]+$/;
+const SHA256 = /^[0-9a-f]{64}$/;
+
+function isString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+/** Only absolute https URLs are rendered as links in the provenance panel. */
+export function isHttpsUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validates `manifest.json` from `build-web-texture`. Every field the provenance panel
+ * displays is checked, so the HUD never shows a texture whose source it cannot state.
+ */
 export function isTextureManifest(value: unknown): value is TextureManifest {
   if (typeof value !== "object" || value === null) return false;
   const m = value as Record<string, unknown>;
@@ -42,14 +74,26 @@ export function isTextureManifest(value: unknown): value is TextureManifest {
   return (
     m.schema_version === 1 &&
     m.kind === "lunar-color-equirectangular" &&
-    typeof m.file === "string" &&
-    /^[A-Za-z0-9._-]+$/.test(m.file) &&
-    typeof m.width === "number" &&
-    typeof m.height === "number" &&
+    m.projection === "equirectangular" &&
+    isString(m.file) &&
+    SAFE_FILE.test(m.file) &&
+    isPositiveInteger(m.width) &&
+    isPositiveInteger(m.height) &&
+    isString(m.credit) &&
+    isString(m.usage) &&
+    Array.isArray(m.assumptions) &&
+    m.assumptions.every(isString) &&
+    isString(m.generated_at_utc) &&
+    isString(m.generator) &&
     typeof source === "object" &&
     source !== null &&
-    typeof source.dataset_id === "string" &&
-    typeof source.sha256 === "string"
+    isString(source.dataset_id) &&
+    isString(source.dataset_title) &&
+    isString(source.file) &&
+    isHttpsUrl(source.source_url) &&
+    typeof source.sha256 === "string" &&
+    SHA256.test(source.sha256) &&
+    isString(source.retrieved_at_utc)
   );
 }
 

@@ -80,6 +80,22 @@ def test_intermediate_positions_match_the_circular_segment(
     np.testing.assert_allclose(result.horizon_elevation_deg, horizon_deg)
 
 
+def test_fully_visible_and_fully_hidden_are_exact_for_any_geometry() -> None:
+    """Regression: summing the numerator and denominator differently gave 1 - 1 ulp, which
+    undercounted 'fully visible' samples."""
+    rng = np.random.default_rng(20261104)
+    az = rng.uniform(0.0, 360.0, 500)
+    radius = rng.uniform(0.2, 1.0, 500)
+    up = visible_disk_fraction(
+        az, radius + rng.uniform(0.0, 5.0, 500), radius, ASTRONOMICAL_HORIZON
+    )
+    down = visible_disk_fraction(
+        az, -radius - rng.uniform(0.0, 5.0, 500), radius, ASTRONOMICAL_HORIZON
+    )
+    assert np.all(up.visible_fraction == 1.0)
+    assert np.all(down.visible_fraction == 0.0)
+
+
 def test_straight_horizon_formula_definitional_values() -> None:
     np.testing.assert_allclose(
         straight_horizon_fraction([-2.0, -1.0, 0.0, 1.0, 2.0], 1.0), [0, 0, 0.5, 1, 1], atol=1e-15

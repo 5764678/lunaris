@@ -1,6 +1,52 @@
 {
   "components": {
     "schemas": {
+      "BodyEphemeris": {
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "earth"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "body_radii_m": {
+            "description": "PCK radii (a, b, c) of the body.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Body Radii M",
+            "type": "array"
+          },
+          "body_radius_m": {
+            "description": "Radius used for angular_radius_deg.",
+            "title": "Body Radius M",
+            "type": "number"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/EphemerisSample"
+            },
+            "title": "Samples",
+            "type": "array"
+          }
+        },
+        "required": [
+          "body",
+          "body_radius_m",
+          "body_radii_m",
+          "samples",
+          "evidence"
+        ],
+        "title": "BodyEphemeris",
+        "type": "object"
+      },
       "BodyFixedPositionSchema": {
         "properties": {
           "evidence": {
@@ -339,7 +385,8 @@
               "missing",
               "incomplete",
               "untracked",
-              "acquired"
+              "acquired",
+              "remote_window"
             ],
             "title": "Status",
             "type": "string"
@@ -359,8 +406,16 @@
       "DatasetSummary": {
         "properties": {
           "acquire_command": {
-            "title": "Acquire Command",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Command that acquires the dataset; null for remote-window datasets, which are read as windows over HTTP and never downloaded whole.",
+            "title": "Acquire Command"
           },
           "category": {
             "enum": [
@@ -662,6 +717,109 @@
           "citation"
         ],
         "title": "DemWindowSchema",
+        "type": "object"
+      },
+      "EphemerisObserver": {
+        "properties": {
+          "frame": {
+            "const": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          },
+          "observer_height_m": {
+            "title": "Observer Height M",
+            "type": "number"
+          },
+          "radius_m": {
+            "description": "Distance of the eye point from the Moon's centre.",
+            "title": "Radius M",
+            "type": "number"
+          },
+          "reference_radius_m": {
+            "title": "Reference Radius M",
+            "type": "number"
+          },
+          "surface_height_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "DEM height above the reference sphere; null when not sampled (h = 0 used).",
+            "title": "Surface Height M"
+          }
+        },
+        "required": [
+          "latitude_deg",
+          "longitude_deg",
+          "frame",
+          "reference_radius_m",
+          "surface_height_m",
+          "observer_height_m",
+          "radius_m"
+        ],
+        "title": "EphemerisObserver",
+        "type": "object"
+      },
+      "EphemerisSample": {
+        "description": "Apparent geometry of one body at one epoch, seen from the site.",
+        "properties": {
+          "angular_radius_deg": {
+            "description": "asin(R_body / range).",
+            "title": "Angular Radius Deg",
+            "type": "number"
+          },
+          "azimuth_deg": {
+            "description": "Clockwise from local north, [0, 360) (C0).",
+            "title": "Azimuth Deg",
+            "type": "number"
+          },
+          "direction_moon_me": {
+            "description": "Apparent unit direction [x, y, z] in MOON_ME (lights the 3D scene, D5).",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Direction Moon Me",
+            "type": "array"
+          },
+          "elevation_deg": {
+            "description": "Above the local horizontal plane of the reference sphere (C0); astronomical horizon, not terrain.",
+            "title": "Elevation Deg",
+            "type": "number"
+          },
+          "epoch_utc": {
+            "format": "date-time",
+            "title": "Epoch Utc",
+            "type": "string"
+          },
+          "range_m": {
+            "description": "Observer–body distance (apparent, light-time corrected).",
+            "title": "Range M",
+            "type": "number"
+          }
+        },
+        "required": [
+          "epoch_utc",
+          "azimuth_deg",
+          "elevation_deg",
+          "range_m",
+          "angular_radius_deg",
+          "direction_moon_me"
+        ],
+        "title": "EphemerisSample",
         "type": "object"
       },
       "ErrorBody": {
@@ -1194,6 +1352,85 @@
           "frame"
         ],
         "title": "SelenographicCoordinateSchema",
+        "type": "object"
+      },
+      "SiteEphemeris": {
+        "description": "Sun and Earth geometry time series for one site (C2).",
+        "properties": {
+          "aberration_correction": {
+            "const": "CN+S",
+            "title": "Aberration Correction",
+            "type": "string"
+          },
+          "bodies": {
+            "items": {
+              "$ref": "#/components/schemas/BodyEphemeris"
+            },
+            "title": "Bodies",
+            "type": "array"
+          },
+          "end_utc": {
+            "format": "date-time",
+            "title": "End Utc",
+            "type": "string"
+          },
+          "frame": {
+            "const": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "max_samples": {
+            "description": "Cap on samples per request.",
+            "title": "Max Samples",
+            "type": "integer"
+          },
+          "observer": {
+            "$ref": "#/components/schemas/EphemerisObserver"
+          },
+          "sample_count": {
+            "title": "Sample Count",
+            "type": "integer"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "site_name": {
+            "title": "Site Name",
+            "type": "string"
+          },
+          "start_utc": {
+            "format": "date-time",
+            "title": "Start Utc",
+            "type": "string"
+          },
+          "step_s": {
+            "title": "Step S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "site_id",
+          "site_name",
+          "observer",
+          "start_utc",
+          "end_utc",
+          "step_s",
+          "sample_count",
+          "max_samples",
+          "frame",
+          "aberration_correction",
+          "bodies",
+          "limitations"
+        ],
+        "title": "SiteEphemeris",
         "type": "object"
       },
       "SiteTerrainResponse": {
@@ -1986,6 +2223,119 @@
         ]
       }
     },
+    "/api/v1/sites/{site_id}/ephemeris": {
+      "get": {
+        "description": "Apparent azimuth, elevation, range, angular radius and MOON_ME direction of the Sun\nand the Earth from the site, every ``step_s`` seconds from ``start_utc`` to\n``end_utc``. Computed locally with NAIF SPICE (DE440, corrections CN+S). At most\n10 000 samples per request; more gives 422 ``sample_cap_exceeded``.",
+        "operationId": "get_site_ephemeris_api_v1_sites__site_id__ephemeris_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9-]+$",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window start, ISO 8601 UTC.",
+            "in": "query",
+            "name": "start_utc",
+            "required": true,
+            "schema": {
+              "description": "Window start, ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "Start Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window end (inclusive when on a step), ISO 8601 UTC.",
+            "in": "query",
+            "name": "end_utc",
+            "required": true,
+            "schema": {
+              "description": "Window end (inclusive when on a step), ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "End Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sample spacing in seconds.",
+            "in": "query",
+            "name": "step_s",
+            "required": true,
+            "schema": {
+              "description": "Sample spacing in seconds.",
+              "maximum": 2592000.0,
+              "minimum": 1.0,
+              "title": "Step S",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteEphemeris"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "SPICE kernels not acquired or failing verification on this server."
+          }
+        },
+        "summary": "Sun and Earth geometry for a site",
+        "tags": [
+          "ephemeris"
+        ]
+      }
+    },
     "/api/v1/sites/{site_id}/terrain": {
       "get": {
         "description": "Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness\nand footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every\nslope and roughness carries its baseline. Hazard flags appear only when thresholds\nare supplied; they are the caller's assumptions.",
@@ -2437,6 +2787,10 @@
     {
       "description": "User-defined candidate landing sites.",
       "name": "sites"
+    },
+    {
+      "description": "Sun and Earth geometry from a site (SPICE).",
+      "name": "ephemeris"
     }
   ]
 }

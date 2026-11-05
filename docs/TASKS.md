@@ -81,7 +81,9 @@ class HorizonMask:
     method: str  # e.g. "ray-march, curvature-corrected, ..."
 ```
 
-- Validation in `__post_init__`: equal lengths, uniform step, finite values, N ≥ 360.
+- Validation in `__post_init__`: equal lengths, uniform step, finite values, N ≥ 360,
+  and the samples cover the full circle exactly (N × step = 360°), so periodic
+  interpolation is always defined.
 - Consumers interpolate `elevation_deg` linearly and periodically in azimuth.
 - A truncated azimuth must be surfaced in any downstream result
   (`limitations`, evidence assumptions). It is never silently used as exact.
@@ -127,6 +129,15 @@ stereographic inverse.
   `origin_moon_me_m`), then `height_m` (for colouring).
 - The response must be cacheable (`ETag` derived from DEM checksum + parameters).
 
+Accepted with T-12 (#8):
+- Both endpoints take `grid_size` (vertices per side, 2–1024, default 512). It is part of
+  the `ETag`, and a matching `If-None-Match` returns `304`.
+- Grid orientation: row 0 lies toward 0° E, rows advance toward 180° E, and columns
+  advance toward 90° E. The web uses the `MOON_ME` positions and does not infer
+  orientation from the index.
+- The metadata may carry additional fields beyond the list above. Consumers ignore
+  fields they don't use.
+
 ### C4 — Illumination and visibility results
 
 `packages/shared-types/src/illumination.ts` and `visibility.ts` hold the draft wire
@@ -139,6 +150,27 @@ contracts. S-GEOMETRY finalises them with these changes:
 - Results report the **astronomical** horizon (body above the C0 plane) and the
   **terrain** horizon (C1 mask) separately.
 - Earth results state that geometric line of sight does not imply a radio link.
+
+Accepted with T-24 (#14):
+- Each sample carries `astronomical_visible_fraction` and `terrain_visible_fraction`.
+  The terrain fraction is null when no mask is available, and the result then says
+  `terrain_horizon_available: false`. Samples also carry
+  `terrain_horizon_elevation_deg` and `terrain_truncated`.
+- Each result carries an `astronomical` summary and a `terrain` summary.
+  - Sun: `illuminated_fraction`, `mean_visible_disk_fraction`, `fully_lit_fraction`.
+  - Earth: `visible_fraction`, `longest_outage_s`, `fully_visible_fraction`.
+  - Longest runs and windows that touch the analysis-window edge are flagged
+    `*_censored`.
+- Earth line-of-sight state per sample:
+  - `clear`: f > 0 against the terrain horizon. This can happen below 0° when the site
+    is on a peak.
+  - `terrain_obstructed`: visible above the astronomical horizon only.
+  - `below_geometric_horizon`: visible above neither.
+  Each state is reported together with its fractions. The radio-link disclaimer is the
+  first limitation on every Earth result.
+- Provenance goes in `evidence.sources`. Each entry gives the dataset manifest id, the
+  source URL and the SHA-256, plus `software` versions. This replaces the draft's
+  `ephemeris`/`dem` `DatasetProvenance` fields.
 
 ---
 
@@ -165,7 +197,8 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | ID | Task | Acceptance | Depends | Status |
 |---|---|---|---|---|
 | T-01 | Review and merge Milestone 01 (PR #2) | TD re-ran `npm run check` (117 pytest, 42 Vitest, strict mypy/tsc), `next build`, live API + web smoke, real NAIF acquisition + verify; CI green | — | done |
-| T-02 | Cited candidate-site list: PGDA product 78's 27 named 5 m sites and NASA's Artemis III candidate regions, each with coordinates and a citation | Every site has a source a reader can check; nothing uncited ships | — | todo |
+| T-02 | Cited candidate-site list: PGDA product 78's 27 named 5 m sites and NASA's Artemis III candidate regions, each with coordinates and a citation | Every site has a source a reader can check; nothing uncited ships. Delivered as `packages/data/src/lunaris_data/catalogs/south-pole-candidate-sites.json` (27 sites; all 13 Artemis III 2022 regions matched; reference point = DEM tile centre, cross-checked with PROJ) | — | in review |
+| T-03 | Serve the site catalogue: `GET /api/v1/catalog/sites`, and let a catalogue site be added to the registry with `origin: "published"` plus its citation (wire-contract change to `CandidateSite.origin`) | Contract generated; catalogue sites show their source and the "tile centre, not a landing point" definition in the UI; the demo trio (`demo_trio: true`) can be added in one action | T-02 | todo; TD assigns to the first free session |
 
 ### S-TERRAIN
 
@@ -182,10 +215,10 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 
 | ID | Task | Acceptance | Depends | Status |
 |---|---|---|---|---|
-| T-20 | SPICE kernel context | Loads only the checksum-verified kernel set from the data store by manifest (explicit paths, no implicit I/O in the science core); process-wide lock; committed test that `MOON_ME` → `MOON_ME_DE440_ME421` | M01 | todo |
-| T-21 | Body geometry time series (C2) for the Sun and the Earth | Pole rejection (C0); vectorised; 8 760 samples < 2 s. Replace the two-sample fixture with full 25-sample hourly Horizons fixtures for **Sun and Earth** (site −89.5°, 0° E, h = 0, 2026-11-04 00:00 → 11-05 00:00, `QUANTITIES='4'`, `EXTRA_PREC='YES'`), recording the exact request URL and the verbatim `$$SOE…$$EOE` block. Tolerance stated and justified in `docs/SCIENCE.md` (the TD measured ≤ 0.002″ against both `azlcpo` and a manual ENU computation on 2026-11-04). Fix the fixture's stale claim that NASA hosts are blocked | T-20 | todo |
-| T-22 | `GET /api/v1/sites/{id}/ephemeris` | Contract generated; sample cap enforced with a clear 422; evidence names kernels and corrections | T-21 | todo |
-| T-23 | Visible disk fraction against a `HorizonMask` | Synthetic masks: flat 0° horizon with the disk centre on it gives 0.5; centre at +r gives 1; at −r gives 0; intermediate positions match the analytical circular-segment area to 1e-3; step-function horizons tested | T-10 (type only) | in review |
+| T-20 | SPICE kernel context | Loads only the checksum-verified kernel set from the data store by manifest (explicit paths, no implicit I/O in the science core); process-wide lock; committed test that `MOON_ME` → `MOON_ME_DE440_ME421` | M01 | done |
+| T-21 | Body geometry time series (C2) for the Sun and the Earth | Pole rejection (C0); vectorised; 8 760 samples < 2 s. Replace the two-sample fixture with full 25-sample hourly Horizons fixtures for **Sun and Earth** (site −89.5°, 0° E, h = 0, 2026-11-04 00:00 → 11-05 00:00, `QUANTITIES='4'`, `EXTRA_PREC='YES'`), recording the exact request URL and the verbatim `$$SOE…$$EOE` block. Tolerance stated and justified in `docs/SCIENCE.md` (the TD measured ≤ 0.002″ against both `azlcpo` and a manual ENU computation on 2026-11-04). Fix the fixture's stale claim that NASA hosts are blocked | T-20 | done |
+| T-22 | `GET /api/v1/sites/{id}/ephemeris` | Contract generated; sample cap enforced with a clear 422; evidence names kernels and corrections | T-21 | in review |
+| T-23 | Visible disk fraction against a `HorizonMask` | Synthetic masks: flat 0° horizon with the disk centre on it gives 0.5; centre at +r gives 1; at −r gives 0; intermediate positions match the analytical circular-segment area to 1e-3; step-function horizons tested | T-10 (type only) | done |
 | T-24 | Illumination and Earth visibility timelines (C4) + `POST /api/v1/analysis/timeline` | Astronomical vs terrain horizon reported separately; summaries (mean visible disk fraction, illuminated fraction, longest darkness/illumination, visibility windows); truncation surfaced; radio-link disclaimer on Earth results | T-21, T-23, T-15 | todo |
 | T-25 | Validation against published polar illumination studies (Mazarico et al. 2011; Gläser et al. 2014) | Reproduce reported values at named locations where possible; differences reported with their causes (DEM, period, method) | T-24 | todo |
 
@@ -193,7 +226,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 
 | ID | Task | Acceptance | Depends | Status |
 |---|---|---|---|---|
-| T-30 | Real globe texture | Dev setup acquires the SVS CGI Moon Kit and runs `build-web-texture`; globe shows it with its provenance; placeholder label only when absent | M01 | todo |
+| T-30 | Real globe texture | Dev setup acquires the SVS CGI Moon Kit and runs `build-web-texture`; globe shows it with its provenance; placeholder label only when absent | M01 | in review |
 | T-31 | South-pole terrain scene (D5) from C3 | Globe → pole transition; mesh from the binary (NaN vertices skipped); site markers on the terrain; works at 390 px width; frame time measured on the CI browser | T-12 | todo |
 | T-32 | Plotly (dynamic import) + Sun/Earth elevation timeline lanes from C2 | Lanes show computed data with evidence badges; the "not computed" state remains for lanes without data; Vitest + e2e | T-22 | todo |
 | T-33 | SPICE-driven lighting of the terrain scene | Directional light from `direction_moon_me` at the selected epoch; rendered shadows labelled illustrative; the selected site shows its computed value from T-24 when available (D5) | T-31, T-22 | todo |

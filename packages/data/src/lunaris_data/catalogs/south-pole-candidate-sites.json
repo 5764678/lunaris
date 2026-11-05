@@ -1,0 +1,606 @@
+{
+  "schema_version": 1,
+  "id": "south-pole-candidate-sites",
+  "title": "Lunar south-pole candidate landing regions (PGDA product 78 site set)",
+  "evidence_kind": "derived_product",
+  "reference_point_definition": "Centre of the site's PGDA 5 m/pixel LDEM tile, converted from south polar stereographic (lat_0 = -90, lon_0 = 0, k = 1, sphere R = 1737400 m, MOON_ME/DE421) to planetocentric latitude and east longitude. It is the centre of the mapped region, NOT a selected landing point.",
+  "method": "GeoTIFF ModelTiepoint/ModelPixelScale read with HTTP range requests; tile centre converted with the spherical polar stereographic inverse and cross-checked with PROJ via rasterio (exact agreement for Haworth, Site04, Site23).",
+  "retrieved_on": "2026-11-04",
+  "sources": [
+    {
+      "title": "High-Resolution LOLA Topography for Lunar South Pole Sites (PGDA product 78)",
+      "url": "https://pgda.gsfc.nasa.gov/products/78",
+      "use": "site ids, names, DEM tiles"
+    },
+    {
+      "title": "Barker, M. K., et al. (2021). Improved LOLA elevation maps for south pole landing sites: error estimates and their impact on illumination conditions. Planetary and Space Science, 203, 105119.",
+      "url": "https://doi.org/10.1016/j.pss.2020.105119",
+      "use": "citation for the site DEMs"
+    },
+    {
+      "title": "Mazarico, E., et al. (2011). Illumination conditions of the lunar polar regions using LOLA topography. Icarus, 211(2), 1066-1081.",
+      "url": "https://doi.org/10.1016/j.icarus.2010.10.030",
+      "use": "origin of the SiteNN numbering"
+    },
+    {
+      "title": "NASA (2022-08-19). NASA identifies candidate regions for landing next Americans on Moon (news release); NASA SVS 5013, Artemis III Landing Region Candidates.",
+      "url": "https://svs.gsfc.nasa.gov/5013",
+      "use": "the 13 Artemis III candidate regions; artemis_iii_2022_region mapping"
+    }
+  ],
+  "limitations": [
+    "Reference points are tile centres, not landing sites; the regions of interest are defined by the per-site ROI shapefiles (*_ROIs.tgz) on PGDA, not yet ingested.",
+    "The list of 13 Artemis III region names was confirmed from secondary coverage of NASA's 2022 release; nasa.gov is not reachable from the LUNARIS build environment. SVS 5013 (reachable) confirms the count and date but its text does not list names.",
+    "PGDA labels both Site11 and SL2 'de Gerlache rim'; which corresponds to NASA's 'de Gerlache Rim 1' vs 'Rim 2' is not established.",
+    "NASA revised the Artemis III candidate list after 2022; the 2022 list is used here and later revisions are not yet reflected."
+  ],
+  "sites": [
+    {
+      "id": "pgda78-site01",
+      "name": "Connecting ridge",
+      "pgda_site_id": "Site01",
+      "artemis_iii_2022_region": "Connecting Ridge",
+      "demo_trio": true,
+      "reference_point": {
+        "latitude_deg": -89.4632,
+        "longitude_deg": 222.51,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
+        "width_px": 3200,
+        "height_px": 3200,
+        "pixel_size_m": 5.0,
+        "extent_km": 16.0,
+        "centre_x_m": -11000.0,
+        "centre_y_m": -12000.0
+      }
+    },
+    {
+      "id": "pgda78-site23",
+      "name": "Malapert massif",
+      "pgda_site_id": "Site23",
+      "artemis_iii_2022_region": "Malapert Massif",
+      "demo_trio": true,
+      "reference_point": {
+        "latitude_deg": -85.9948,
+        "longitude_deg": 359.764,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site23/Site23_final_adj_5mpp_surf.tif",
+        "width_px": 4200,
+        "height_px": 4200,
+        "pixel_size_m": 5.0,
+        "extent_km": 21.0,
+        "centre_x_m": -500.0,
+        "centre_y_m": 121500.0
+      }
+    },
+    {
+      "id": "pgda78-site07",
+      "name": "Peak near Shackleton",
+      "pgda_site_id": "Site07",
+      "artemis_iii_2022_region": "Peak Near Shackleton",
+      "demo_trio": true,
+      "reference_point": {
+        "latitude_deg": -88.811,
+        "longitude_deg": 123.69,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site07/Site07_final_adj_5mpp_surf.tif",
+        "width_px": 3200,
+        "height_px": 3200,
+        "pixel_size_m": 5.0,
+        "extent_km": 16.0,
+        "centre_x_m": 30000.0,
+        "centre_y_m": -20000.0
+      }
+    },
+    {
+      "id": "pgda78-dm1",
+      "name": "Amundsen rim",
+      "pgda_site_id": "DM1",
+      "artemis_iii_2022_region": "Amundsen Rim",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -84.2287,
+        "longitude_deg": 69.444,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM1/DM1_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 164000.0,
+        "centre_y_m": 61500.0
+      }
+    },
+    {
+      "id": "pgda78-dm2",
+      "name": "Nobile rim 2",
+      "pgda_site_id": "DM2",
+      "artemis_iii_2022_region": "Nobile Rim 2",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -83.954,
+        "longitude_deg": 58.822,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM2/DM2_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 157000.0,
+        "centre_y_m": 95000.0
+      }
+    },
+    {
+      "id": "pgda78-haworth",
+      "name": "Haworth",
+      "pgda_site_id": "Haworth",
+      "artemis_iii_2022_region": "Haworth",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -86.7639,
+        "longitude_deg": 337.223,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Haworth/Haworth_final_adj_5mpp_surf.tif",
+        "width_px": 5960,
+        "height_px": 5960,
+        "pixel_size_m": 5.0,
+        "extent_km": 29.8,
+        "centre_x_m": -38000.0,
+        "centre_y_m": 90500.0
+      }
+    },
+    {
+      "id": "pgda78-lm1",
+      "name": "Shackleton Rim B",
+      "pgda_site_id": "LM1",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -89.5244,
+        "longitude_deg": 56.31,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM1/LM1_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 12000.0,
+        "centre_y_m": 8000.0
+      }
+    },
+    {
+      "id": "pgda78-lm2",
+      "name": "Shoemaker Rim A",
+      "pgda_site_id": "LM2",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -88.0792,
+        "longitude_deg": 11.889,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM2/LM2_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 12000.0,
+        "centre_y_m": 57000.0
+      }
+    },
+    {
+      "id": "pgda78-lm3",
+      "name": "Shoemaker Rim B",
+      "pgda_site_id": "LM3",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -88.3828,
+        "longitude_deg": 16.587,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM3/LM3_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 14000.0,
+        "centre_y_m": 47000.0
+      }
+    },
+    {
+      "id": "pgda78-lm4",
+      "name": "Shoemaker Rim C",
+      "pgda_site_id": "LM4",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -88.9645,
+        "longitude_deg": 37.235,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM4/LM4_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 19000.0,
+        "centre_y_m": 25000.0
+      }
+    },
+    {
+      "id": "pgda78-lm5",
+      "name": "Shoemaker Rim D",
+      "pgda_site_id": "LM5",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -88.632,
+        "longitude_deg": 74.624,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM5/LM5_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 40000.0,
+        "centre_y_m": 11000.0
+      }
+    },
+    {
+      "id": "pgda78-lm6",
+      "name": "Shoemaker Rim E",
+      "pgda_site_id": "LM6",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -87.9458,
+        "longitude_deg": 71.274,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM6/LM6_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 59000.0,
+        "centre_y_m": 20000.0
+      }
+    },
+    {
+      "id": "pgda78-lm7",
+      "name": "Faustini Rim A",
+      "pgda_site_id": "LM7",
+      "artemis_iii_2022_region": "Faustini Rim A",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -87.8897,
+        "longitude_deg": 90.0,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM7/LM7_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 64000.0,
+        "centre_y_m": 0.0
+      }
+    },
+    {
+      "id": "pgda78-lm8",
+      "name": "Shoemaker Rim F",
+      "pgda_site_id": "LM8",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -87.3417,
+        "longitude_deg": 60.255,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM8/LM8_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 70000.0,
+        "centre_y_m": 40000.0
+      }
+    },
+    {
+      "id": "pgda78-npa",
+      "name": "Cabeus exterior wall 1",
+      "pgda_site_id": "NPA",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -86.9243,
+        "longitude_deg": 288.435,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPA/NPA_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": -88500.0,
+        "centre_y_m": 29500.0
+      }
+    },
+    {
+      "id": "pgda78-npb",
+      "name": "Amundsen 1",
+      "pgda_site_id": "NPB",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -83.9046,
+        "longitude_deg": 89.535,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPB/NPB_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 185000.0,
+        "centre_y_m": 1500.0
+      }
+    },
+    {
+      "id": "pgda78-npc",
+      "name": "Idel'son L crater 1",
+      "pgda_site_id": "NPC",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -84.5397,
+        "longitude_deg": 126.904,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPC/NPC_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 132500.0,
+        "centre_y_m": -99500.0
+      }
+    },
+    {
+      "id": "pgda78-npd",
+      "name": "Malapert crater 1",
+      "pgda_site_id": "NPD",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -84.8034,
+        "longitude_deg": 8.387,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPD/NPD_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 23000.0,
+        "centre_y_m": 156000.0
+      }
+    },
+    {
+      "id": "pgda78-sl2",
+      "name": "de Gerlache rim",
+      "pgda_site_id": "SL2",
+      "artemis_iii_2022_region": "de Gerlache Rim (1 or 2)",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -88.23,
+        "longitude_deg": 295.372,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/SL2/SL2_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": -48500.0,
+        "centre_y_m": 23000.0
+      }
+    },
+    {
+      "id": "pgda78-sl3",
+      "name": "Connecting ridge extension",
+      "pgda_site_id": "SL3",
+      "artemis_iii_2022_region": "Connecting Ridge Extension",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -89.0324,
+        "longitude_deg": 258.001,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/SL3/SL3_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": -28700.0,
+        "centre_y_m": -6100.0
+      }
+    },
+    {
+      "id": "pgda78-shoemaker",
+      "name": "Shoemaker",
+      "pgda_site_id": "Shoemaker",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -87.1835,
+        "longitude_deg": 62.835,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Shoemaker/Shoemaker_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 76000.0,
+        "centre_y_m": 39000.0
+      }
+    },
+    {
+      "id": "pgda78-site04",
+      "name": "Shackleton rim",
+      "pgda_site_id": "Site04",
+      "artemis_iii_2022_region": null,
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -89.7668,
+        "longitude_deg": 188.13,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_surf.tif",
+        "width_px": 3200,
+        "height_px": 3200,
+        "pixel_size_m": 5.0,
+        "extent_km": 16.0,
+        "centre_x_m": -1000.0,
+        "centre_y_m": -7000.0
+      }
+    },
+    {
+      "id": "pgda78-site06",
+      "name": "Nobile rim 1",
+      "pgda_site_id": "Site06",
+      "artemis_iii_2022_region": "Nobile Rim 1",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -85.4381,
+        "longitude_deg": 37.367,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": 84000.0,
+        "centre_y_m": 110000.0
+      }
+    },
+    {
+      "id": "pgda78-site11",
+      "name": "de Gerlache rim",
+      "pgda_site_id": "Site11",
+      "artemis_iii_2022_region": "de Gerlache Rim (1 or 2)",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -88.6834,
+        "longitude_deg": 292.068,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site11/Site11_final_adj_5mpp_surf.tif",
+        "width_px": 3200,
+        "height_px": 3200,
+        "pixel_size_m": 5.0,
+        "extent_km": 16.0,
+        "centre_x_m": -37000.0,
+        "centre_y_m": 15000.0
+      }
+    },
+    {
+      "id": "pgda78-site20",
+      "name": "Leibnitz beta plateau",
+      "pgda_site_id": "Site20",
+      "artemis_iii_2022_region": "Leibnitz Beta Plateau",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -85.4266,
+        "longitude_deg": 31.743,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site20/Site20_final_adj_5mpp_surf.tif",
+        "width_px": 3200,
+        "height_px": 3200,
+        "pixel_size_m": 5.0,
+        "extent_km": 16.0,
+        "centre_x_m": 73000.0,
+        "centre_y_m": 118000.0
+      }
+    },
+    {
+      "id": "pgda78-site20v2",
+      "name": "Leibnitz beta plateau, extended boundaries",
+      "pgda_site_id": "Site20v2",
+      "artemis_iii_2022_region": "Leibnitz Beta Plateau",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -85.4266,
+        "longitude_deg": 31.743,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site20v2/Site20v2_final_adj_5mpp_surf.tif",
+        "width_px": 5200,
+        "height_px": 5200,
+        "pixel_size_m": 5.0,
+        "extent_km": 26.0,
+        "centre_x_m": 73000.0,
+        "centre_y_m": 118000.0
+      }
+    },
+    {
+      "id": "pgda78-site42",
+      "name": "de Gerlache-Kocher massif",
+      "pgda_site_id": "Site42",
+      "artemis_iii_2022_region": "de Gerlache-Kocher Massif",
+      "demo_trio": false,
+      "reference_point": {
+        "latitude_deg": -85.8296,
+        "longitude_deg": 243.678,
+        "frame": "MOON_ME"
+      },
+      "tile": {
+        "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site42/Site42_final_adj_5mpp_surf.tif",
+        "width_px": 4000,
+        "height_px": 4000,
+        "pixel_size_m": 5.0,
+        "extent_km": 20.0,
+        "centre_x_m": -113400.0,
+        "centre_y_m": -56100.0
+      }
+    }
+  ]
+}

@@ -16,6 +16,9 @@ jobs:
   python:
     name: Python (${{ matrix.python }})
     runs-on: ubuntu-latest
+    env:
+      # Space-separated dataset ids acquired before the tests (see "Acquire and verify").
+      LUNARIS_CI_DATASETS: naif-generic-kernels-lunar
     strategy:
       fail-fast: false
       matrix:
@@ -32,8 +35,27 @@ jobs:
         run: uv run ruff check . && uv run ruff format --check .
       - name: Type check
         run: uv run mypy
+      # Real datasets the tests need, acquired and SHA-256 verified through the manifests.
+      # Append dataset ids to the list; the cache key changes with the list and with any
+      # manifest edit, so a stale or tampered cache is never used without re-verification.
+      - name: Restore acquired datasets
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/kernels
+            data/raw
+          key: datasets-${{ hashFiles('packages/data/src/lunaris_data/manifests/**') }}-${{ env.LUNARIS_CI_DATASETS }}
+      - name: Acquire and verify datasets
+        run: |
+          for dataset in $LUNARIS_CI_DATASETS; do
+            uv run lunaris-data acquire "$dataset"
+            uv run lunaris-data verify "$dataset"
+          done
       - name: Tests (science, data, API, live-server integration)
         run: uv run pytest
+        env:
+          # Tests that need a dataset fail instead of skipping when it is missing.
+          LUNARIS_REQUIRE_KERNELS: "1"
 
   web:
     name: Web

@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/setup-texture.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "setup:texture": "node scripts/setup-texture.mjs",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
