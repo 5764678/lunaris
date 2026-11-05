@@ -17,7 +17,14 @@ import type {
   ErrorResponse,
   HealthResponse,
   RuntimeReport,
+  components,
 } from "@lunaris/shared-types";
+
+/** C3 terrain scene metadata (generated from the API contract). */
+export type TerrainSceneMetadata = components["schemas"]["TerrainSceneMetadata"];
+
+const MAX_SCENE_GRID = 1024;
+const SCENE_DATA_TIMEOUT_MS = 60_000;
 
 export type ApiErrorKind = "network" | "timeout" | "http" | "invalid_response";
 
@@ -104,6 +111,36 @@ const isCandidateSite: Guard<CandidateSite> = (v): v is CandidateSite =>
 
 const isCandidateSiteList: Guard<CandidateSiteList> = (v): v is CandidateSiteList =>
   isObject(v) && Array.isArray(v.sites) && v.sites.every(isCandidateSite);
+
+const isFiniteNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+const isGridSize = (v: unknown): v is number =>
+  typeof v === "number" && Number.isInteger(v) && v >= 2 && v <= MAX_SCENE_GRID;
+
+/** Checks every field the terrain scene relies on, including the binary layout (C3). */
+export const isTerrainSceneMetadata: Guard<TerrainSceneMetadata> = (v): v is TerrainSceneMetadata => {
+  if (!isObject(v) || !isGridSize(v.width) || !isGridSize(v.height)) return false;
+  const layout = v.layout;
+  return (
+    v.frame === "MOON_ME" &&
+    Array.isArray(v.origin_moon_me_m) &&
+    v.origin_moon_me_m.length === 3 &&
+    v.origin_moon_me_m.every(isFiniteNumber) &&
+    isFiniteNumber(v.height_min_m) &&
+    isFiniteNumber(v.height_max_m) &&
+    isFiniteNumber(v.vertex_spacing_m) &&
+    typeof v.data_url === "string" &&
+    v.data_url.startsWith("/api/v1/terrain/scenes/") &&
+    isObject(layout) &&
+    layout.dtype === "float32" &&
+    layout.byte_order === "little" &&
+    layout.values_per_vertex === 4 &&
+    layout.byte_length === v.width * v.height * 16 &&
+    isObject(v.dem) &&
+    typeof v.dem.sha256 === "string" &&
+    isObject(v.evidence) &&
+    typeof v.evidence.kind === "string"
+  );
+};
 
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
@@ -210,7 +247,81 @@ export function createApiClient(options: ApiClientOptions) {
       request<CandidateSite>("POST", "/api/v1/sites", { body: input, guard: isCandidateSite }),
     deleteSite: (siteId: string) =>
       request<undefined>("DELETE", `/api/v1/sites/${encodeURIComponent(siteId)}`),
+    terrainScene: (sceneId: string, gridSize: number, signal?: AbortSignal) =>
+      request<TerrainSceneMetadata>(
+        "GET",
+        `/api/v1/terrain/scenes/${encodeURIComponent(sceneId)}?grid_size=${gridSize}`,
+        { signal, guard: isTerrainSceneMetadata },
+      ),
+    terrainSceneData: (metadata: TerrainSceneMetadata, signal?: AbortSignal) =>
+      requestBinary(metadata.data_url, metadata.layout.byte_length, signal),
   };
+
+  /**
+   * Fetches a C3 vertex buffer. `cache: "no-cache"` makes the browser revalidate with
+   * the response's ETag (If-None-Match → 304) instead of downloading 16 MiB again, and
+   * without a custom header that would need a CORS preflight.
+   */
+  async function requestBinary(path: string, expectedBytes: number, signal?: AbortSignal) {
+    const controller = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, SCENE_DATA_TIMEOUT_MS);
+    const onExternalAbort = () => controller.abort();
+    signal?.addEventListener("abort", onExternalAbort, { once: true });
+    const started = now();
+    try {
+      let response: Response;
+      try {
+        response = await fetchImpl(`${baseUrl}${path}`, {
+          headers: { Accept: "application/octet-stream" },
+          signal: controller.signal,
+          cache: "no-cache",
+        });
+      } catch (cause) {
+        if (signal?.aborted) throw cause;
+        throw new ApiError({
+          kind: timedOut ? "timeout" : "network",
+          message: timedOut
+            ? `Terrain data did not arrive within ${SCENE_DATA_TIMEOUT_MS / 1000} s.`
+            : `LUNARIS API unreachable at ${baseUrl}.`,
+        });
+      }
+      const requestId = response.headers.get("x-request-id");
+      if (!response.ok) {
+        let envelope: ErrorResponse["error"] | null = null;
+        try {
+          const payload: unknown = await response.json();
+          envelope = isErrorResponse(payload) ? payload.error : null;
+        } catch {
+          // not an envelope
+        }
+        throw new ApiError({
+          kind: "http",
+          status: response.status,
+          code: envelope?.code ?? null,
+          message: envelope?.message ?? `HTTP ${response.status} from ${path}.`,
+          details: envelope?.details ?? [],
+          requestId: envelope?.request_id ?? requestId,
+        });
+      }
+      const data = await response.arrayBuffer();
+      if (data.byteLength !== expectedBytes) {
+        throw new ApiError({
+          kind: "invalid_response",
+          status: response.status,
+          requestId,
+          message: `Terrain data from ${path} is ${data.byteLength} bytes; the metadata promised ${expectedBytes}.`,
+        });
+      }
+      return { data, status: response.status, latencyMs: now() - started, requestId };
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onExternalAbort);
+    }
+  }
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
