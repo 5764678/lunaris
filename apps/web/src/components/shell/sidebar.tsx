@@ -64,6 +64,14 @@ function NavItem({ module, active }: { module: MissionModule; active: boolean })
     >
       {content}
     </Link>
+  ) : module.status === "available" ? (
+    <span
+      tabIndex={0}
+      className={cn(base, "cursor-default text-muted-foreground")}
+      data-testid={`nav-available-${module.id}`}
+    >
+      {content}
+    </span>
   ) : (
     <span
       aria-disabled="true"
@@ -81,10 +89,11 @@ function NavItem({ module, active }: { module: MissionModule; active: boolean })
         <p className="font-medium text-foreground">{module.title}</p>
         <p className="text-muted-foreground">{module.description}</p>
         <p className="mt-1 font-mono text-3xs uppercase tracking-wider text-dim">
-          {module.href
+          {module.href || module.status === "available"
             ? `Available · ${module.milestone}`
             : `Planned · ${module.milestone} — not implemented`}
         </p>
+        {module.availableIn && <p className="mt-0.5 text-3xs text-muted-foreground">{module.availableIn}</p>}
       </TooltipContent>
     </Tooltip>
   );

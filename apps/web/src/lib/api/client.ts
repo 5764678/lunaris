@@ -88,6 +88,8 @@ interface RequestOptions<T> {
   /** Non-2xx statuses whose body is a valid payload of type T (e.g. 503 for /health). */
   acceptStatuses?: readonly number[];
   guard?: Guard<T>;
+  /** Overrides the client timeout for slow analysis endpoints. */
+  timeoutMs?: number;
 }
 
 // ── Shape guards ───────────────────────────────────────────────────────────
@@ -222,14 +224,14 @@ export function createApiClient(options: ApiClientOptions) {
   async function request<T>(
     method: "GET" | "POST" | "DELETE",
     path: string,
-    { body, signal, acceptStatuses = [], guard }: RequestOptions<T> = {},
+    { body, signal, acceptStatuses = [], guard, timeoutMs: requestTimeoutMs }: RequestOptions<T> = {},
   ): Promise<ApiResult<T>> {
     const controller = new AbortController();
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
       controller.abort();
-    }, timeoutMs);
+    }, requestTimeoutMs ?? timeoutMs);
     const onExternalAbort = () => controller.abort();
     signal?.addEventListener("abort", onExternalAbort, { once: true });
 
@@ -251,7 +253,7 @@ export function createApiClient(options: ApiClientOptions) {
       throw new ApiError({
         kind: timedOut ? "timeout" : "network",
         message: timedOut
-          ? `LUNARIS API did not respond within ${timeoutMs / 1000} s (${baseUrl}).`
+          ? `LUNARIS API did not respond within ${(requestTimeoutMs ?? timeoutMs) / 1000} s (${baseUrl}).`
           : `LUNARIS API unreachable at ${baseUrl}.`,
       });
     } finally {
@@ -327,7 +329,7 @@ export function createApiClient(options: ApiClientOptions) {
       request<SiteComparison>(
         "GET",
         `/api/v1/analysis/site-comparison?${new URLSearchParams({ site_ids: siteIds.join(",") }).toString()}`,
-        { signal, guard: isSiteComparison },
+        { signal, guard: isSiteComparison, timeoutMs: 120_000 },
       ),
     analysisTimeline: (
       siteId: string,
@@ -338,6 +340,7 @@ export function createApiClient(options: ApiClientOptions) {
         body: { site_id: siteId, start_utc: window.startUtc, end_utc: window.endUtc, step_s: window.stepS },
         signal,
         guard: isTimelineAnalysis,
+        timeoutMs: 60_000,
       }),
     siteEphemeris: (
       siteId: string,
