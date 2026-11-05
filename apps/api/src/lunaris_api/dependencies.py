@@ -94,3 +94,22 @@ def get_catalog_service(
 
 
 CatalogServiceDep = Annotated[CatalogService, Depends(get_catalog_service)]
+
+
+# ── Site comparison (S-TERRAIN, T-17) ────────────────────────────────────────
+from lunaris_api.services.compare import CompareService  # noqa: E402
+
+
+def get_compare_service(
+    request: Request, sites: Annotated[SiteService, Depends(get_site_service)]
+) -> CompareService:
+    registry, layout = request.app.state.dataset_registry, request.app.state.data_layout
+    return CompareService(
+        sites,
+        HorizonMaskService(registry, layout, sites),
+        SiteTerrainService(registry, layout),
+    )
+
+
+CompareServiceDep = Annotated[CompareService, Depends(get_compare_service)]
+__all__ += ["CompareServiceDep"]

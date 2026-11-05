@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from lunaris_api.routers import (
     catalog,
+    compare,
     datasets,
     ephemeris,
     health,
@@ -16,6 +17,8 @@ from lunaris_api.routers import (
 api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(system.router)
 api_v1.include_router(datasets.router)
+# compare before sites: /sites/compare must not be read as /sites/{site_id}.
+api_v1.include_router(compare.router)
 api_v1.include_router(sites.router)
 api_v1.include_router(catalog.router)
 api_v1.include_router(terrain.router)

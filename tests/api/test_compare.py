@@ -1,0 +1,122 @@
+"""Site comparison table (task T-17). SYNTHETIC LDEM + synthetic PGDA window."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import Any
+
+import pytest
+from fastapi.testclient import TestClient
+
+from lunaris_api.app import create_app
+from lunaris_api.services import terrain as terrain_service
+from lunaris_api.services.compare import ILLUMINATION_KEYS, ILLUMINATION_UNAVAILABLE
+from lunaris_api.settings import Settings
+from lunaris_data.registry import DatasetRegistry
+from lunaris_data.remote.window import RemoteWindowError
+from tests.api.test_site_terrain import SLOPE_DEG, _fake_window
+from tests.api.test_terrain_scenes import CACHE, _install_synthetic
+
+URL = "/api/v1/sites/compare"
+
+
+@pytest.fixture
+def compare_client(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    def window_with_coverage(source: Any, *, latitude_deg: float, **kwargs: Any) -> Any:
+        if latitude_deg > -80.0:  # like the real PGDA 20 m mosaic (about 80°S–90°S)
+            raise RemoteWindowError("the window lies outside the raster")
+        return _fake_window(source, latitude_deg=latitude_deg, **kwargs)
+
+    monkeypatch.setattr(terrain_service, "read_window", window_with_coverage)
+    CACHE.clear()
+    with TestClient(create_app(settings)) as client:
+        _install_synthetic(client, settings.data_dir)
+        synthetic_ldem = client.app.state.dataset_registry.get("lola-ldem-75s-240m")  # type: ignore[attr-defined]
+        pgda = DatasetRegistry.load_builtin().get("pgda-lola-20mpp-80s")
+        client.app.state.dataset_registry = DatasetRegistry([synthetic_ldem, pgda])  # type: ignore[attr-defined]
+        yield client
+    CACHE.clear()
+
+
+def _sites(client: TestClient) -> list[str]:
+    ids = []
+    for name, lat, lon in (("A", -89.5, 45.0), ("B", -89.2, 200.0), ("C", -88.8, 300.0)):
+        r = client.post(
+            "/api/v1/sites", json={"name": name, "latitude_deg": lat, "longitude_deg": lon}
+        )
+        ids.append(r.json()["id"])
+    return ids
+
+
+def test_compare_rows_cells_and_evidence(compare_client: TestClient) -> None:
+    ids = _sites(compare_client)
+    response = compare_client.get(URL, params={"site_ids": ",".join(ids)})
+    assert response.status_code == 200
+    body = response.json()
+    assert [r["site_id"] for r in body["rows"]] == ids
+    assert body["sample_count"] == 8761  # default: 2027 at 1 h
+    assert {c["key"] for c in body["columns"]} >= set(ILLUMINATION_KEYS)
+    row = body["rows"][0]
+    for key in (
+        "surface_height_m",
+        "horizon_min_deg",
+        "horizon_max_deg",
+        "horizon_truncated_azimuths",
+    ):
+        cell = row[key]
+        assert cell["value"] is not None, key
+        assert cell["evidence"]["sources"][0]["source_id"] == "lola-ldem-75s-240m"
+        assert cell["evidence"]["sources"][0]["sha256"]
+    assert row["surface_height_m"]["evidence"]["kind"] == "derived_product"
+    assert row["horizon_max_deg"]["evidence"]["kind"] == "calculation"
+    assert row["horizon_truncated_azimuths"]["value"] == 0
+    for key in ("slope_at_site_deg", "slope_p95_deg", "roughness_rms_m"):
+        cell = row[key]
+        assert cell["value"] is not None
+        assert cell["baseline_m"] > 0
+        assert cell["evidence"]["sources"][0]["source_id"] == "pgda-lola-20mpp-80s"
+        assert "ETag" in cell["evidence"]["sources"][0]["version"]
+        assert cell["limitations"]
+    assert row["slope_at_site_deg"]["value"] == pytest.approx(SLOPE_DEG, abs=0.1)
+    assert row["roughness_rms_m"]["baseline_m"] == 100.0  # default 50 m footprint
+    for key in ILLUMINATION_KEYS:
+        assert row[key]["value"] is None  # never 0
+        assert row[key]["reason"] == ILLUMINATION_UNAVAILABLE
+
+
+def test_uncomputable_cells_are_null_with_reason(compare_client: TestClient) -> None:
+    far = compare_client.post(
+        "/api/v1/sites", json={"name": "Far", "latitude_deg": -60.0, "longitude_deg": 0.0}
+    ).json()["id"]
+    row = compare_client.get(URL, params={"site_ids": far}).json()["rows"][0]
+    assert row["surface_height_m"]["value"] is None
+    assert "horizon mask not available" in row["surface_height_m"]["reason"]
+    assert row["slope_at_site_deg"]["value"] is None
+    assert "outside" in row["slope_at_site_deg"]["reason"]
+
+
+def test_validation(compare_client: TestClient) -> None:
+    ids = _sites(compare_client)
+    assert compare_client.get(URL, params={"site_ids": "nope"}).status_code == 404
+    assert compare_client.get(URL, params={"site_ids": ""}).status_code == 422
+    too_many = compare_client.get(
+        URL,
+        params={
+            "site_ids": ids[0],
+            "start_utc": "2027-01-01T00:00:00Z",
+            "end_utc": "2029-01-01T00:00:00Z",
+        },
+    )
+    assert too_many.status_code == 422
+    assert too_many.json()["error"]["details"][0]["type"] == "sample_cap_exceeded"
+    order = compare_client.get(
+        URL,
+        params={
+            "site_ids": ids[0],
+            "start_utc": "2027-02-01T00:00:00Z",
+            "end_utc": "2027-01-01T00:00:00Z",
+        },
+    )
+    assert order.status_code == 422
+    # /sites/compare is not swallowed by /sites/{site_id}
+    assert compare_client.get("/api/v1/sites").status_code == 200
