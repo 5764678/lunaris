@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { ApiError, createApiClient, describeError } from "./client";
+import { ApiError, createApiClient, describeError, isTimelineAnalysis } from "./client";
 
 const HEALTH = {
   status: "ok",
@@ -217,5 +217,42 @@ describe("terrain scene (C3)", () => {
       status: 404,
       message: "DEM not acquired",
     });
+  });
+});
+
+describe("isTimelineAnalysis", () => {
+  // SYNTHETIC minimal C4 response.
+  const evidence = { kind: "calculation", statement: "s", sources: [], method: "m", assumptions: [] };
+  const result = () => ({
+    evidence,
+    astronomical: {},
+    terrain: null,
+    limitations: [],
+    samples: [
+      { epoch_utc: "2026-11-05T00:00:00Z", astronomical_visible_fraction: 1, terrain_visible_fraction: null },
+    ],
+  });
+  const valid = () => ({
+    site_id: "s",
+    step_s: 3600,
+    terrain_horizon_available: false,
+    illumination: result(),
+    earth_visibility: result(),
+  });
+
+  it("accepts a contract-shaped response", () => {
+    expect(isTimelineAnalysis(valid())).toBe(true);
+  });
+
+  it("rejects evidence without a known kind (would crash the badge) and malformed samples", () => {
+    const noKind = valid();
+    (noKind.earth_visibility as { evidence: unknown }).evidence = {};
+    expect(isTimelineAnalysis(noKind)).toBe(false);
+    const badKind = valid();
+    badKind.illumination.evidence = { ...evidence, kind: "guess" };
+    expect(isTimelineAnalysis(badKind)).toBe(false);
+    const badSample = valid();
+    (badSample.earth_visibility.samples[0] as Record<string, unknown>).astronomical_visible_fraction = "1";
+    expect(isTimelineAnalysis(badSample)).toBe(false);
   });
 });
