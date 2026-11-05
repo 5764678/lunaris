@@ -103,6 +103,31 @@ uv run lunaris-data verify lola-ldem-75s-240m           # re-hash against the re
 docker compose up --build    # API :8000, web :3000; ./data is bind-mounted
 ```
 
+## Two-minute demo
+
+Live at <https://lunaris-demo.onrender.com>. Open it a minute early: free instances sleep
+after about 15 minutes idle.
+
+1. **Globe.** The NASA SVS color map with the cited south-pole sites. Click one. It shows its
+   source (PGDA product 78, Barker et al. 2021) and the note "tile centre, not a landing
+   point".
+2. **Pole Terrain.** A 250 km square of LOLA heights at true vertical scale, lit by the SPICE
+   Sun for the selected time. Scrub the time slider and long shadows cross the craters.
+   Rendered shadows are labelled illustrative. The numbers come from the API.
+3. **Timeline lanes.** For the selected site: Sun and Earth elevation over 30 days, terrain
+   illumination, and Earth line of sight. Line of sight is geometric only; it is not a radio
+   link.
+4. **Compare** (`/compare`, about 20 s on the free plan). The demo trio over 2027: height,
+   slope with its baseline, roughness, horizon, sunlight, longest darkness, Earth visibility.
+   Click any number for its method, sources (with SHA-256) and limitations.
+5. **Where the numbers come from:**
+   - SPICE geometry matches JPL Horizons to 0.002″.
+   - Horizon masks match an independent implementation to < 0.0001°.
+   - Over 2001–2018, illumination at the trio is within 0.042 of the published maps of
+     Mazarico et al. (2011). The one site above the published range is reported with its
+     causes.
+   - Shackleton's floor comes out at exactly 0 % sunlit.
+
 ## Hosted demo (Render)
 
 Two Docker web services, both built from this repository's root:
