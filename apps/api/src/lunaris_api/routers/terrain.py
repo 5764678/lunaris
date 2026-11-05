@@ -6,10 +6,19 @@ from typing import Annotated
 
 from fastapi import APIRouter, Header, Path, Query, Response
 
-from lunaris_api.dependencies import TerrainSceneServiceDep
+from lunaris_api.dependencies import (
+    SiteServiceDep,
+    SiteTerrainServiceDep,
+    TerrainSceneServiceDep,
+)
 from lunaris_api.schemas.common import ERROR_RESPONSES, SERVER_ERROR, ErrorResponse, ResponseDocs
-from lunaris_api.schemas.terrain import TerrainSceneListResponse, TerrainSceneMetadata
-from lunaris_api.services.terrain import DEFAULT_GRID_SIZE, SceneResult
+from lunaris_api.schemas.terrain import (
+    SiteTerrainResponse,
+    TerrainSceneListResponse,
+    TerrainSceneMetadata,
+)
+from lunaris_api.services.terrain import DEFAULT_GRID_SIZE, MAX_FOOTPRINT_RADIUS_M, SceneResult
+from lunaris_science.terrain.analysis import HazardThresholds
 from lunaris_science.terrain.scene import MAX_SCENE_VERTICES_PER_SIDE
 
 router = APIRouter(prefix="/terrain", tags=["terrain"])
@@ -109,3 +118,47 @@ def get_scene_data(
         media_type="application/octet-stream",
         headers=headers,
     )
+
+
+site_router = APIRouter(prefix="/sites", tags=["terrain"])
+
+SitePath = Annotated[str, Path(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9-]+$")]
+
+
+@site_router.get(
+    "/{site_id}/terrain",
+    response_model=SiteTerrainResponse,
+    summary="Terrain analysis at a site (height, slope, roughness, hazards)",
+    responses={
+        404: {"model": ErrorResponse, "description": "Unknown site."},
+        422: {"model": ErrorResponse, "description": "Invalid input or site outside coverage."},
+        503: {"model": ErrorResponse, "description": "DEM window could not be read."},
+        **SERVER_ERROR,
+    },
+)
+def get_site_terrain(
+    site_id: SitePath,
+    sites: SiteServiceDep,
+    service: SiteTerrainServiceDep,
+    *,
+    footprint_radius_m: Annotated[
+        float, Query(gt=0, le=MAX_FOOTPRINT_RADIUS_M, description="Footprint radius, m.")
+    ] = 50.0,
+    max_slope_deg: Annotated[
+        float | None, Query(gt=0, lt=90, description="Hazard threshold (assumption).")
+    ] = None,
+    max_roughness_m: Annotated[
+        float | None, Query(gt=0, description="Hazard threshold (assumption).")
+    ] = None,
+) -> SiteTerrainResponse:
+    """Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness
+    and footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every
+    slope and roughness carries its baseline. Hazard flags appear only when thresholds
+    are supplied; they are the caller's assumptions."""
+    site = sites.get_site(site_id)
+    thresholds = (
+        HazardThresholds(max_slope_deg=max_slope_deg, max_roughness_m=max_roughness_m)
+        if max_slope_deg is not None or max_roughness_m is not None
+        else None
+    )
+    return service.analyze(site, footprint_radius_m=footprint_radius_m, thresholds=thresholds)

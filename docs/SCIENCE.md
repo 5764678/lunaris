@@ -203,17 +203,31 @@ while the mirrored-sample and flipped-line conventions are off by 300 m (median)
 1906 px × 240 m = 457.44 km; the pole falls exactly at the grid centre (0-based pixel
 1905.5, 1905.5), and the edge midpoints lie at 75.00° S.
 
-**Slope.** Horn (1981) 3 × 3 finite differences on the projected grid, with the ground
-sample distance corrected by the scale factor (240 m / k at the pixel). Slope =
-atan(√((∂h/∂x)² + (∂h/∂y)²)). Reported with the baseline (3 pixels) and resolution.
+**Slope** (implemented, T-14: `lunaris_science.terrain.analysis`). Horn (1981) 3 × 3 finite
+differences on the projected grid. The ground spacing is MAP_SCALE / k, where
+k = 1 + (ρ/2R)² is evaluated at each pixel. Slope = atan(√((∂h/∂x)² + (∂h/∂y)²)). The
+**baseline** of a slope is 2 × ground spacing, the distance between the pixel centres the
+operator differences (≈ 40 m on the PGDA 20 m DEM). Validated on synthetic planes and cones
+to < 0.1°; at ρ = 400 km (k = 1.0133) the correction changes a 30° slope by 0.33° (29.67° uncorrected). With
+projected spacing the operator equals `gdaldem slope`: < 10⁻³° on a synthetic grid, and
+5 × 10⁻⁴° (float32 rounding) over 996 004 cells of a real PGDA window at 89.45° S,
+222.69° E.
 
-**Roughness.** A defined statistic over a stated baseline (candidate: RMS of residual
-heights after removing a best-fit plane within a circular window). The definition, window
-and resolution are part of every result.
+**Roughness** (implemented). RMS of the height residuals after removing the least-squares
+plane fitted to the cells whose centres lie within a circle of ground diameter D around the
+site. **Baseline** = D, which is 2 × the footprint radius in `GET /sites/{id}/terrain`.
 
-**Hazard indicators.** Threshold classification (slope above a configured limit, fraction
-of footprint above it). Thresholds are mission-specific **assumptions**, returned with the
-result; LUNARIS ships no default "safe slope".
+**Footprint statistics.** Over cells within the footprint radius: cell count, missing
+cells (counted, never filled), height min/mean/max, and slope mean / p95 / max.
+
+**Hazard indicators.** Returned only when the caller supplies thresholds (`max_slope_deg`,
+`max_roughness_m`): fraction of footprint cells above the slope limit, whether the p95
+slope exceeds it, and whether roughness exceeds its limit. Thresholds are mission-specific
+**assumptions**, echoed as `assumption` evidence; LUNARIS ships no default "safe slope".
+
+**Source.** `GET /api/v1/sites/{id}/terrain` reads a window of the PGDA 20 m DEM around
+the site (`pgda-lola-20mpp-80s`, docs/DATA_SOURCES.md §2.4). The window is about
+2 × radius + 8 cells and is cached under `data/processed/`.
 
 **Known limitations.** DEM resolution bounds detectable hazards (boulders and small
 craters below the grid spacing are invisible); polar products contain interpolated areas

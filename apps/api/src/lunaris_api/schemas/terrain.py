@@ -98,3 +98,66 @@ __all__ = [
     "TerrainSceneMetadata",
     "TerrainSceneSummary",
 ]
+
+
+class SlopeValueSchema(Schema):
+    slope_deg: float | None = Field(description="Horn slope; null where the DEM has no value.")
+    baseline_m: float = Field(
+        description="Ground distance between the pixel centres Horn's operator differences."
+    )
+
+
+class FootprintSchema(Schema):
+    radius_m: float
+    cell_count: int
+    missing_cell_count: int = Field(description="Cells with no DEM value (never treated as 0).")
+    height_min_m: float
+    height_max_m: float
+    height_mean_m: float
+    slope_mean_deg: float | None
+    slope_p95_deg: float | None
+    slope_max_deg: float | None
+    slope_baseline_m: float
+    roughness_rms_m: float | None
+    roughness_baseline_m: float = Field(description="Diameter of the plane-fit window, m.")
+
+
+class HazardSchema(Schema):
+    max_slope_deg: float | None = Field(description="Assumption supplied by the caller.")
+    max_roughness_m: float | None = Field(description="Assumption supplied by the caller.")
+    slope_fraction_above: float | None
+    slope_p95_exceeds: bool | None
+    roughness_exceeds: bool | None
+    evidence: EvidenceSchema
+
+
+class DemWindowSchema(Schema):
+    dataset_id: str
+    title: str
+    url: str
+    etag: str | None
+    last_modified: str | None
+    resolution_m: float
+    window_col_row_width_height: list[int]
+    window_map_bounds_m: list[float]
+    bytes_requested: int
+    http_retries: int
+    served_from_cache: bool
+    read_at_utc: str
+    citation: str
+
+
+class SiteTerrainResponse(Schema):
+    site_id: str
+    latitude_deg: float
+    longitude_deg: float
+    height_m: float = Field(description="Bilinear DEM height above the 1 737 400 m sphere.")
+    scale_factor: float = Field(description="Polar stereographic point scale factor k at the site.")
+    slope_at_site: SlopeValueSchema
+    footprint: FootprintSchema
+    hazard: HazardSchema | None = Field(
+        description="Present only when thresholds were supplied; LUNARIS ships no default."
+    )
+    dem: DemWindowSchema
+    evidence: EvidenceSchema
+    limitations: list[str]
