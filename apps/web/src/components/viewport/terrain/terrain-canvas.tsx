@@ -3,10 +3,19 @@
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { BufferAttribute, BufferGeometry, DirectionalLight, Quaternion, Vector3, type Group } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  DirectionalLight,
+  Matrix4,
+  Quaternion,
+  Vector3,
+  type Group,
+} from "three";
 
 import type { TerrainScene } from "@/lib/api/queries";
 import { heightColors } from "@/lib/terrain/scene-data";
+import type { Direction } from "@/lib/terrain/sun";
 import { useMissionStore } from "@/store/mission-store";
 
 import { LabelProjector } from "../label-layer";
@@ -63,7 +72,7 @@ function TerrainMesh({ scene }: { scene: TerrainScene }) {
   }, [scene]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
-    <mesh geometry={geometry} scale={1 / TERRAIN_UNIT_M} name="lunar-terrain">
+    <mesh geometry={geometry} scale={1 / TERRAIN_UNIT_M} name="lunar-terrain" castShadow receiveShadow>
       <meshLambertMaterial vertexColors />
     </mesh>
   );
@@ -91,6 +100,95 @@ function DisplayLight() {
     <>
       <ambientLight intensity={0.25} />
       <directionalLight ref={light} intensity={2.4} />
+    </>
+  );
+}
+
+/** Terrain bounds in scene units (km), for fitting the shadow camera. */
+function terrainCorners(scene: TerrainScene): Vector3[] {
+  const p = scene.terrain.positions;
+  const min = new Vector3(Infinity, Infinity, Infinity);
+  const max = new Vector3(-Infinity, -Infinity, -Infinity);
+  for (let i = 0; i < scene.terrain.valid.length; i++) {
+    if (!scene.terrain.valid[i]) continue;
+    min.min(new Vector3(p[i * 3]!, p[i * 3 + 1]!, p[i * 3 + 2]!));
+    max.max(new Vector3(p[i * 3]!, p[i * 3 + 1]!, p[i * 3 + 2]!));
+  }
+  min.divideScalar(TERRAIN_UNIT_M);
+  max.divideScalar(TERRAIN_UNIT_M);
+  const out: Vector3[] = [];
+  for (const x of [min.x, max.x])
+    for (const y of [min.y, max.y]) for (const z of [min.z, max.z]) out.push(new Vector3(x, y, z));
+  return out;
+}
+
+const SUN_DISTANCE_KM = 600;
+const lightView = new Matrix4();
+const corner = new Vector3();
+
+/**
+ * Directional light from the SPICE Sun direction (C2 `direction_moon_me`, MOON_ME), so
+ * the scene needs no rotation. Shadows come from a shadow map whose orthographic
+ * frustum is fitted to the terrain in light space: at Sun elevations of 1–2° the
+ * terrain is a thin sliver seen from the Sun, and a fitted frustum keeps the texels
+ * small. Rendered shadows are illustrative (point source, no penumbra from the 0.53°
+ * disk, 240 m terrain); quantitative illumination comes only from the API.
+ */
+function SunLight({ direction, corners }: { direction: Direction; corners: Vector3[] }) {
+  const light = useRef<DirectionalLight>(null);
+  const shadowMapSize = useThree((s) => (s.size.width < 640 ? 2048 : 4096));
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    const l = light.current;
+    if (!l) return;
+    const eye = new Vector3(...direction).multiplyScalar(SUN_DISTANCE_KM);
+    l.position.copy(eye);
+    l.target.position.set(0, 0, 0);
+    l.target.updateMatrixWorld();
+    const cam = l.shadow.camera;
+    cam.up.copy(UP); // the Sun is near the horizon, never along the radial
+    lightView
+      .lookAt(eye, new Vector3(0, 0, 0), UP)
+      .setPosition(eye)
+      .invert();
+    let minX = Infinity,
+      maxX = -Infinity,
+      minY = Infinity,
+      maxY = -Infinity,
+      minZ = Infinity,
+      maxZ = -Infinity;
+    for (const c of corners) {
+      corner.copy(c).applyMatrix4(lightView);
+      minX = Math.min(minX, corner.x);
+      maxX = Math.max(maxX, corner.x);
+      minY = Math.min(minY, corner.y);
+      maxY = Math.max(maxY, corner.y);
+      minZ = Math.min(minZ, corner.z);
+      maxZ = Math.max(maxZ, corner.z);
+    }
+    const pad = 2;
+    cam.left = minX - pad;
+    cam.right = maxX + pad;
+    cam.bottom = minY - pad;
+    cam.top = maxY + pad;
+    cam.near = Math.max(0.1, -maxZ - pad);
+    cam.far = -minZ + pad;
+    cam.updateProjectionMatrix();
+    l.shadow.needsUpdate = true;
+    invalidate();
+  }, [direction, corners, invalidate]);
+  return (
+    <>
+      {/* Faint fill so shadowed ground is not pure black; not a physical source (no Earthshine model). */}
+      <ambientLight intensity={0.06} />
+      <directionalLight
+        ref={light}
+        intensity={3.2}
+        castShadow
+        shadow-mapSize={[shadowMapSize, shadowMapSize]}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.35}
+      />
     </>
   );
 }
@@ -200,16 +298,21 @@ export default function TerrainCanvas({
   placements,
   labelRegistry,
   onSettled,
+  sunDirection,
 }: {
   scene: TerrainScene;
   placements: TerrainSitePlacement[];
   labelRegistry: LabelRegistry;
   onSettled: () => void;
+  /** SPICE Sun direction at the epoch (MOON_ME unit vector), or null → display light. */
+  sunDirection: Direction | null;
 }) {
+  const corners = useMemo(() => terrainCorners(scene), [scene]);
   const selectedSiteId = useMissionStore((s) => s.selectedSiteId);
   const showSites = useMissionStore((s) => s.layers.sites);
   return (
     <Canvas
+      shadows
       frameloop="demand"
       dpr={[1, 1.75]}
       gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
@@ -220,7 +323,7 @@ export default function TerrainCanvas({
     >
       <CameraUp />
       <TerrainMesh scene={scene} />
-      <DisplayLight />
+      {sunDirection ? <SunLight direction={sunDirection} corners={corners} /> : <DisplayLight />}
       {showSites &&
         placements.map((p) => (
           <SitePin key={p.siteId} placement={p} selected={p.siteId === selectedSiteId} />

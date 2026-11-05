@@ -8,7 +8,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { TerrainScene } from "@/lib/api/queries";
 import { heightColor } from "@/lib/terrain/scene-data";
 
+import { formatUtc } from "@/lib/time/time";
+
 import { isHttpsUrl } from "../surface-source";
+import type { TerrainSun } from "./use-terrain-sun";
 
 function Row({ label, children, testId }: { label: string; children: ReactNode; testId?: string }) {
   return (
@@ -46,7 +49,7 @@ function HeightLegend({ minM, maxM }: { minM: number; maxM: number }) {
 }
 
 /** HUD disclosures for the terrain scene: DEM provenance (click for detail) and lighting. */
-export function TerrainDisclosures({ scene }: { scene: TerrainScene }) {
+export function TerrainDisclosures({ scene, sun }: { scene: TerrainScene; sun: TerrainSun }) {
   const { metadata: m, terrain } = scene;
   return (
     <>
@@ -139,16 +142,75 @@ export function TerrainDisclosures({ scene }: { scene: TerrainScene }) {
         </Popover>
       </div>
       <HeightLegend minM={m.height_min_m} maxM={m.height_max_m} />
-      <div className="flex items-center gap-2" data-testid="terrain-lighting-disclosure">
+      <LightingDisclosure sun={sun} />
+    </>
+  );
+}
+
+const signed = (deg: number) => `${deg >= 0 ? "+" : "−"}${Math.abs(deg).toFixed(2)}°`;
+
+/**
+ * How the terrain is lit. With a selected site: the SPICE Sun direction at the epoch
+ * (MODEL), with rendered shadows labelled illustrative and the site's computed
+ * illumination shown as not computed until the timeline analysis (T-24) is served.
+ * Otherwise: the camera-relative display light, labelled as such.
+ */
+function LightingDisclosure({ sun }: { sun: TerrainSun }) {
+  if (sun.kind === "display") {
+    return (
+      <div
+        className="flex flex-col gap-0.5"
+        data-testid="terrain-lighting-disclosure"
+        data-lighting="display"
+      >
+        <div className="flex items-center gap-2">
+          <EvidenceBadge
+            kind="placeholder"
+            label="Display light"
+            detail="Shading follows the camera for legibility. It is not the computed solar direction and shows no computed shadows; quantitative illumination comes only from the API."
+          />
+          <span className="font-mono text-3xs text-muted-foreground">
+            Illustrative shading — not the computed Sun, not illumination data
+          </span>
+        </div>
+        <span className="font-mono text-3xs text-dim">{sun.reason}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1" data-testid="terrain-lighting-disclosure" data-lighting="spice">
+      <div className="flex min-w-0 items-center gap-2">
         <EvidenceBadge
-          kind="placeholder"
-          label="Display light"
-          detail="Shading follows the camera for legibility. It is not the computed solar direction and shows no computed shadows; quantitative illumination comes only from the API."
+          kind={sun.evidence.kind}
+          label="SPICE Sun"
+          detail={`${sun.evidence.statement} Light direction: C2 direction_moon_me (CN+S) for ${sun.siteName}, interpolated between hourly samples.`}
         />
-        <span className="font-mono text-3xs text-muted-foreground">
-          Illustrative shading — not the computed Sun, not illumination data
+        <span className="truncate font-mono text-3xs text-muted-foreground">
+          {formatUtc(sun.epochMs)} UTC · Sun elevation at {sun.siteName}{" "}
+          <span className="numeric text-foreground" data-testid="terrain-sun-elevation">
+            {signed(sun.elevationDeg)}
+          </span>{" "}
+          (astronomical horizon)
         </span>
       </div>
-    </>
+      <div className="flex items-center gap-2">
+        <EvidenceBadge
+          kind="placeholder"
+          label="Illustrative"
+          detail="Shadows are rendered by the 3D engine from a point-source Sun over the 240 m mesh (shadow map, no penumbra from the 0.53° disk). They are an illustration, not an illumination result."
+        />
+        <span className="font-mono text-3xs text-muted-foreground">Rendered shadows are illustrative</span>
+      </div>
+      <div className="flex items-center gap-2" data-testid="terrain-site-illumination">
+        <EvidenceBadge
+          kind="not_computed"
+          label="N/C · M04"
+          detail="The selected site's illumination against the terrain horizon (visible solar-disk fraction, D4) comes from the timeline analysis, which is not served yet."
+        />
+        <span className="font-mono text-3xs text-dim">
+          {sun.siteName}: illumination vs terrain horizon not computed yet
+        </span>
+      </div>
+    </div>
   );
 }
