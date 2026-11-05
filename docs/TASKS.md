@@ -222,7 +222,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-22 | `GET /api/v1/sites/{id}/ephemeris` | Contract generated; sample cap enforced with a clear 422; evidence names kernels and corrections | T-21 | in review |
 | T-23 | Visible disk fraction against a `HorizonMask` | Synthetic masks: flat 0° horizon with the disk centre on it gives 0.5; centre at +r gives 1; at −r gives 0; intermediate positions match the analytical circular-segment area to 1e-3; step-function horizons tested | T-10 (type only) | done |
 | T-24 | Illumination and Earth visibility timelines (C4) + `POST /api/v1/analysis/timeline` | Astronomical vs terrain horizon reported separately; summaries (mean visible disk fraction, illuminated fraction, longest darkness/illumination, visibility windows); truncation surfaced; radio-link disclaimer on Earth results | T-21, T-23, T-15 | in review |
-| T-25 | Validation against published polar illumination studies (Mazarico et al. 2011; Gläser et al. 2014) | Reproduce reported values at named locations where possible; differences reported with their causes (DEM, period, method) | T-24 | todo |
+| T-25 | Validation against published polar illumination studies (Mazarico et al. 2011; Gläser et al. 2014) | Reproduce reported values at named locations where possible; differences reported with their causes (DEM, period, method) | T-24 | in review |
 
 ### S-WEB
 
