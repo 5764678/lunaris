@@ -429,9 +429,37 @@ tolerance, malformed input) and `test_analysis.py` (separate horizons, truncatio
 surfaced with a count, radio-link disclaimer, and the 2026-11-04 fixture day with the real
 kernels: Sun f = 1 at all 25 samples, one sunlit window 00:00 → 11-05 00:00 of exactly 86 400 s censored at both ends; Earth f = 0 at all 25).
 
-**Terrain masks.** Until S-TERRAIN's mask computation (T-15) is merged and served, results
-report the astronomical horizon only. `terrain` is null, `terrain_horizon_available` is
-false, and a limitation says terrain can hide a body that is above 0°.
+**Terrain masks.** The API takes each site's C1 mask from S-TERRAIN's
+`HorizonMaskService` (T-16): T-15's `compute_horizon_mask` on the checksum-verified
+LDEM_75S_240M (0.25° step, 200 km), file-cached under `data/processed/` and keyed by the
+DEM SHA-256, site, eye height and method version. It is the same mask that
+`GET /api/v1/sites/{id}/horizon` serves. The eye point is 2 m above the DEM surface, and the C2 observer sits
+at R + surface height + 2 m. If no mask can be produced (DEM missing or failing
+verification, site outside 75°–90° S), the result is astronomical-only and the
+limitation states the reason.
+
+*Physical checks* (`tests/science/illumination/test_terrain_physics.py`; real LDEM and
+kernels, 2026 at 1 h):
+
+- Shackleton floor (89.67° S, 129.2° E): the horizon is ≥ 19.75° all round, the terrain
+  illuminated fraction is exactly 0, and the astronomical fraction is > 0.
+- At Site01, Site23 and Site07, for the Sun and the Earth: terrain f ≤ astronomical f at
+  every sample where the horizon at the body's azimuth is ≥ 0°.
+- From a peak (Site01, Site07), the horizon toward the Earth is below 0° all year, so
+  terrain Earth visibility exceeds the astronomical value.
+- Visible and hidden windows tile the year exactly.
+
+*Demo trio, 2026, 1 h step, eye at 2 m* (any part visible / mean disk fraction; no
+truncated rays):
+
+| Site | Sun, astronomical | Sun, terrain | Earth, astronomical | Earth, terrain |
+| --- | --- | --- | --- | --- |
+| Site01 Connecting ridge (surface 1942 m) | 0.566 / 0.522 | **0.732** / 0.684 | 0.485 / 0.440 | 0.529 / 0.483 |
+| Site23 Malapert massif (4786 m) | 0.537 / 0.516 | **0.462** / 0.410 | 0.726 / 0.666 | 0.495 / 0.449 |
+| Site07 Peak near Shackleton (1639 m) | 0.591 / 0.509 | **0.879** / 0.842 | 0.473 / 0.427 | 0.574 / 0.524 |
+
+These are catalogue reference points (tile centres), not selected landing points. The
+comparison with published values is T-25 (§6).
 
 ### 5.4 Earth visibility — Milestone 04 (implemented: T-24)
 
@@ -473,7 +501,7 @@ sensitivity analysis over the weights. Placeholder evidence can never contribute
 | Property | Round trips and invariants over random inputs (Hypothesis) | `tests/science` |
 | Product consistency | Label-derived grid geometry (§5.1 check), DN ranges vs label | M02 |
 | Independent ephemeris | Sun/Earth az/el vs JPL Horizons at reference sites/epochs (feasibility shown 2026-11-04, §5.2) | M03, fixture `data/fixtures/validation/` |
-| Published results | Polar illumination fractions vs Mazarico et al. (2011) and Gläser et al. (2014), with stated differences in DEM, period and method | M04 |
+| Published results | Illumination and Earth-visibility fractions vs the published LOLA average-visibility maps (Mazarico et al. 2011) at the catalogue sites, with stated differences in DEM, period, method and point sampling (below) | M04, T-25 |
 | Reproducibility | Acquisition records + `GET /api/v1/system/runtime` versions embedded in results | all |
 
 **Horizons references (captured 2026-11-04).** `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json`
@@ -481,6 +509,66 @@ and `horizons-earth-s89p5-e0-2026-11-04.json`: 25 hourly apparent az/el samples 
 requested directly from the Horizons API by the development environment, with the exact
 request URL and the verbatim `$$SOE…$$EOE` table. They replace an earlier two-sample Sun
 fixture that had been relayed second-hand. Tolerance and its justification: §5.2.
+
+**Published illumination references (T-25).** `data/fixtures/validation/published-illumination.json`
+is built by `build_published_illumination.py` (same directory) from the PDS LOLA EXTRAS
+products `AVGVISIB_65S_240M` and `AVGVISIB_65S_240M_EARTH` (Mazarico et al. 2011; SHA-256
+recorded per entry). For each catalogue site it records the value of the 240 m pixel
+containing the reference point, and the 3 × 3 (720 m) spread.
+
+- *Definition (labels, verbatim in the fixture).* The fraction of hourly samples,
+  2001-01-01 → 2018-08-08, with any part of the Sun (or the Earth) visible. Both are
+  extended sources. This is LUNARIS's `illuminated_fraction` / `visible_fraction` against
+  the terrain horizon (§5.3), not the mean disk fraction.
+- *Orientation.* Both labels state `CENTER_LATITUDE = 90`, but the data are south polar.
+  The fixture uses the LOLA GDR orientation (§5.1). Against LDEM_75S_240M local relief
+  (height minus its 21-pixel mean), the correlation is +0.35 as oriented and below 0.02
+  in magnitude for every flip, transpose and 180° rotation.
+- *Local variability.* On ridges the published value changes by tens of percent within
+  720 m (Site01: 0.41–0.77). Agreement is therefore judged against that spread
+  (`lunaris_science.illumination.validation.compare`).
+- *Differences that are always stated.* Period (the 18.6-year cycle versus the computed
+  window), DEM and resolution, observer height (not stated in the labels), sampling
+  step, point sampling, and horizon truncation (then the computed value is an upper
+  bound).
+- *Also recorded.* Barker et al. (2021) (PGDA product 78, verbatim): Site 1 has the most
+  area with average illumination > 70 % at 1 m, 2024-01-01 → 2026-01-01. This is a
+  qualitative consistency check, satisfied by the published map (Site01 pixel 0.768).
+  Point values from the paper tables of Mazarico et al. (2011), Gläser et al. (2014) and
+  Barker et al. (2021) are recorded as **unavailable**: the publishers, doi.org and NTRS
+  are not reachable from the development environment. No value is quoted from memory.
+- *Comparison (T-25 part 2).* LUNARIS terrain-horizon results (T-15 mask from
+  LDEM_75S_240M, 0.25°, 200 km; DE440; eye 2 m) over the published period,
+  2001-01-01 → 2018-08-08, hourly (154 273 samples), against the published pixel
+  (3 × 3 range):
+
+  | Site | Body | LUNARIS (eye 2 m) | LUNARIS (eye 0 m) | Published | Published 3 × 3 |
+  | --- | --- | ---: | ---: | ---: | --- |
+  | Site01 Connecting ridge | Sun | 0.730 | 0.661 | 0.768 | 0.415–0.768 |
+  | Site01 Connecting ridge | Earth | 0.558 | 0.535 | 0.562 | 0.239–0.582 |
+  | Site23 Malapert massif | Sun | 0.458 | 0.410 | 0.461 | 0.220–0.557 |
+  | Site23 Malapert massif | Earth | 0.523 | 0.501 | 0.565 | 0.457–0.645 |
+  | Site07 Peak near Shackleton | Sun | 0.881 | 0.855 | 0.841 | 0.555–0.841 |
+  | Site07 Peak near Shackleton | Earth | 0.607 | 0.607 | 0.605 | 0.439–0.606 |
+
+  With the eye at 2 m, every difference is ≤ 0.042, and four of the six values lie
+  within the published local spread. Site07 is slightly above its spread (Sun +0.040,
+  Earth +0.001). The analysis period is **ruled out** as the cause: a one-year (2026)
+  preview first gave Site07 Sun 0.879, and over the published 2001–2018 period the value
+  is still 0.881. Stated causes:
+  1. *Observer height.* The labels state none. It matters at the 0.1 level (Site01 Sun:
+     0.730 at 2 m, 0.661 at 0 m), and 2 m agrees better overall (mean absolute
+     difference 0.022, against 0.044 at 0 m).
+  2. *Point vs pixel.* LUNARIS evaluates the exact catalogue point. The published value
+     is the 240 m pixel containing it. On a peak a pixel averages lower ground.
+  3. *DEM version.* The labels do not name the DEM. LUNARIS uses LDEM_75S_240M.
+  4. *Ephemeris and method details.* DE440 here; the published method and horizon
+     range are not stated in the labels, and the paper is not reachable from this
+     environment.
+
+  Tested in `tests/science/illumination/test_published_comparison.py` at a 7 h step,
+  which reproduces the hourly values to within 6e-4: |difference| < 0.05 for all six,
+  and Site01 and Site23 within the published spread.
 
 ---
 

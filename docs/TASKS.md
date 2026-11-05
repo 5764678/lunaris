@@ -211,7 +211,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-14 | Terrain analysis + `GET /api/v1/sites/{id}/terrain` | Height (bilinear), Horn slope with scale-corrected spacing, defined roughness, footprint stats, hazard thresholds as config; every slope/roughness value carries `baseline_m`; synthetic plane/cone slopes within 0.1°; cross-check against `gdaldem slope` on a real window | T-11, T-13 | in review |
 | T-15 | Horizon mask computation (C1) from LDEM_75S_240M | Curvature-corrected ray march, scale-corrected distance, truncation flags. Tests: zero-height DEM on the sphere gives horizon = −acos(R/(R+h_obs)) within 0.01°; an axisymmetric synthetic crater rim gives its analytical angle; a site at 78°S flags truncation toward the north. One mask at 0.25° step, 200 km range in < 30 s | T-10, T-11 | done |
 | T-16 | Horizon mask service + `GET /api/v1/sites/{id}/horizon` | Masks from `compute_horizon_mask` only; file cache under `data/processed/` keyed by DEM SHA-256, site point and parameters, a hit never recomputes; C1 fields + DEM id/SHA-256 + evidence; 2 m default stated as an assumption; 422 outside coverage; truncation count in limitations | T-15 | in review |
-| T-17 | Site comparison `GET /api/v1/analysis/site-comparison` | One row per site: height, slope (site, p95) and roughness with `baseline_m`, terrain-horizon summary, Sun and Earth terrain-horizon summaries; every cell carries its own evidence; uncomputable cells are null with a reason, never 0; demo trio over one year in CI with real LDEM and kernels (PGDA mocked in CI, live test opt-in) | T-14, T-16, T-24 | in progress |
+| T-17 | Site comparison `GET /api/v1/analysis/site-comparison` | One row per site: height, slope (site, p95) and roughness with `baseline_m`, terrain-horizon summary, Sun and Earth terrain-horizon summaries; every cell carries its own evidence; uncomputable cells are null with a reason, never 0; demo trio over one year in CI with real LDEM and kernels (PGDA mocked in CI, live test opt-in) | T-14, T-16, T-24 | in review |
 
 ### S-GEOMETRY
 
@@ -222,7 +222,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-22 | `GET /api/v1/sites/{id}/ephemeris` | Contract generated; sample cap enforced with a clear 422; evidence names kernels and corrections | T-21 | in review |
 | T-23 | Visible disk fraction against a `HorizonMask` | Synthetic masks: flat 0° horizon with the disk centre on it gives 0.5; centre at +r gives 1; at −r gives 0; intermediate positions match the analytical circular-segment area to 1e-3; step-function horizons tested | T-10 (type only) | done |
 | T-24 | Illumination and Earth visibility timelines (C4) + `POST /api/v1/analysis/timeline` | Astronomical vs terrain horizon reported separately; summaries (mean visible disk fraction, illuminated fraction, longest darkness/illumination, visibility windows); truncation surfaced; radio-link disclaimer on Earth results | T-21, T-23, T-15 | in review |
-| T-25 | Validation against published polar illumination studies (Mazarico et al. 2011; Gläser et al. 2014) | Reproduce reported values at named locations where possible; differences reported with their causes (DEM, period, method) | T-24 | todo |
+| T-25 | Validation against published polar illumination studies (Mazarico et al. 2011; Gläser et al. 2014) | Reproduce reported values at named locations where possible; differences reported with their causes (DEM, period, method) | T-24 | in review |
 
 ### S-WEB
 

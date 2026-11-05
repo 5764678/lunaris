@@ -18,6 +18,7 @@ from lunaris_api.schemas.ephemeris import (
     EphemerisSample,
     SiteEphemeris,
 )
+from lunaris_api.schemas.sites import CandidateSite
 from lunaris_api.services.sites import SiteService
 from lunaris_data.kernels import KERNEL_DATASET_ID, KernelSetUnavailableError, get_spice_context
 from lunaris_data.registry import DatasetRegistry
@@ -158,6 +159,10 @@ class EphemerisService:
     def registry(self) -> DatasetRegistry:
         return self._registry
 
+    def site(self, site_id: str) -> CandidateSite:
+        """The registered site (404 for unknown ids)."""
+        return self._sites.get_site(site_id)
+
     def _context(self) -> SpiceContext:
         try:
             return get_spice_context(self._registry.get(KERNEL_DATASET_ID), self._layout)
@@ -175,12 +180,16 @@ class EphemerisService:
         step_s: float,
         *,
         location: str = "query",
+        surface_height_m: float | None = None,
+        observer_height_m: float = 0.0,
     ) -> SiteGeometry:
         """Validate a window and compute Sun and Earth geometry for a registered site.
 
         ``location`` is the request part the window came from (``"query"`` or ``"body"``),
-        used in error details. Raises the typed 404 / 422 / 503 errors documented in
-        docs/API.md.
+        used in error details. ``surface_height_m`` (DEM height above the reference sphere)
+        and ``observer_height_m`` place the eye point (C2); without a surface height the
+        site is on the sphere and the evidence says so. Raises the typed 404 / 422 / 503
+        errors documented in docs/API.md.
         """
         for name, value in (("start_utc", start_utc), ("end_utc", end_utc)):
             if value.utcoffset() != timedelta(0):
@@ -207,8 +216,11 @@ class EphemerisService:
         try:
             observer = ObserverSite(
                 SelenographicCoordinate(
-                    site.coordinate.latitude_deg, site.coordinate.longitude_deg, None
-                )
+                    site.coordinate.latitude_deg,
+                    site.coordinate.longitude_deg,
+                    surface_height_m,
+                ),
+                observer_height_m=observer_height_m,
             )
         except CoordinateError as exc:
             raise EphemerisRequestError(

@@ -368,9 +368,11 @@ Response **200** (`TimelineAnalysis`, abridged):
 }
 ```
 
-- Each sample carries the astronomical **and** the terrain fraction. The terrain fields are
-  `null` when no horizon mask exists for the site (`terrain_horizon_available: false`;
-  masks arrive with S-TERRAIN T-15).
+- Each sample carries the astronomical **and** the terrain fraction. Terrain uses the
+  site's C1 horizon mask from LDEM_75S_240M (0.25°, 200 km, eye 2 m above the DEM
+  surface), and the observer is placed at that height. The terrain fields are `null`
+  when no mask can be produced (`terrain_horizon_available: false`, reason in
+  `limitations`): DEM not acquired, or site outside 75°–90° S.
 - Each sample's interval [t, t + step) is clipped to the requested window, so durations
   and fractions never extend past `end_utc` (the last sample of an end-inclusive grid has
   weight 0).
@@ -378,6 +380,29 @@ Response **200** (`TimelineAnalysis`, abridged):
   lower bound. Window edges are known to ± `resolution_s`.
 - `terrain_truncated: true` means the mask ray left DEM coverage. There the terrain
   fraction is an upper bound.
+
+### `GET /api/v1/analysis/site-comparison`
+
+The demo comparison table (T-17; owner S-TERRAIN). Query: `site_ids` (comma-separated,
+1–10), `start_utc` / `end_utc` (default: calendar year 2027), `step_s` (default 3600),
+`observer_height_m` (default 2) and `footprint_radius_m` (default 50). The window obeys
+the ephemeris sample cap (10 000); the default gives 8 761 samples.
+
+The response holds one row per site with these cells:
+- `surface_height_m` (LDEM_75S_240M);
+- `slope_at_site_deg`, `slope_p95_deg` and `roughness_rms_m`, each with `baseline_m`
+  (PGDA 20 m, T-14);
+- `horizon_min_deg`, `horizon_max_deg` and `horizon_truncated_azimuths` (T-16 mask);
+- `sun_mean_visible_disk_fraction`, `sun_illuminated_fraction` and `sun_longest_hidden_s`;
+- `earth_visible_fraction` and `earth_longest_outage_s` (T-24, terrain horizon).
+
+Every cell is `{value, unit, baseline_m, reason, evidence, limitations}`. The evidence
+names its kind, method and sources (manifest id plus SHA-256, or URL plus ETag), so the
+UI can show the source of any number. A cell that cannot be computed has `value: null`
+and a `reason` (for example outside PGDA 20 m coverage, or `terrain illumination not
+available` while the timeline has no terrain horizon); it is never 0. Illumination cells
+state their period in `limitations`, because published values use other periods.
+`columns` lists each key with its label, unit and description.
 
 ## Changing the contract
 

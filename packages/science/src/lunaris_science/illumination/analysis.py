@@ -101,6 +101,7 @@ def body_timeline(
     *,
     dem_source: SourceReference | None = None,
     window_end_et_s: float | None = None,
+    terrain_unavailable_reason: str | None = None,
     nodes: int = DEFAULT_NODES,
 ) -> BodyTimeline:
     """Astronomical and (optionally) terrain timelines for one body's geometry series.
@@ -123,9 +124,10 @@ def body_timeline(
     if geometry.body is Body.EARTH:
         limitations.insert(0, RADIO_LINK_DISCLAIMER)
     if terrain is None:
+        reason = f" ({terrain_unavailable_reason})" if terrain_unavailable_reason else ""
         limitations.append(
-            "Terrain horizon not available for this site: only the astronomical horizon "
-            "is reported. Terrain can hide a body that is above 0°."
+            f"Terrain horizon not available for this site{reason}: only the astronomical "
+            "horizon is reported. Terrain can hide a body that is above 0°."
         )
     elif terrain_timeline is not None and terrain_timeline.summary.any_truncated:
         count = int(terrain_timeline.disk.truncated.sum())
