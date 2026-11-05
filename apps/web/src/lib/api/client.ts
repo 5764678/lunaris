@@ -25,6 +25,10 @@ export type TerrainSceneMetadata = components["schemas"]["TerrainSceneMetadata"]
 
 const MAX_SCENE_GRID = 1024;
 const SCENE_DATA_TIMEOUT_MS = 60_000;
+/** Cited site catalogue (T-03, generated contract). */
+export type SiteCatalog = components["schemas"]["SiteCatalogResponse"];
+export type CatalogSite = components["schemas"]["CatalogSiteSchema"];
+export type RegisteredCatalogSites = components["schemas"]["RegisteredCatalogSites"];
 
 export type ApiErrorKind = "network" | "timeout" | "http" | "invalid_response";
 
@@ -141,6 +145,23 @@ export const isTerrainSceneMetadata: Guard<TerrainSceneMetadata> = (v): v is Ter
     typeof v.evidence.kind === "string"
   );
 };
+const isSiteCatalog: Guard<SiteCatalog> = (v): v is SiteCatalog =>
+  isObject(v) &&
+  typeof v.citation === "string" &&
+  typeof v.reference_point_definition === "string" &&
+  Array.isArray(v.sources) &&
+  Array.isArray(v.sites) &&
+  v.sites.every(
+    (s) =>
+      isObject(s) &&
+      typeof s.id === "string" &&
+      typeof s.name === "string" &&
+      typeof s.demo_trio === "boolean" &&
+      isObject(s.reference_point),
+  );
+
+const isRegisteredCatalogSites: Guard<RegisteredCatalogSites> = (v): v is RegisteredCatalogSites =>
+  isObject(v) && Array.isArray(v.created) && Array.isArray(v.already_registered) && Array.isArray(v.sites);
 
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
@@ -245,6 +266,12 @@ export function createApiClient(options: ApiClientOptions) {
       request<CandidateSiteList>("GET", "/api/v1/sites", { signal, guard: isCandidateSiteList }),
     createSite: (input: CandidateSiteCreate) =>
       request<CandidateSite>("POST", "/api/v1/sites", { body: input, guard: isCandidateSite }),
+    siteCatalog: (signal?: AbortSignal) =>
+      request<SiteCatalog>("GET", "/api/v1/catalog/sites", { signal, guard: isSiteCatalog }),
+    registerDemoTrio: () =>
+      request<RegisteredCatalogSites>("POST", "/api/v1/catalog/demo-trio/register", {
+        guard: isRegisteredCatalogSites,
+      }),
     deleteSite: (siteId: string) =>
       request<undefined>("DELETE", `/api/v1/sites/${encodeURIComponent(siteId)}`),
     terrainScene: (sceneId: string, gridSize: number, signal?: AbortSignal) =>
