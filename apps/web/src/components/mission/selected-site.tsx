@@ -5,8 +5,9 @@ import { Crosshair } from "lucide-react";
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { useMemo } from "react";
 
-import { describeError } from "@/lib/api/client";
-import { useSiteEphemeris, useSitesQuery } from "@/lib/api/queries";
+import { CellEvidence } from "@/components/evidence/cell-evidence";
+import { describeError, type CompareCell, type CompareRow } from "@/lib/api/client";
+import { useSiteComparison, useSiteEphemeris, useSitesQuery } from "@/lib/api/queries";
 import { azElAt, toDirectionSeries } from "@/lib/terrain/sun";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { useMissionStore } from "@/store/mission-store";
@@ -14,12 +15,13 @@ import { useMissionStore } from "@/store/mission-store";
 import { DataRow, PanelSection } from "./panel-section";
 import { SiteOriginBadge, TILE_CENTRE_NOTE } from "./site-origin";
 
-const NOT_COMPUTED_ROWS: { label: string; milestone: string; detail: string }[] = [
-  { label: "Height", milestone: "M02", detail: "Sampled from a LOLA DEM in Milestone 02." },
-  { label: "Slope", milestone: "M02", detail: "Horn (1981) slope on the polar grid — Milestone 02." },
-  { label: "Roughness", milestone: "M02", detail: "Defined roughness statistic — Milestone 02." },
-  { label: "Illumination", milestone: "M04", detail: "Terrain-aware illumination — Milestone 04." },
-  { label: "Earth LOS", milestone: "M04", detail: "Terrain-obstructed line of sight — Milestone 04." },
+/** Selected-site cells filled from the T-17 comparison row for this site. */
+const COMPARISON_ROWS: { label: string; key: keyof CompareRow }[] = [
+  { label: "Height", key: "surface_height_m" },
+  { label: "Slope", key: "slope_at_site_deg" },
+  { label: "Roughness", key: "roughness_rms_m" },
+  { label: "Illumination", key: "sun_mean_visible_disk_fraction" },
+  { label: "Earth LOS", key: "earth_visible_fraction" },
 ];
 
 export function SelectedSite() {
@@ -70,12 +72,7 @@ export function SelectedSite() {
           </span>
         </DataRow>
         <GeometryRows siteId={site.id} />
-        {NOT_COMPUTED_ROWS.map((row) => (
-          <DataRow key={row.label} label={row.label}>
-            <span className="text-dim">—</span>
-            <EvidenceBadge kind="not_computed" label={`N/C · ${row.milestone}`} detail={row.detail} />
-          </DataRow>
-        ))}
+        <ComparisonRows siteId={site.id} />
       </dl>
     </PanelSection>
   );
@@ -134,4 +131,47 @@ function GeometryRows({ siteId }: { siteId: string }) {
       })}
     </>
   );
+}
+
+/**
+ * Height, slope, roughness, illumination and Earth visibility from the site comparison
+ * (T-17, default window). Each value opens its own evidence; while computing or on error
+ * the rows say so (N/C with the reason), never 0.
+ */
+function ComparisonRows({ siteId }: { siteId: string }) {
+  const query = useSiteComparison([siteId]);
+  const row = query.data?.rows.find((r) => r.site_id === siteId);
+  const reason = query.isError
+    ? describeError(query.error)
+    : query.isPending
+      ? "computing site comparison…"
+      : "site missing from the comparison";
+  return (
+    <>
+      {COMPARISON_ROWS.map(({ label, key }) => {
+        const cell = row?.[key] as CompareCell | undefined;
+        return (
+          <DataRow key={key} label={label}>
+            {cell ? (
+              <CellEvidence
+                cell={cell}
+                label={`${label} (${siteLabel(row)})`}
+                align="end"
+                testId={`selected-site-${key}`}
+              />
+            ) : (
+              <>
+                <span className="text-dim">—</span>
+                <EvidenceBadge kind="not_computed" label="N/C" detail={reason} />
+              </>
+            )}
+          </DataRow>
+        );
+      })}
+    </>
+  );
+}
+
+function siteLabel(row: CompareRow | undefined): string {
+  return row?.name ?? "site";
 }

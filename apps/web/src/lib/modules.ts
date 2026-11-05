@@ -34,6 +34,8 @@ export const MISSION_MODULES: readonly MissionModule[] = [
     description: "LOLA elevation, slope, roughness and hazard indicators.",
     milestone: "M02",
     icon: Mountain,
+    status: "available",
+    availableIn: "South-pole terrain scene (Overview) and height/slope/roughness in Site comparison.",
   },
   {
     id: "geometry",
@@ -50,6 +52,8 @@ export const MISSION_MODULES: readonly MissionModule[] = [
     description: "Geometric and terrain-aware solar illumination timelines.",
     milestone: "M04",
     icon: Sun,
+    status: "available",
+    availableIn: "Illumination lane, terrain-scene site value and Site comparison.",
   },
   {
     id: "visibility",
@@ -57,13 +61,18 @@ export const MISSION_MODULES: readonly MissionModule[] = [
     description: "Geometric and terrain-obstructed direct-to-Earth line of sight.",
     milestone: "M04",
     icon: Earth,
+    status: "available",
+    availableIn: "Earth line-of-sight lane and Site comparison (geometric; not a radio link).",
   },
   {
     id: "analysis",
     title: "Mission Intelligence",
-    description: "Constraints, scoring, site comparison and reports.",
+    description: "Site comparison with per-value evidence (constraints, scoring and reports later).",
     milestone: "M05",
     icon: Scale,
+    href: "/compare",
+    status: "available",
+    availableIn: "Site comparison table with per-value evidence. No scoring or ranking yet.",
   },
   {
     id: "data",

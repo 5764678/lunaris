@@ -16,6 +16,7 @@ export const queryKeys = {
   runtime: ["system", "runtime"] as const,
   datasets: ["datasets"] as const,
   sites: ["sites"] as const,
+  comparison: (siteIds: readonly string[]) => ["analysis", "site-comparison", ...siteIds] as const,
   timeline: (siteId: string, startMs: number, endMs: number, stepS: number) =>
     ["sites", siteId, "timeline", startMs, endMs, stepS] as const,
   ephemeris: (siteId: string, startMs: number, endMs: number, stepS: number) =>
@@ -227,4 +228,21 @@ export function useRegisterDemoTrio() {
     mutationFn: () => api.registerDemoTrio().then((r) => r.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sites }),
   });
+}
+
+/**
+ * T-17 site comparison for the given sites, over the server's default window (calendar
+ * year 2027, 1 h). Horizon masks and DEM windows are computed on first request (seconds).
+ */
+export function useSiteComparison(siteIds: readonly string[]) {
+  const sorted = [...siteIds].sort();
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.comparison(sorted),
+      enabled: sorted.length > 0,
+      staleTime: Infinity,
+      retry: 1,
+      queryFn: ({ signal }) => api.siteComparison(sorted, signal).then((r) => r.data),
+    }),
+  );
 }
