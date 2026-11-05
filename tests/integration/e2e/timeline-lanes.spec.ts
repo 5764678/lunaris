@@ -164,3 +164,72 @@ test("readiness lists Celestial Geometry as available and the rest as planned", 
     await expect(page.getByTestId(`readiness-${id}`)).toHaveText(/planned/i);
   }
 });
+
+/** SYNTHETIC C4 timeline (labelled). `terrain` null = no horizon mask served. */
+function syntheticTimeline(
+  body: { site_id: string; start_utc: string; end_utc: string; step_s: number },
+  terrain: number | null,
+) {
+  const start = Date.parse(body.start_utc);
+  const step = body.step_s * 1000;
+  const n = Math.floor((Date.parse(body.end_utc) - start) / step) + 1;
+  const ev = {
+    kind: "calculation",
+    statement: "SYNTHETIC E2E FIXTURE.",
+    sources: [],
+    method: "x",
+    assumptions: [],
+  };
+  const samples = Array.from({ length: n }, (_, i) => ({
+    epoch_utc: new Date(start + i * step).toISOString(),
+    azimuth_deg: 0,
+    elevation_deg: 1,
+    astronomical_visible_fraction: 1,
+    terrain_visible_fraction: terrain,
+    terrain_truncated: terrain === null ? null : true,
+    line_of_sight: "clear",
+  }));
+  return {
+    site_id: body.site_id,
+    step_s: body.step_s,
+    terrain_horizon_available: terrain !== null,
+    illumination: { evidence: ev, limitations: [], astronomical: {}, terrain: null, samples },
+    earth_visibility: { evidence: ev, limitations: [], astronomical: {}, terrain: null, samples },
+  };
+}
+
+for (const terrain of [null, 0.42]) {
+  test(`illumination and line-of-sight lanes (${terrain === null ? "no terrain horizon" : "terrain served"})`, async ({
+    page,
+    request,
+  }) => {
+    const name = `E2E fractions ${terrain} ${Date.now()}`;
+    const id = await createSite(request, name);
+    try {
+      await page.route(/\/api\/v1\/analysis\/timeline$/, (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(syntheticTimeline(route.request().postDataJSON(), terrain)),
+        }),
+      );
+      await page.goto("/");
+      await selectSite(page, name);
+      for (const lane of ["illumination", "los"]) {
+        const el = page.locator(`[data-lane="${lane}"]`);
+        await expect(el).toHaveAttribute("data-lane-state", "computed");
+        await expect(el.locator('[data-plot-state="ready"]')).toBeVisible();
+        const readout = page.getByTestId(`lane-readout-${lane}`);
+        if (terrain === null) {
+          await expect(page.getByTestId(`lane-note-${lane}`)).toContainText("Terrain horizon not available");
+          await expect(readout).toHaveText("astro 100 % · terrain n/a");
+        } else {
+          await expect(page.getByTestId(`lane-note-${lane}`)).toHaveCount(0);
+          await expect(readout).toHaveText("≤ 42 % · astro 100 %");
+        }
+      }
+    } finally {
+      await request.delete(`${API}/api/v1/sites/${id}`);
+    }
+  });
+}

@@ -4,10 +4,12 @@ import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from "react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { DAY_MS, HOUR_MS, dayTicks, formatUtc } from "@/lib/time/time";
+import { fractionAt, type FractionSeries } from "@/lib/timeline/fractions";
 import { elevationAt, type ElevationSeries } from "@/lib/timeline/series";
 import { useMissionStore } from "@/store/mission-store";
 
 import { ELEVATION_LANE_HEIGHT_PX, ElevationLane } from "./elevation-lane";
+import { FractionLane } from "./fraction-lane";
 
 export const ANALYSIS_LANES = [
   { id: "sun", label: "Sun elevation", milestone: "M03", note: "SPICE solar geometry" },
@@ -18,8 +20,15 @@ export const ANALYSIS_LANES = [
 
 export type LaneId = (typeof ANALYSIS_LANES)[number]["id"];
 
-/** Computed data per lane. Only the Sun and Earth elevation lanes (C2) take data so far. */
-export type LaneData = Partial<Record<"sun" | "earth", ElevationSeries>>;
+/** Computed data per lane: elevation (C2) for Sun/Earth, visible-disk fractions (C4) otherwise. */
+export type LaneData = Partial<Record<"sun" | "earth", ElevationSeries>> &
+  Partial<Record<"illumination" | "los", FractionSeries>>;
+
+function laneFraction(data: LaneData, id: LaneId): FractionSeries | undefined {
+  return id === "illumination" || id === "los" ? data[id] : undefined;
+}
+
+const pct = (f: number) => `${Math.round(f * 100)} %`;
 
 const EMPTY_LANE_HEIGHT_PX = 18;
 
@@ -36,7 +45,16 @@ function formatElevation(deg: number | null): string {
  * Time axis + analysis lanes with a draggable epoch cursor. Exposed to assistive
  * technology as a slider (arrows ±1 h, PageUp/PageDown ±1 d, Home/End).
  */
-export function TimelineTrack({ lanes = {}, geometryNote }: { lanes?: LaneData; geometryNote?: string }) {
+export function TimelineTrack({
+  lanes = {},
+  geometryNote,
+  fractionNote,
+}: {
+  lanes?: LaneData;
+  geometryNote?: string;
+  /** Why the illumination / line-of-sight lanes are empty, when they are. */
+  fractionNote?: string;
+}) {
   const epochMs = useMissionStore((s) => s.epochMs);
   const startMs = useMissionStore((s) => s.windowStartMs);
   const endMs = useMissionStore((s) => s.windowEndMs);
@@ -145,6 +163,20 @@ export function TimelineTrack({ lanes = {}, geometryNote }: { lanes?: LaneData; 
               </div>
             );
           }
+          const fraction = laneFraction(lanes, lane.id);
+          if (fraction && ready) {
+            return (
+              <div
+                key={lane.id}
+                data-lane={lane.id}
+                data-lane-state="computed"
+                className="relative mt-1 overflow-hidden rounded-[3px] border border-hairline bg-panel-sunken/40"
+                style={{ height: ELEVATION_LANE_HEIGHT_PX }}
+              >
+                <FractionLane series={fraction} startMs={startMs} endMs={endMs} />
+              </div>
+            );
+          }
           return (
             <div
               key={lane.id}
@@ -156,7 +188,9 @@ export function TimelineTrack({ lanes = {}, geometryNote }: { lanes?: LaneData; 
               <span className="max-w-full truncate rounded-sm bg-panel-sunken/90 px-1.5 font-mono text-3xs uppercase tracking-[0.12em] text-dim">
                 {(lane.id === "sun" || lane.id === "earth") && geometryNote
                   ? geometryNote
-                  : `Not computed · ${lane.milestone} · ${lane.note}`}
+                  : (lane.id === "illumination" || lane.id === "los") && fractionNote
+                    ? fractionNote
+                    : `Not computed · ${lane.milestone} · ${lane.note}`}
               </span>
             </div>
           );
@@ -192,6 +226,35 @@ export function TimelineTrack({ lanes = {}, geometryNote }: { lanes?: LaneData; 
                 data-testid={`lane-readout-${lane.id}`}
               >
                 {formatElevation(elevationAt(series, epochMs))}
+              </span>
+            </div>
+          );
+        }
+        const fraction = laneFraction(lanes, lane.id);
+        if (fraction && ready) {
+          const value = fractionAt(fraction, epochMs);
+          return (
+            <div
+              key={lane.id}
+              className="mt-1 flex flex-col justify-center gap-0.5 text-2xs text-muted-foreground"
+              style={{ height: ELEVATION_LANE_HEIGHT_PX }}
+            >
+              <span className="flex items-center gap-1.5">
+                {lane.label}
+                <EvidenceBadge
+                  kind={fraction.evidence.kind}
+                  detail={[fraction.evidence.statement, fraction.evidence.method].filter(Boolean).join(" · ")}
+                />
+              </span>
+              <span
+                className="numeric font-mono text-3xs text-foreground"
+                data-testid={`lane-readout-${lane.id}`}
+              >
+                {value === null
+                  ? "—"
+                  : value.terrain === null
+                    ? `astro ${pct(value.astronomical)} · terrain n/a`
+                    : `${fraction.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · astro ${pct(value.astronomical)}`}
               </span>
             </div>
           );
