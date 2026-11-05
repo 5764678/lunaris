@@ -1,0 +1,1186 @@
+{
+  "schema_version": 1,
+  "id": "published-illumination",
+  "purpose": "Reference values for T-25: published average solar illumination and Earth visibility at the candidate-site reference points, read from the products themselves (no value typed from memory).",
+  "evidence_kind": "derived_product",
+  "built_by": "data/fixtures/validation/build_published_illumination.py",
+  "sources": {
+    "mazarico2011_maps": {
+      "citation": "Mazarico, E., Neumann, G. A., Smith, D. E., Zuber, M. T., & Torrence, M. H. (2011). Illumination conditions of the lunar polar regions using LOLA topography. Icarus, 211(2), 1066–1081. doi:10.1016/j.icarus.2010.10.030",
+      "product_page": "https://pgda.gsfc.nasa.gov/products/69",
+      "archive": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/",
+      "period": {
+        "start_utc": "2001-01-01",
+        "end_utc": "2018-08-08",
+        "step": "1 hour"
+      },
+      "resolution_m": 240.0,
+      "projection": "South polar stereographic, sphere 1737.4 km, MEAN EARTH/POLAR AXIS OF DE421, line/sample projection offsets 3209.5 px (labels).",
+      "dem": "LOLA polar topography at 240 m/px. The labels do not name the DEM version; LDEM_75S_240M uses the same grid spacing and projection.",
+      "method": "Labels: hourly modelling over ~18.6 years; Sun and Earth treated as extended sources; visible means any part of the disk. Observer height and horizon range are not stated in the labels; method details are in Mazarico et al. (2011), which is not reachable from this environment.",
+      "products": {
+        "sun": {
+          "product_id": "AVGVISIB_65S_240M",
+          "quantity": "illuminated_fraction",
+          "definition_verbatim": "Visibility varies between 0, when the sun is not visible, and 1, when any part of it is. A given data value is obtained from time averaging of computational modeling results performed every hour over ~18.6 years (2001 JAN 01 to 2018 AUG 08) and indicates the fraction of time the Sun is visible from this location. The Sun is considered an extended source.",
+          "label_file": "avgvisib_65s_240m.lbl"
+        },
+        "earth": {
+          "product_id": "AVGVISIB_65S_240M_EARTH",
+          "quantity": "earth_visible_fraction",
+          "definition_verbatim": "Visibility varies between 0, when the Earth is not visible, and 1, when any part of it is. A given data value is obtained from time averaging of computational modeling results performed every hour over ~18.6 years (2001 JAN 01 to 2018 AUG 08) and indicates the fraction of time the Earth is visible from this location. The Earth is considered an extended source.",
+          "label_file": "avgvisib_65s_240m_earth.lbl"
+        }
+      },
+      "label_quirk": "Both south-pole labels state CENTER_LATITUDE = 90 <deg>. The data are south polar; orientation was checked against LDEM_75S_240M (height minus its 21-pixel mean): correlation +0.35 as labelled with the LOLA GDR convention, |r| < 0.02 for every flip, transpose and 180° rotation.",
+      "sampling": "Value of the pixel containing the catalogue reference point (the centre of the site's PGDA 5 m tile, not a selected landing point), plus the 3 × 3 neighbourhood (720 m) to show local variability."
+    },
+    "barker2021_site_statement": {
+      "citation": "Barker, M. K., et al. (2021). Improved LOLA Elevation Maps for South Pole Landing Sites: Error Estimates and Their Impact on Illumination Conditions. Planetary and Space Science, 203, 105119. doi:10.1016/j.pss.2020.105119",
+      "read_from": "https://pgda.gsfc.nasa.gov/products/78",
+      "quote_verbatim": "Between Jan. 1, 2024 and Jan. 1, 2026, Site 1 has the most area with average illumination > 70% at 1 m above the surface and RoIs 4 - 6 at this site generally have the most favorable illumination conditions even considering their uncertainties. At 5 m above the surface, the effect of LDEM uncertainties on illumination conditions are significantly reduced, and Site 1 has longer continuous illumination periods than the other sites.",
+      "status": "qualitative",
+      "note": "A ranking over regions of interest, not a point value: usable as a consistency check (Site01 > 70% somewhere within its RoIs at 1 m, 2024-01-01 → 2026-01-01, 5 m DEM), not as a numeric target."
+    },
+    "paper_tables": {
+      "status": "unavailable",
+      "reason": "doi.org, the publishers' sites and NTRS are not reachable from the development environment (checked 2026-11-05). Point values from the tables of Mazarico et al. (2011), Gläser et al. (2014) and Barker et al. (2021) are therefore not recorded; none is quoted from memory."
+    }
+  },
+  "entries": [
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site01",
+      "site_id": "pgda78-site01",
+      "site_name": "Connecting ridge",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.76788,
+      "local_3x3": {
+        "min": 0.41452,
+        "max": 0.76788,
+        "mean": 0.6494
+      },
+      "pixel": {
+        "line": 3259,
+        "sample": 3164,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site01",
+      "site_id": "pgda78-site01",
+      "site_name": "Connecting ridge",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.56228,
+      "local_3x3": {
+        "min": 0.23912,
+        "max": 0.58156,
+        "mean": 0.51292
+      },
+      "pixel": {
+        "line": 3259,
+        "sample": 3164,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site23",
+      "site_id": "pgda78-site23",
+      "site_name": "Malapert massif",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.46084,
+      "local_3x3": {
+        "min": 0.21968,
+        "max": 0.5572,
+        "mean": 0.40568
+      },
+      "pixel": {
+        "line": 2703,
+        "sample": 3207,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site23",
+      "site_id": "pgda78-site23",
+      "site_name": "Malapert massif",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.56472,
+      "local_3x3": {
+        "min": 0.4566,
+        "max": 0.64516,
+        "mean": 0.54867
+      },
+      "pixel": {
+        "line": 2703,
+        "sample": 3207,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site07",
+      "site_id": "pgda78-site07",
+      "site_name": "Peak near Shackleton",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.84108,
+      "local_3x3": {
+        "min": 0.55532,
+        "max": 0.84108,
+        "mean": 0.63393
+      },
+      "pixel": {
+        "line": 3293,
+        "sample": 3335,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site07",
+      "site_id": "pgda78-site07",
+      "site_name": "Peak near Shackleton",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.6048,
+      "local_3x3": {
+        "min": 0.4394,
+        "max": 0.60616,
+        "mean": 0.55626
+      },
+      "pixel": {
+        "line": 3293,
+        "sample": 3335,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-dm1",
+      "site_id": "pgda78-dm1",
+      "site_name": "Amundsen rim",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.38212,
+      "local_3x3": {
+        "min": 0.34212,
+        "max": 0.41852,
+        "mean": 0.39528
+      },
+      "pixel": {
+        "line": 2953,
+        "sample": 3893,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-dm1",
+      "site_id": "pgda78-dm1",
+      "site_name": "Amundsen rim",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.50984,
+      "local_3x3": {
+        "min": 0.439,
+        "max": 0.60608,
+        "mean": 0.54372
+      },
+      "pixel": {
+        "line": 2953,
+        "sample": 3893,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-dm2",
+      "site_id": "pgda78-dm2",
+      "site_name": "Nobile rim 2",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.42724,
+      "local_3x3": {
+        "min": 0.3702,
+        "max": 0.44176,
+        "mean": 0.41348
+      },
+      "pixel": {
+        "line": 2814,
+        "sample": 3864,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-dm2",
+      "site_id": "pgda78-dm2",
+      "site_name": "Nobile rim 2",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.6908,
+      "local_3x3": {
+        "min": 0.6854,
+        "max": 0.69648,
+        "mean": 0.69156
+      },
+      "pixel": {
+        "line": 2814,
+        "sample": 3864,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-haworth",
+      "site_id": "pgda78-haworth",
+      "site_name": "Haworth",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.13836,
+      "local_3x3": {
+        "min": 0.09432,
+        "max": 0.18356,
+        "mean": 0.13043
+      },
+      "pixel": {
+        "line": 2832,
+        "sample": 3051,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-haworth",
+      "site_id": "pgda78-haworth",
+      "site_name": "Haworth",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.4378,
+      "local_3x3": {
+        "min": 0.417,
+        "max": 0.44944,
+        "mean": 0.43458
+      },
+      "pixel": {
+        "line": 2832,
+        "sample": 3051,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm1",
+      "site_id": "pgda78-lm1",
+      "site_name": "Shackleton Rim B",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.38464,
+      "local_3x3": {
+        "min": 0.36012,
+        "max": 0.4204,
+        "mean": 0.39353
+      },
+      "pixel": {
+        "line": 3176,
+        "sample": 3259,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm1",
+      "site_id": "pgda78-lm1",
+      "site_name": "Shackleton Rim B",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.53864,
+      "local_3x3": {
+        "min": 0.53504,
+        "max": 0.54128,
+        "mean": 0.53848
+      },
+      "pixel": {
+        "line": 3176,
+        "sample": 3259,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm2",
+      "site_id": "pgda78-lm2",
+      "site_name": "Shoemaker Rim A",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.26604,
+      "local_3x3": {
+        "min": 0.21816,
+        "max": 0.32428,
+        "mean": 0.2648
+      },
+      "pixel": {
+        "line": 2972,
+        "sample": 3260,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm2",
+      "site_id": "pgda78-lm2",
+      "site_name": "Shoemaker Rim A",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.47772,
+      "local_3x3": {
+        "min": 0.47356,
+        "max": 0.48084,
+        "mean": 0.47752
+      },
+      "pixel": {
+        "line": 2972,
+        "sample": 3260,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm3",
+      "site_id": "pgda78-lm3",
+      "site_name": "Shoemaker Rim B",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.19436,
+      "local_3x3": {
+        "min": 0.18924,
+        "max": 0.24736,
+        "mean": 0.2097
+      },
+      "pixel": {
+        "line": 3014,
+        "sample": 3268,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm3",
+      "site_id": "pgda78-lm3",
+      "site_name": "Shoemaker Rim B",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.5178,
+      "local_3x3": {
+        "min": 0.50764,
+        "max": 0.52008,
+        "mean": 0.51601
+      },
+      "pixel": {
+        "line": 3014,
+        "sample": 3268,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm4",
+      "site_id": "pgda78-lm4",
+      "site_name": "Shoemaker Rim C",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.27936,
+      "local_3x3": {
+        "min": 0.15996,
+        "max": 0.30944,
+        "mean": 0.24103
+      },
+      "pixel": {
+        "line": 3105,
+        "sample": 3289,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm4",
+      "site_id": "pgda78-lm4",
+      "site_name": "Shoemaker Rim C",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.40024,
+      "local_3x3": {
+        "min": 0.32788,
+        "max": 0.464,
+        "mean": 0.40924
+      },
+      "pixel": {
+        "line": 3105,
+        "sample": 3289,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm5",
+      "site_id": "pgda78-lm5",
+      "site_name": "Shoemaker Rim D",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.33344,
+      "local_3x3": {
+        "min": 0.1574,
+        "max": 0.3482,
+        "mean": 0.28297
+      },
+      "pixel": {
+        "line": 3164,
+        "sample": 3376,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm5",
+      "site_id": "pgda78-lm5",
+      "site_name": "Shoemaker Rim D",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.50636,
+      "local_3x3": {
+        "min": 0.41416,
+        "max": 0.52136,
+        "mean": 0.48556
+      },
+      "pixel": {
+        "line": 3164,
+        "sample": 3376,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm6",
+      "site_id": "pgda78-lm6",
+      "site_name": "Shoemaker Rim E",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.18304,
+      "local_3x3": {
+        "min": 0.16268,
+        "max": 0.19784,
+        "mean": 0.18252
+      },
+      "pixel": {
+        "line": 3126,
+        "sample": 3455,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm6",
+      "site_id": "pgda78-lm6",
+      "site_name": "Shoemaker Rim E",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.49096,
+      "local_3x3": {
+        "min": 0.48916,
+        "max": 0.49332,
+        "mean": 0.49102
+      },
+      "pixel": {
+        "line": 3126,
+        "sample": 3455,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm7",
+      "site_id": "pgda78-lm7",
+      "site_name": "Faustini Rim A",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.3138,
+      "local_3x3": {
+        "min": 0.29356,
+        "max": 0.43844,
+        "mean": 0.35982
+      },
+      "pixel": {
+        "line": 3210,
+        "sample": 3476,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm7",
+      "site_id": "pgda78-lm7",
+      "site_name": "Faustini Rim A",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.5088,
+      "local_3x3": {
+        "min": 0.50816,
+        "max": 0.50996,
+        "mean": 0.50889
+      },
+      "pixel": {
+        "line": 3210,
+        "sample": 3476,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-lm8",
+      "site_id": "pgda78-lm8",
+      "site_name": "Shoemaker Rim F",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.30976,
+      "local_3x3": {
+        "min": 0.19704,
+        "max": 0.32644,
+        "mean": 0.2776
+      },
+      "pixel": {
+        "line": 3043,
+        "sample": 3501,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-lm8",
+      "site_id": "pgda78-lm8",
+      "site_name": "Shoemaker Rim F",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.46748,
+      "local_3x3": {
+        "min": 0.46656,
+        "max": 0.46828,
+        "mean": 0.46736
+      },
+      "pixel": {
+        "line": 3043,
+        "sample": 3501,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-npa",
+      "site_id": "pgda78-npa",
+      "site_name": "Cabeus exterior wall 1",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.20956,
+      "local_3x3": {
+        "min": 0.19768,
+        "max": 0.247,
+        "mean": 0.2201
+      },
+      "pixel": {
+        "line": 3087,
+        "sample": 2841,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-npa",
+      "site_id": "pgda78-npa",
+      "site_name": "Cabeus exterior wall 1",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.378,
+      "local_3x3": {
+        "min": 0.37124,
+        "max": 0.38576,
+        "mean": 0.37864
+      },
+      "pixel": {
+        "line": 3087,
+        "sample": 2841,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-npb",
+      "site_id": "pgda78-npb",
+      "site_name": "Amundsen 1",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.03888,
+      "local_3x3": {
+        "min": 0.03344,
+        "max": 0.04388,
+        "mean": 0.03861
+      },
+      "pixel": {
+        "line": 3203,
+        "sample": 3980,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-npb",
+      "site_id": "pgda78-npb",
+      "site_name": "Amundsen 1",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.3754,
+      "local_3x3": {
+        "min": 0.37436,
+        "max": 0.376,
+        "mean": 0.37528
+      },
+      "pixel": {
+        "line": 3203,
+        "sample": 3980,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-npc",
+      "site_id": "pgda78-npc",
+      "site_name": "Idel'son L crater 1",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.254,
+      "local_3x3": {
+        "min": 0.23648,
+        "max": 0.26648,
+        "mean": 0.25254
+      },
+      "pixel": {
+        "line": 3624,
+        "sample": 3762,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-npc",
+      "site_id": "pgda78-npc",
+      "site_name": "Idel'son L crater 1",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.25068,
+      "local_3x3": {
+        "min": 0.01112,
+        "max": 0.26356,
+        "mean": 0.19533
+      },
+      "pixel": {
+        "line": 3624,
+        "sample": 3762,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-npd",
+      "site_id": "pgda78-npd",
+      "site_name": "Malapert crater 1",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.10064,
+      "local_3x3": {
+        "min": 0.09956,
+        "max": 0.10188,
+        "mean": 0.1007
+      },
+      "pixel": {
+        "line": 2559,
+        "sample": 3305,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-npd",
+      "site_id": "pgda78-npd",
+      "site_name": "Malapert crater 1",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.5206,
+      "local_3x3": {
+        "min": 0.5188,
+        "max": 0.523,
+        "mean": 0.5207
+      },
+      "pixel": {
+        "line": 2559,
+        "sample": 3305,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-sl2",
+      "site_id": "pgda78-sl2",
+      "site_name": "de Gerlache rim",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.38112,
+      "local_3x3": {
+        "min": 0.37164,
+        "max": 0.3826,
+        "mean": 0.37896
+      },
+      "pixel": {
+        "line": 3114,
+        "sample": 3007,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-sl2",
+      "site_id": "pgda78-sl2",
+      "site_name": "de Gerlache rim",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.5478,
+      "local_3x3": {
+        "min": 0.54428,
+        "max": 0.55068,
+        "mean": 0.54778
+      },
+      "pixel": {
+        "line": 3114,
+        "sample": 3007,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-sl3",
+      "site_id": "pgda78-sl3",
+      "site_name": "Connecting ridge extension",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.35196,
+      "local_3x3": {
+        "min": 0.30428,
+        "max": 0.38216,
+        "mean": 0.34759
+      },
+      "pixel": {
+        "line": 3235,
+        "sample": 3090,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-sl3",
+      "site_id": "pgda78-sl3",
+      "site_name": "Connecting ridge extension",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.00604,
+      "local_3x3": {
+        "min": 0.0,
+        "max": 0.17976,
+        "mean": 0.04349
+      },
+      "pixel": {
+        "line": 3235,
+        "sample": 3090,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-shoemaker",
+      "site_id": "pgda78-shoemaker",
+      "site_name": "Shoemaker",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.35436,
+      "local_3x3": {
+        "min": 0.31332,
+        "max": 0.43152,
+        "mean": 0.35515
+      },
+      "pixel": {
+        "line": 3047,
+        "sample": 3526,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-shoemaker",
+      "site_id": "pgda78-shoemaker",
+      "site_name": "Shoemaker",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.43932,
+      "local_3x3": {
+        "min": 0.41536,
+        "max": 0.44308,
+        "mean": 0.43321
+      },
+      "pixel": {
+        "line": 3047,
+        "sample": 3526,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site04",
+      "site_id": "pgda78-site04",
+      "site_name": "Shackleton rim",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.12556,
+      "local_3x3": {
+        "min": 0.08408,
+        "max": 0.17116,
+        "mean": 0.12748
+      },
+      "pixel": {
+        "line": 3239,
+        "sample": 3205,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site04",
+      "site_id": "pgda78-site04",
+      "site_name": "Shackleton rim",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.1318,
+      "local_3x3": {
+        "min": 0.07168,
+        "max": 0.20816,
+        "mean": 0.13611
+      },
+      "pixel": {
+        "line": 3239,
+        "sample": 3205,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site06",
+      "site_id": "pgda78-site06",
+      "site_name": "Nobile rim 1",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.2892,
+      "local_3x3": {
+        "min": 0.27868,
+        "max": 0.33564,
+        "mean": 0.29936
+      },
+      "pixel": {
+        "line": 2751,
+        "sample": 3560,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site06",
+      "site_id": "pgda78-site06",
+      "site_name": "Nobile rim 1",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.2806,
+      "local_3x3": {
+        "min": 0.00428,
+        "max": 0.42992,
+        "mean": 0.25184
+      },
+      "pixel": {
+        "line": 2751,
+        "sample": 3560,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site11",
+      "site_id": "pgda78-site11",
+      "site_name": "de Gerlache rim",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.67868,
+      "local_3x3": {
+        "min": 0.48832,
+        "max": 0.76876,
+        "mean": 0.58165
+      },
+      "pixel": {
+        "line": 3147,
+        "sample": 3055,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site11",
+      "site_id": "pgda78-site11",
+      "site_name": "de Gerlache rim",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.6134,
+      "local_3x3": {
+        "min": 0.51056,
+        "max": 0.614,
+        "mean": 0.58332
+      },
+      "pixel": {
+        "line": 3147,
+        "sample": 3055,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site20",
+      "site_id": "pgda78-site20",
+      "site_name": "Leibnitz beta plateau",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.46144,
+      "local_3x3": {
+        "min": 0.19732,
+        "max": 0.76928,
+        "mean": 0.50797
+      },
+      "pixel": {
+        "line": 2718,
+        "sample": 3514,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site20",
+      "site_id": "pgda78-site20",
+      "site_name": "Leibnitz beta plateau",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.47512,
+      "local_3x3": {
+        "min": 0.43932,
+        "max": 0.60268,
+        "mean": 0.50502
+      },
+      "pixel": {
+        "line": 2718,
+        "sample": 3514,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site20v2",
+      "site_id": "pgda78-site20v2",
+      "site_name": "Leibnitz beta plateau, extended boundaries",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.46144,
+      "local_3x3": {
+        "min": 0.19732,
+        "max": 0.76928,
+        "mean": 0.50797
+      },
+      "pixel": {
+        "line": 2718,
+        "sample": 3514,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site20v2",
+      "site_id": "pgda78-site20v2",
+      "site_name": "Leibnitz beta plateau, extended boundaries",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.47512,
+      "local_3x3": {
+        "min": 0.43932,
+        "max": 0.60268,
+        "mean": 0.50502
+      },
+      "pixel": {
+        "line": 2718,
+        "sample": 3514,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m-pgda78-site42",
+      "site_id": "pgda78-site42",
+      "site_name": "de Gerlache-Kocher massif",
+      "body": "sun",
+      "quantity": "illuminated_fraction",
+      "value": 0.81512,
+      "local_3x3": {
+        "min": 0.4188,
+        "max": 0.81512,
+        "mean": 0.59757
+      },
+      "pixel": {
+        "line": 3443,
+        "sample": 2737,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m.img",
+      "product_sha256": "103d71ccf377fc5444b3f52c35a89069d008d1ac9b763408ca853378fa440fa5"
+    },
+    {
+      "id": "mazarico2011-avgvisib_65s_240m_earth-pgda78-site42",
+      "site_id": "pgda78-site42",
+      "site_name": "de Gerlache-Kocher massif",
+      "body": "earth",
+      "quantity": "earth_visible_fraction",
+      "value": 0.60588,
+      "local_3x3": {
+        "min": 0.29124,
+        "max": 0.60588,
+        "mean": 0.54056
+      },
+      "pixel": {
+        "line": 3443,
+        "sample": 2737,
+        "zero_based": true
+      },
+      "product_id": "AVGVISIB_65S_240M_EARTH",
+      "product_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/extras/illumination/release_2014/img/avgvisib_65s_240m_earth.img",
+      "product_sha256": "7563b4cd4f9371452930f0fee80ba1b9a20a6a8e25ad75b1e10d37b56c9aad85"
+    }
+  ]
+}

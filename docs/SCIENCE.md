@@ -434,7 +434,7 @@ sensitivity analysis over the weights. Placeholder evidence can never contribute
 | Property | Round trips and invariants over random inputs (Hypothesis) | `tests/science` |
 | Product consistency | Label-derived grid geometry (§5.1 check), DN ranges vs label | M02 |
 | Independent ephemeris | Sun/Earth az/el vs JPL Horizons at reference sites/epochs (feasibility shown 2026-11-04, §5.2) | M03, fixture `data/fixtures/validation/` |
-| Published results | Polar illumination fractions vs Mazarico et al. (2011) and Gläser et al. (2014), with stated differences in DEM, period and method | M04 |
+| Published results | Illumination and Earth-visibility fractions vs the published LOLA average-visibility maps (Mazarico et al. 2011) at the catalogue sites, with stated differences in DEM, period, method and point sampling (below) | M04, T-25 |
 | Reproducibility | Acquisition records + `GET /api/v1/system/runtime` versions embedded in results | all |
 
 **Horizons references (captured 2026-11-04).** `data/fixtures/validation/horizons-sun-s89p5-e0-2026-11-04.json`
@@ -442,6 +442,37 @@ and `horizons-earth-s89p5-e0-2026-11-04.json`: 25 hourly apparent az/el samples 
 requested directly from the Horizons API by the development environment, with the exact
 request URL and the verbatim `$$SOE…$$EOE` table. They replace an earlier two-sample Sun
 fixture that had been relayed second-hand. Tolerance and its justification: §5.2.
+
+**Published illumination references (T-25).** `data/fixtures/validation/published-illumination.json`
+is built by `build_published_illumination.py` (same directory) from the PDS LOLA EXTRAS
+products `AVGVISIB_65S_240M` and `AVGVISIB_65S_240M_EARTH` (Mazarico et al. 2011; SHA-256
+recorded per entry). For each catalogue site it records the value of the 240 m pixel
+containing the reference point, and the 3 × 3 (720 m) spread.
+
+- *Definition (labels, verbatim in the fixture).* The fraction of hourly samples,
+  2001-01-01 → 2018-08-08, with any part of the Sun (or the Earth) visible. Both are
+  extended sources. This is LUNARIS's `illuminated_fraction` / `visible_fraction` against
+  the terrain horizon (§5.3), not the mean disk fraction.
+- *Orientation.* Both labels state `CENTER_LATITUDE = 90`, but the data are south polar.
+  The fixture uses the LOLA GDR orientation (§5.1). Against LDEM_75S_240M local relief
+  (height minus its 21-pixel mean), the correlation is +0.35 as oriented and below 0.02
+  in magnitude for every flip, transpose and 180° rotation.
+- *Local variability.* On ridges the published value changes by tens of percent within
+  720 m (Site01: 0.41–0.77). Agreement is therefore judged against that spread
+  (`lunaris_science.illumination.validation.compare`).
+- *Differences that are always stated.* Period (the 18.6-year cycle versus the computed
+  window), DEM and resolution, observer height (not stated in the labels), sampling
+  step, point sampling, and horizon truncation (then the computed value is an upper
+  bound).
+- *Also recorded.* Barker et al. (2021) (PGDA product 78, verbatim): Site 1 has the most
+  area with average illumination > 70 % at 1 m, 2024-01-01 → 2026-01-01. This is a
+  qualitative consistency check, satisfied by the published map (Site01 pixel 0.768).
+  Point values from the paper tables of Mazarico et al. (2011), Gläser et al. (2014) and
+  Barker et al. (2021) are recorded as **unavailable**: the publishers, doi.org and NTRS
+  are not reachable from the development environment. No value is quoted from memory.
+- *Status.* The harness is tested against synthetic masks. The comparison of LUNARIS's
+  terrain-horizon results with these references needs real horizon masks (S-TERRAIN
+  T-15).
 
 ---
 
