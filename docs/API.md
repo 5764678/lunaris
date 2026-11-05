@@ -270,6 +270,26 @@ In-process interface for other services (`lunaris_api.services.horizon`):
 `HorizonMaskService.get_site_mask(site_id, *, observer_height_m=2.0)` and
 `get_mask(*, latitude_deg, longitude_deg, observer_height_m=2.0)`, both returning
 `HorizonMask`; the dependency provider is `HorizonMaskServiceDep`.
+### `GET /api/v1/catalog/sites` · `POST /api/v1/catalog/sites/{catalog_site_id}/register` · `POST /api/v1/catalog/demo-trio/register`
+
+The cited south-pole candidate-site catalogue (T-03; data from T-02,
+`packages/data/src/lunaris_data/catalogs/south-pole-candidate-sites.json`).
+
+- `GET /catalog/sites` returns the 27 PGDA product 78 sites, with `reference_point`
+  (planetocentric, MOON_ME), `tile`, `pgda_site_id`, `artemis_iii_2022_region` and
+  `demo_trio`. The catalogue-level `reference_point_definition` states what the
+  coordinates are: the DEM tile centre, **not a landing point**. Also returned: `method`,
+  `sources`, `citation` and `limitations`.
+- `POST /catalog/sites/{id}/register` adds that site to the registry and returns
+  **201** with a `CandidateSite` whose `origin` is `"published"`. Its `reference` holds the
+  citation (including the PGDA tile id); its `notes` hold the catalogue id, the Artemis
+  III region and the reference-point definition. **404** for an unknown catalogue id,
+  **409** if a site with that name is already registered.
+- `POST /catalog/demo-trio/register` adds the three `demo_trio` sites in one action. It
+  is idempotent: sites already registered under the same name are returned and listed
+  in `already_registered`.
+
+`CandidateSite.origin` is now `"user_defined" | "published"` (wire-contract change).
 
 ## Changing the contract
 

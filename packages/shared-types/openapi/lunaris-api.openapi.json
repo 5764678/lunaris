@@ -118,7 +118,11 @@
             "title": "Notes"
           },
           "origin": {
-            "const": "user_defined",
+            "description": "user_defined: entered by a user; published: added from the cited site catalogue (GET /api/v1/catalog/sites), with its citation in `reference`.",
+            "enum": [
+              "user_defined",
+              "published"
+            ],
             "title": "Origin",
             "type": "string"
           },
@@ -231,6 +235,150 @@
           "limit"
         ],
         "title": "CandidateSiteList",
+        "type": "object"
+      },
+      "CatalogReferencePointSchema": {
+        "properties": {
+          "frame": {
+            "const": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitude_deg",
+          "longitude_deg",
+          "frame"
+        ],
+        "title": "CatalogReferencePointSchema",
+        "type": "object"
+      },
+      "CatalogSiteSchema": {
+        "properties": {
+          "artemis_iii_2022_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artemis Iii 2022 Region"
+          },
+          "demo_trio": {
+            "title": "Demo Trio",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pgda_site_id": {
+            "title": "Pgda Site Id",
+            "type": "string"
+          },
+          "reference_point": {
+            "$ref": "#/components/schemas/CatalogReferencePointSchema"
+          },
+          "register_url": {
+            "description": "POST here to add this site to the registry.",
+            "title": "Register Url",
+            "type": "string"
+          },
+          "tile": {
+            "$ref": "#/components/schemas/CatalogTileSchema"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "pgda_site_id",
+          "artemis_iii_2022_region",
+          "demo_trio",
+          "reference_point",
+          "tile",
+          "register_url"
+        ],
+        "title": "CatalogSiteSchema",
+        "type": "object"
+      },
+      "CatalogSourceSchema": {
+        "properties": {
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "use": {
+            "title": "Use",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "use"
+        ],
+        "title": "CatalogSourceSchema",
+        "type": "object"
+      },
+      "CatalogTileSchema": {
+        "properties": {
+          "centre_x_m": {
+            "title": "Centre X M",
+            "type": "number"
+          },
+          "centre_y_m": {
+            "title": "Centre Y M",
+            "type": "number"
+          },
+          "extent_km": {
+            "title": "Extent Km",
+            "type": "number"
+          },
+          "height_px": {
+            "title": "Height Px",
+            "type": "integer"
+          },
+          "pixel_size_m": {
+            "title": "Pixel Size M",
+            "type": "number"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "width_px": {
+            "title": "Width Px",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "url",
+          "width_px",
+          "height_px",
+          "pixel_size_m",
+          "extent_km",
+          "centre_x_m",
+          "centre_y_m"
+        ],
+        "title": "CatalogTileSchema",
         "type": "object"
       },
       "ComponentCheck": {
@@ -1081,6 +1229,40 @@
         "title": "HorizonMaskResponse",
         "type": "object"
       },
+      "RegisteredCatalogSites": {
+        "properties": {
+          "already_registered": {
+            "description": "Catalogue ids whose site (same name) was already in the registry.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Already Registered",
+            "type": "array"
+          },
+          "created": {
+            "description": "Catalogue ids registered by this request.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Created",
+            "type": "array"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateSite"
+            },
+            "title": "Sites",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sites",
+          "created",
+          "already_registered"
+        ],
+        "title": "RegisteredCatalogSites",
+        "type": "object"
+      },
       "RuntimeComponentSchema": {
         "properties": {
           "available": {
@@ -1230,6 +1412,85 @@
           "frame"
         ],
         "title": "SelenographicCoordinateSchema",
+        "type": "object"
+      },
+      "SiteCatalogResponse": {
+        "properties": {
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "demo_trio_register_url": {
+            "title": "Demo Trio Register Url",
+            "type": "string"
+          },
+          "evidence_kind": {
+            "const": "derived_product",
+            "title": "Evidence Kind",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "reference_point_definition": {
+            "description": "What the coordinates mean: the DEM tile centre, NOT a landing point.",
+            "title": "Reference Point Definition",
+            "type": "string"
+          },
+          "retrieved_on": {
+            "title": "Retrieved On",
+            "type": "string"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogSiteSchema"
+            },
+            "title": "Sites",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogSourceSchema"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "evidence_kind",
+          "reference_point_definition",
+          "method",
+          "retrieved_on",
+          "citation",
+          "sources",
+          "limitations",
+          "sites",
+          "count",
+          "demo_trio_register_url"
+        ],
+        "title": "SiteCatalogResponse",
         "type": "object"
       },
       "SiteEphemeris": {
@@ -1696,6 +1957,153 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/catalog/demo-trio/register": {
+      "post": {
+        "description": "Idempotent: sites already registered under the same name are returned, not duplicated.",
+        "operationId": "register_demo_trio_api_v1_catalog_demo_trio_register_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredCatalogSites"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Registry full."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Add the three demo sites (demo_trio) to the registry in one action",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/sites": {
+      "get": {
+        "description": "The 27 PGDA product 78 sites with their sources, method, limitations and the\ndefinition of the reference point (the DEM tile centre, not a landing point).",
+        "operationId": "get_site_catalog_api_v1_catalog_sites_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Cited south-pole candidate-site catalogue",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/sites/{catalog_site_id}/register": {
+      "post": {
+        "operationId": "register_catalog_site_api_v1_catalog_sites__catalog_site_id__register_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "catalog_site_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9][a-z0-9-]{1,63}$",
+              "title": "Catalog Site Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateSite"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown catalogue site."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Already registered, or registry full."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Add a catalogue site to the registry (origin: published)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/datasets": {
       "get": {
         "description": "Every dataset LUNARIS knows about, with provenance metadata, URL verification\nstatus and whether it is present in the local data store. Status is computed from\nfile presence and sizes; full checksum verification is done with\n``lunaris-data verify``.",
