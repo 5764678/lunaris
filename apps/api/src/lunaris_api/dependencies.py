@@ -102,8 +102,9 @@ from lunaris_api.services.illumination import TimelineService  # noqa: E402
 
 def get_timeline_service(
     ephemeris: Annotated[EphemerisService, Depends(get_ephemeris_service)],
+    masks: Annotated[HorizonMaskService, Depends(get_horizon_mask_service)],
 ) -> TimelineService:
-    return TimelineService(ephemeris)
+    return TimelineService(ephemeris, masks)
 
 
 TimelineServiceDep = Annotated[TimelineService, Depends(get_timeline_service)]

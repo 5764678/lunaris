@@ -429,9 +429,37 @@ tolerance, malformed input) and `test_analysis.py` (separate horizons, truncatio
 surfaced with a count, radio-link disclaimer, and the 2026-11-04 fixture day with the real
 kernels: Sun f = 1 at all 25 samples, one sunlit window 00:00 → 11-05 00:00 of exactly 86 400 s censored at both ends; Earth f = 0 at all 25).
 
-**Terrain masks.** Until S-TERRAIN's mask computation (T-15) is merged and served, results
-report the astronomical horizon only. `terrain` is null, `terrain_horizon_available` is
-false, and a limitation says terrain can hide a body that is above 0°.
+**Terrain masks.** The API takes each site's C1 mask from S-TERRAIN's
+`HorizonMaskService` (T-16): T-15's `compute_horizon_mask` on the checksum-verified
+LDEM_75S_240M (0.25° step, 200 km), file-cached under `data/processed/` and keyed by the
+DEM SHA-256, site, eye height and method version. It is the same mask that
+`GET /api/v1/sites/{id}/horizon` serves. The eye point is 2 m above the DEM surface, and the C2 observer sits
+at R + surface height + 2 m. If no mask can be produced (DEM missing or failing
+verification, site outside 75°–90° S), the result is astronomical-only and the
+limitation states the reason.
+
+*Physical checks* (`tests/science/illumination/test_terrain_physics.py`; real LDEM and
+kernels, 2026 at 1 h):
+
+- Shackleton floor (89.67° S, 129.2° E): the horizon is ≥ 19.75° all round, the terrain
+  illuminated fraction is exactly 0, and the astronomical fraction is > 0.
+- At Site01, Site23 and Site07, for the Sun and the Earth: terrain f ≤ astronomical f at
+  every sample where the horizon at the body's azimuth is ≥ 0°.
+- From a peak (Site01, Site07), the horizon toward the Earth is below 0° all year, so
+  terrain Earth visibility exceeds the astronomical value.
+- Visible and hidden windows tile the year exactly.
+
+*Demo trio, 2026, 1 h step, eye at 2 m* (any part visible / mean disk fraction; no
+truncated rays):
+
+| Site | Sun, astronomical | Sun, terrain | Earth, astronomical | Earth, terrain |
+| --- | --- | --- | --- | --- |
+| Site01 Connecting ridge (surface 1942 m) | 0.566 / 0.522 | **0.732** / 0.684 | 0.485 / 0.440 | 0.529 / 0.483 |
+| Site23 Malapert massif (4786 m) | 0.537 / 0.516 | **0.462** / 0.410 | 0.726 / 0.666 | 0.495 / 0.449 |
+| Site07 Peak near Shackleton (1639 m) | 0.591 / 0.509 | **0.879** / 0.842 | 0.473 / 0.427 | 0.574 / 0.524 |
+
+These are catalogue reference points (tile centres), not selected landing points. The
+comparison with published values is T-25 (§6).
 
 ### 5.4 Earth visibility — Milestone 04 (implemented: T-24)
 
