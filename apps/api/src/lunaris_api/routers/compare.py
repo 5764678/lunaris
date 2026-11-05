@@ -12,14 +12,14 @@ from lunaris_api.schemas.common import ERROR_RESPONSES, ErrorResponse
 from lunaris_api.schemas.compare import SiteComparison
 from lunaris_api.services.compare import DEFAULT_FOOTPRINT_RADIUS_M, MAX_COMPARE_SITES
 
-router = APIRouter(prefix="/sites", tags=["compare"])
+router = APIRouter(prefix="/analysis", tags=["compare"])
 
 DEFAULT_START = datetime(2027, 1, 1, tzinfo=UTC)
 DEFAULT_END = datetime(2028, 1, 1, tzinfo=UTC)
 
 
 @router.get(
-    "/compare",
+    "/site-comparison",
     response_model=SiteComparison,
     summary="Compare sites: terrain, horizon, illumination and Earth visibility",
     responses={404: {"model": ErrorResponse, "description": "Unknown site."}, **ERROR_RESPONSES},

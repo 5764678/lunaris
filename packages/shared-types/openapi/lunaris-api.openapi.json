@@ -2565,6 +2565,134 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/analysis/site-comparison": {
+      "get": {
+        "description": "One row per site; every cell carries its own evidence (kind, method, sources with\nmanifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be\ncomputed is null with a `reason`, never 0. The default window is calendar year 2027\nat a 1 h step (8 761 samples, within the ephemeris sample cap).",
+        "operationId": "compare_sites_api_v1_analysis_site_comparison_get",
+        "parameters": [
+          {
+            "description": "Comma-separated site ids (1–10).",
+            "in": "query",
+            "name": "site_ids",
+            "required": true,
+            "schema": {
+              "description": "Comma-separated site ids (1–10).",
+              "title": "Site Ids",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window start, ISO 8601 UTC.",
+            "in": "query",
+            "name": "start_utc",
+            "required": false,
+            "schema": {
+              "default": "2027-01-01T00:00:00Z",
+              "description": "Window start, ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "Start Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window end, ISO 8601 UTC.",
+            "in": "query",
+            "name": "end_utc",
+            "required": false,
+            "schema": {
+              "default": "2028-01-01T00:00:00Z",
+              "description": "Window end, ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "End Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Time step, s.",
+            "in": "query",
+            "name": "step_s",
+            "required": false,
+            "schema": {
+              "default": 3600.0,
+              "description": "Time step, s.",
+              "exclusiveMinimum": 0,
+              "title": "Step S",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "observer_height_m",
+            "required": false,
+            "schema": {
+              "default": 2.0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Observer Height M",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "footprint_radius_m",
+            "required": false,
+            "schema": {
+              "default": 50.0,
+              "exclusiveMinimum": 0,
+              "maximum": 2000,
+              "title": "Footprint Radius M",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteComparison"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Compare sites: terrain, horizon, illumination and Earth visibility",
+        "tags": [
+          "compare"
+        ]
+      }
+    },
     "/api/v1/catalog/demo-trio/register": {
       "post": {
         "description": "Idempotent: sites already registered under the same name are returned, not duplicated.",
@@ -2895,134 +3023,6 @@
         "summary": "Register a user-defined candidate site",
         "tags": [
           "sites"
-        ]
-      }
-    },
-    "/api/v1/sites/compare": {
-      "get": {
-        "description": "One row per site; every cell carries its own evidence (kind, method, sources with\nmanifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be\ncomputed is null with a `reason`, never 0. The default window is calendar year 2027\nat a 1 h step (8 761 samples, within the ephemeris sample cap).",
-        "operationId": "compare_sites_api_v1_sites_compare_get",
-        "parameters": [
-          {
-            "description": "Comma-separated site ids (1–10).",
-            "in": "query",
-            "name": "site_ids",
-            "required": true,
-            "schema": {
-              "description": "Comma-separated site ids (1–10).",
-              "title": "Site Ids",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Window start, ISO 8601 UTC.",
-            "in": "query",
-            "name": "start_utc",
-            "required": false,
-            "schema": {
-              "default": "2027-01-01T00:00:00Z",
-              "description": "Window start, ISO 8601 UTC.",
-              "format": "date-time",
-              "title": "Start Utc",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Window end, ISO 8601 UTC.",
-            "in": "query",
-            "name": "end_utc",
-            "required": false,
-            "schema": {
-              "default": "2028-01-01T00:00:00Z",
-              "description": "Window end, ISO 8601 UTC.",
-              "format": "date-time",
-              "title": "End Utc",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Time step, s.",
-            "in": "query",
-            "name": "step_s",
-            "required": false,
-            "schema": {
-              "default": 3600.0,
-              "description": "Time step, s.",
-              "exclusiveMinimum": 0,
-              "title": "Step S",
-              "type": "number"
-            }
-          },
-          {
-            "in": "query",
-            "name": "observer_height_m",
-            "required": false,
-            "schema": {
-              "default": 2.0,
-              "maximum": 100,
-              "minimum": 0,
-              "title": "Observer Height M",
-              "type": "number"
-            }
-          },
-          {
-            "in": "query",
-            "name": "footprint_radius_m",
-            "required": false,
-            "schema": {
-              "default": 50.0,
-              "exclusiveMinimum": 0,
-              "maximum": 2000,
-              "title": "Footprint Radius M",
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SiteComparison"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unknown site."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Request validation failed."
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unexpected server error."
-          }
-        },
-        "summary": "Compare sites: terrain, horizon, illumination and Earth visibility",
-        "tags": [
-          "compare"
         ]
       }
     },

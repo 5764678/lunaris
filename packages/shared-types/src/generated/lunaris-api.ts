@@ -4,6 +4,29 @@
  */
 
 export interface paths {
+    "/api/v1/analysis/site-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Compare sites: terrain, horizon, illumination and Earth visibility
+         * @description One row per site; every cell carries its own evidence (kind, method, sources with
+         *     manifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be
+         *     computed is null with a `reason`, never 0. The default window is calendar year 2027
+         *     at a 1 h step (8 761 samples, within the ephemeris sample cap).
+         */
+        get: operations["compare_sites_api_v1_analysis_site_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/demo-trio/register": {
         parameters: {
             query?: never;
@@ -118,29 +141,6 @@ export interface paths {
          *     [0, 360). Site names are unique (case-insensitive).
          */
         post: operations["create_site_api_v1_sites_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/sites/compare": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Compare sites: terrain, horizon, illumination and Earth visibility
-         * @description One row per site; every cell carries its own evidence (kind, method, sources with
-         *     manifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be
-         *     computed is null with a `reason`, never 0. The default window is calendar year 2027
-         *     at a 1 h step (8 761 samples, within the ephemeris sample cap).
-         */
-        get: operations["compare_sites_api_v1_sites_compare_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1414,6 +1414,64 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    compare_sites_api_v1_analysis_site_comparison_get: {
+        parameters: {
+            query: {
+                /** @description Comma-separated site ids (1–10). */
+                site_ids: string;
+                /** @description Window start, ISO 8601 UTC. */
+                start_utc?: string;
+                /** @description Window end, ISO 8601 UTC. */
+                end_utc?: string;
+                /** @description Time step, s. */
+                step_s?: number;
+                observer_height_m?: number;
+                footprint_radius_m?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteComparison"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     register_demo_trio_api_v1_catalog_demo_trio_register_post: {
         parameters: {
             query?: never;
@@ -1670,64 +1728,6 @@ export interface operations {
             };
             /** @description Duplicate name or registry limit reached. */
             409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Request validation failed. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unexpected server error. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    compare_sites_api_v1_sites_compare_get: {
-        parameters: {
-            query: {
-                /** @description Comma-separated site ids (1–10). */
-                site_ids: string;
-                /** @description Window start, ISO 8601 UTC. */
-                start_utc?: string;
-                /** @description Window end, ISO 8601 UTC. */
-                end_utc?: string;
-                /** @description Time step, s. */
-                step_s?: number;
-                observer_height_m?: number;
-                footprint_radius_m?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiteComparison"];
-                };
-            };
-            /** @description Unknown site. */
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };

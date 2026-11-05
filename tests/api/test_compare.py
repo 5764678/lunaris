@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -17,7 +19,7 @@ from lunaris_data.remote.window import RemoteWindowError
 from tests.api.test_site_terrain import SLOPE_DEG, _fake_window
 from tests.api.test_terrain_scenes import CACHE, _install_synthetic
 
-URL = "/api/v1/sites/compare"
+URL = "/api/v1/analysis/site-comparison"
 
 
 @pytest.fixture
@@ -118,5 +120,22 @@ def test_validation(compare_client: TestClient) -> None:
         },
     )
     assert order.status_code == 422
-    # /sites/compare is not swallowed by /sites/{site_id}
-    assert compare_client.get("/api/v1/sites").status_code == 200
+
+
+@pytest.mark.skipif(
+    os.environ.get("LUNARIS_NETWORK_TESTS") != "1", reason="set LUNARIS_NETWORK_TESTS=1"
+)
+def test_live_demo_trio_full_table() -> None:
+    """Real LDEM + kernels + PGDA 20 m windows (network) for the catalogue demo trio."""
+    data = Path(os.environ.get("LUNARIS_DATA_DIR", "data")).resolve()
+    settings = Settings(environment="test", data_dir=data, log_level="WARNING")
+    with TestClient(create_app(settings)) as client:
+        trio = client.post("/api/v1/catalog/demo-trio/register").json()["sites"]
+        ids = ",".join(s["id"] for s in trio)
+        body = client.get(URL, params={"site_ids": ids}).json()
+        assert len(body["rows"]) == 3
+        for row in body["rows"]:
+            for column in body["columns"]:
+                cell = row[column["key"]]
+                assert cell["value"] is not None, (row["name"], column["key"], cell["reason"])
+                assert cell["evidence"]["sources"], (row["name"], column["key"])
