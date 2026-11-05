@@ -152,6 +152,10 @@ class TerrainSceneService:
             )
         return TerrainSceneListResponse(scenes=scenes, count=len(scenes))
 
+    def load_dem(self, manifest: DatasetManifest) -> PolarDem:
+        """The verified, process-cached DEM of ``manifest`` (raises DatasetUnavailableError)."""
+        return self._load_dem(manifest)
+
     def _load_dem(self, manifest: DatasetManifest) -> PolarDem:
         state = inspect_dataset(manifest, self._layout)
         if state.status is not DatasetStatus.ACQUIRED:

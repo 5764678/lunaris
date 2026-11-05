@@ -7,6 +7,7 @@ from lunaris_api.routers import (
     datasets,
     ephemeris,
     health,
+    horizon,
     illumination,
     sites,
     system,
@@ -20,6 +21,7 @@ api_v1.include_router(sites.router)
 api_v1.include_router(catalog.router)
 api_v1.include_router(terrain.router)
 api_v1.include_router(terrain.site_router)
+api_v1.include_router(horizon.router)
 api_v1.include_router(ephemeris.router)
 api_v1.include_router(illumination.router)
 

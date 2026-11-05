@@ -9,6 +9,9 @@ import { expect, test, type Page } from "@playwright/test";
 const EXPECTED_CONSOLE = [
   /textures\/moon\/manifest\.json/, // placeholder fallback probe: 404 until a texture is built
   /Failed to load resource: the server responded with a status of 404/,
+  // Ephemeris for a selected site without SPICE kernels in the throw-away e2e data dir:
+  // the lanes show the API's reason ("not computed"), the browser logs the 503.
+  /Failed to load resource: the server responded with a status of 503/,
   /THREE\.Clock: This module has been deprecated/, // emitted inside @react-three/fiber
   /\[Fast Refresh\]|Download the React DevTools|\[HMR\]/,
 ];

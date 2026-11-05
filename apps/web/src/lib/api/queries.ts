@@ -16,7 +16,10 @@ export const queryKeys = {
   runtime: ["system", "runtime"] as const,
   datasets: ["datasets"] as const,
   sites: ["sites"] as const,
+  ephemeris: (siteId: string, startMs: number, endMs: number, stepS: number) =>
+    ["sites", siteId, "ephemeris", startMs, endMs, stepS] as const,
   terrainScene: (sceneId: string, gridSize: number) => ["terrain", "scene", sceneId, gridSize] as const,
+  catalog: ["catalog", "sites"] as const,
 };
 
 export interface TerrainScene {
@@ -131,6 +134,33 @@ export function useDeleteSite() {
   });
 }
 
+/** Sample spacing for the timeline lanes: 30 d × 1 h = 721 samples per body (cap 10 000). */
+export const EPHEMERIS_STEP_S = 3_600;
+
+/** C2 Sun/Earth geometry for a site over the analysis window (SPICE, computed by the API). */
+export function useSiteEphemeris(siteId: string | null, startMs: number | null, endMs: number | null) {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.ephemeris(siteId ?? "", startMs ?? 0, endMs ?? 0, EPHEMERIS_STEP_S),
+      enabled: siteId !== null && startMs !== null && endMs !== null,
+      staleTime: Infinity,
+      retry: 1,
+      queryFn: ({ signal }) =>
+        api
+          .siteEphemeris(
+            siteId!,
+            {
+              startUtc: new Date(startMs!).toISOString(),
+              endUtc: new Date(endMs!).toISOString(),
+              stepS: EPHEMERIS_STEP_S,
+            },
+            signal,
+          )
+          .then((r) => r.data),
+    }),
+  );
+}
+
 /**
  * C3 terrain scene: metadata, then the vertex buffer, decoded for display. Kept for the
  * session (the scene is immutable for a given ETag; the browser revalidates the buffer).
@@ -151,4 +181,23 @@ export function useTerrainScene(sceneId: string, gridSize: number, enabled: bool
       },
     }),
   );
+}
+/** The cited south-pole site catalogue (static on the server). */
+export function useSiteCatalog() {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.catalog,
+      queryFn: ({ signal }) => api.siteCatalog(signal).then((r) => r.data),
+      staleTime: Infinity,
+    }),
+  );
+}
+
+/** Adds the cited demo trio to the registry in one request (idempotent on the server). */
+export function useRegisterDemoTrio() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.registerDemoTrio().then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sites }),
+  });
 }

@@ -4,7 +4,6 @@ import type { CandidateSite } from "@lunaris/shared-types";
 import { MapPin, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { describeError } from "@/lib/api/client";
@@ -14,7 +13,9 @@ import { cn } from "@/lib/utils";
 import { useMissionStore } from "@/store/mission-store";
 
 import { PanelSection } from "./panel-section";
+import { CatalogDemoTrio } from "./catalog-demo-trio";
 import { SiteForm } from "./site-form";
+import { SiteOriginBadge } from "./site-origin";
 
 export function SiteRegistry() {
   const sites = useSitesQuery();
@@ -33,6 +34,7 @@ export function SiteRegistry() {
         )
       }
     >
+      <CatalogDemoTrio />
       <div className="mb-3">
         {sites.isPending ? (
           <div className="space-y-1.5" aria-label="Loading sites">
@@ -55,7 +57,9 @@ export function SiteRegistry() {
             className="hatch rounded-md border border-dashed border-border px-3 py-4 text-center"
           >
             <p className="text-2xs text-muted-foreground">No candidate sites registered.</p>
-            <p className="mt-0.5 text-3xs text-dim">Add a site by coordinates below.</p>
+            <p className="mt-0.5 text-3xs text-dim">
+              Add the cited demo sites above, or a site by coordinates below.
+            </p>
           </div>
         ) : (
           <ul className="space-y-1" data-testid="site-list">
@@ -106,11 +110,7 @@ function SiteRow({ site }: { site: CandidateSite }) {
           </span>
         </span>
       </button>
-      <EvidenceBadge
-        kind="assumption"
-        label="USER"
-        detail="Coordinates entered by a user; not curated or verified."
-      />
+      <SiteOriginBadge site={site} />
       <Button
         size="icon-xs"
         variant={confirming ? "destructive" : "ghost"}

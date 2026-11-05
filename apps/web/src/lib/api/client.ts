@@ -17,6 +17,7 @@ import type {
   ErrorResponse,
   HealthResponse,
   RuntimeReport,
+  SiteEphemeris,
   components,
 } from "@lunaris/shared-types";
 
@@ -25,6 +26,10 @@ export type TerrainSceneMetadata = components["schemas"]["TerrainSceneMetadata"]
 
 const MAX_SCENE_GRID = 1024;
 const SCENE_DATA_TIMEOUT_MS = 60_000;
+/** Cited site catalogue (T-03, generated contract). */
+export type SiteCatalog = components["schemas"]["SiteCatalogResponse"];
+export type CatalogSite = components["schemas"]["CatalogSiteSchema"];
+export type RegisteredCatalogSites = components["schemas"]["RegisteredCatalogSites"];
 
 export type ApiErrorKind = "network" | "timeout" | "http" | "invalid_response";
 
@@ -112,6 +117,28 @@ const isCandidateSite: Guard<CandidateSite> = (v): v is CandidateSite =>
 const isCandidateSiteList: Guard<CandidateSiteList> = (v): v is CandidateSiteList =>
   isObject(v) && Array.isArray(v.sites) && v.sites.every(isCandidateSite);
 
+const isEphemerisSample = (v: unknown): boolean =>
+  isObject(v) &&
+  typeof v.epoch_utc === "string" &&
+  typeof v.elevation_deg === "number" &&
+  typeof v.angular_radius_deg === "number" &&
+  Array.isArray(v.direction_moon_me) &&
+  v.direction_moon_me.length === 3;
+
+/** C2 ephemeris: bodies are "sun" / "earth", each with evidence and samples. */
+export const isSiteEphemeris: Guard<SiteEphemeris> = (v): v is SiteEphemeris =>
+  isObject(v) &&
+  typeof v.site_id === "string" &&
+  Array.isArray(v.bodies) &&
+  v.bodies.every(
+    (b) =>
+      isObject(b) &&
+      (b.body === "sun" || b.body === "earth") &&
+      isObject(b.evidence) &&
+      typeof b.evidence.kind === "string" &&
+      Array.isArray(b.samples) &&
+      b.samples.every(isEphemerisSample),
+  );
 const isFiniteNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 const isGridSize = (v: unknown): v is number =>
   typeof v === "number" && Number.isInteger(v) && v >= 2 && v <= MAX_SCENE_GRID;
@@ -141,6 +168,23 @@ export const isTerrainSceneMetadata: Guard<TerrainSceneMetadata> = (v): v is Ter
     typeof v.evidence.kind === "string"
   );
 };
+const isSiteCatalog: Guard<SiteCatalog> = (v): v is SiteCatalog =>
+  isObject(v) &&
+  typeof v.citation === "string" &&
+  typeof v.reference_point_definition === "string" &&
+  Array.isArray(v.sources) &&
+  Array.isArray(v.sites) &&
+  v.sites.every(
+    (s) =>
+      isObject(s) &&
+      typeof s.id === "string" &&
+      typeof s.name === "string" &&
+      typeof s.demo_trio === "boolean" &&
+      isObject(s.reference_point),
+  );
+
+const isRegisteredCatalogSites: Guard<RegisteredCatalogSites> = (v): v is RegisteredCatalogSites =>
+  isObject(v) && Array.isArray(v.created) && Array.isArray(v.already_registered) && Array.isArray(v.sites);
 
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
@@ -245,8 +289,30 @@ export function createApiClient(options: ApiClientOptions) {
       request<CandidateSiteList>("GET", "/api/v1/sites", { signal, guard: isCandidateSiteList }),
     createSite: (input: CandidateSiteCreate) =>
       request<CandidateSite>("POST", "/api/v1/sites", { body: input, guard: isCandidateSite }),
+    siteCatalog: (signal?: AbortSignal) =>
+      request<SiteCatalog>("GET", "/api/v1/catalog/sites", { signal, guard: isSiteCatalog }),
+    registerDemoTrio: () =>
+      request<RegisteredCatalogSites>("POST", "/api/v1/catalog/demo-trio/register", {
+        guard: isRegisteredCatalogSites,
+      }),
     deleteSite: (siteId: string) =>
       request<undefined>("DELETE", `/api/v1/sites/${encodeURIComponent(siteId)}`),
+    siteEphemeris: (
+      siteId: string,
+      window: { startUtc: string; endUtc: string; stepS: number },
+      signal?: AbortSignal,
+    ) => {
+      const query = new URLSearchParams({
+        start_utc: window.startUtc,
+        end_utc: window.endUtc,
+        step_s: String(window.stepS),
+      });
+      return request<SiteEphemeris>(
+        "GET",
+        `/api/v1/sites/${encodeURIComponent(siteId)}/ephemeris?${query.toString()}`,
+        { signal, guard: isSiteEphemeris },
+      );
+    },
     terrainScene: (sceneId: string, gridSize: number, signal?: AbortSignal) =>
       request<TerrainSceneMetadata>(
         "GET",
