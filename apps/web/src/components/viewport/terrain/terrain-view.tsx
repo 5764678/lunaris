@@ -15,6 +15,7 @@ import type { LabelRegistry } from "../label-registry";
 import { SceneSwitch } from "../scene-switch";
 import { TerrainDisclosures } from "./terrain-overlay";
 import { useTerrainSitePlacements } from "./terrain-placements";
+import { useTerrainSun } from "./use-terrain-sun";
 
 export const TERRAIN_SCENE_ID = "south-pole";
 
@@ -71,6 +72,7 @@ export function TerrainView({ labelRegistry }: { labelRegistry: LabelRegistry })
   const query = useTerrainScene(TERRAIN_SCENE_ID, gridSize ?? 0, gridSize !== null);
   const placements = useTerrainSitePlacements(query.data);
   const layers = useMissionStore((s) => s.layers);
+  const sun = useTerrainSun();
   const toggleLayer = useMissionStore((s) => s.toggleLayer);
   const selectedSiteId = useMissionStore((s) => s.selectedSiteId);
   const exitTerrain = useMissionStore((s) => s.exitTerrain);
@@ -104,6 +106,7 @@ export function TerrainView({ labelRegistry }: { labelRegistry: LabelRegistry })
       data-terrain-state={state}
       data-settled={settled ? "true" : "false"}
       data-grid-size={gridSize ?? undefined}
+      data-lighting={sun.kind}
       data-valid-vertices={query.data?.terrain.validVertexCount}
       data-skipped-vertices={query.data?.terrain.invalidVertexCount}
       data-triangles={query.data?.terrain.triangleCount}
@@ -115,6 +118,7 @@ export function TerrainView({ labelRegistry }: { labelRegistry: LabelRegistry })
           placements={placements}
           labelRegistry={labelRegistry}
           onSettled={() => setSettled(true)}
+          sunDirection={sun.kind === "spice" ? sun.direction : null}
         />
       ) : query.isError ? (
         <Message title="Terrain unavailable" detail={describeError(query.error)}>
@@ -174,7 +178,7 @@ export function TerrainView({ labelRegistry }: { labelRegistry: LabelRegistry })
 
         {query.data && (
           <div className="pointer-events-auto absolute right-3 bottom-3 left-3 flex flex-col gap-1.5 rounded-md border border-hairline bg-[#05070a]/80 p-2 backdrop-blur-sm sm:right-auto sm:bottom-5 sm:left-6 sm:max-w-[min(36rem,calc(100%-3rem))]">
-            <TerrainDisclosures scene={query.data} />
+            <TerrainDisclosures scene={query.data} sun={sun} />
             <p className="font-mono text-3xs text-dim" data-testid="terrain-site-count">
               {placements.length === 0
                 ? "No registered site lies inside this scene."

@@ -21,6 +21,9 @@ import type {
   components,
 } from "@lunaris/shared-types";
 
+/** C4 timeline analysis (T-24, generated contract). */
+export type TimelineAnalysis = components["schemas"]["TimelineAnalysis"];
+
 /** C3 terrain scene metadata (generated from the API contract). */
 export type TerrainSceneMetadata = components["schemas"]["TerrainSceneMetadata"];
 
@@ -186,6 +189,17 @@ const isSiteCatalog: Guard<SiteCatalog> = (v): v is SiteCatalog =>
 const isRegisteredCatalogSites: Guard<RegisteredCatalogSites> = (v): v is RegisteredCatalogSites =>
   isObject(v) && Array.isArray(v.created) && Array.isArray(v.already_registered) && Array.isArray(v.sites);
 
+const isTimelineAnalysis: Guard<TimelineAnalysis> = (v): v is TimelineAnalysis =>
+  isObject(v) &&
+  typeof v.site_id === "string" &&
+  typeof v.terrain_horizon_available === "boolean" &&
+  isObject(v.illumination) &&
+  Array.isArray(v.illumination.samples) &&
+  isObject(v.illumination.astronomical) &&
+  isObject(v.illumination.evidence) &&
+  isObject(v.earth_visibility) &&
+  Array.isArray(v.earth_visibility.samples);
+
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, "");
@@ -297,6 +311,16 @@ export function createApiClient(options: ApiClientOptions) {
       }),
     deleteSite: (siteId: string) =>
       request<undefined>("DELETE", `/api/v1/sites/${encodeURIComponent(siteId)}`),
+    analysisTimeline: (
+      siteId: string,
+      window: { startUtc: string; endUtc: string; stepS: number },
+      signal?: AbortSignal,
+    ) =>
+      request<TimelineAnalysis>("POST", "/api/v1/analysis/timeline", {
+        body: { site_id: siteId, start_utc: window.startUtc, end_utc: window.endUtc, step_s: window.stepS },
+        signal,
+        guard: isTimelineAnalysis,
+      }),
     siteEphemeris: (
       siteId: string,
       window: { startUtc: string; endUtc: string; stepS: number },

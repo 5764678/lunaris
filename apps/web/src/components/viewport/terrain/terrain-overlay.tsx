@@ -8,7 +8,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { TerrainScene } from "@/lib/api/queries";
 import { heightColor } from "@/lib/terrain/scene-data";
 
+import { describeError } from "@/lib/api/client";
+import { useSiteTimeline } from "@/lib/api/queries";
+import { formatUtc } from "@/lib/time/time";
+import { siteIlluminationAt } from "@/lib/timeline/illumination";
+import { useMissionStore } from "@/store/mission-store";
+
 import { isHttpsUrl } from "../surface-source";
+import type { TerrainSun } from "./use-terrain-sun";
 
 function Row({ label, children, testId }: { label: string; children: ReactNode; testId?: string }) {
   return (
@@ -46,7 +53,7 @@ function HeightLegend({ minM, maxM }: { minM: number; maxM: number }) {
 }
 
 /** HUD disclosures for the terrain scene: DEM provenance (click for detail) and lighting. */
-export function TerrainDisclosures({ scene }: { scene: TerrainScene }) {
+export function TerrainDisclosures({ scene, sun }: { scene: TerrainScene; sun: TerrainSun }) {
   const { metadata: m, terrain } = scene;
   return (
     <>
@@ -139,16 +146,130 @@ export function TerrainDisclosures({ scene }: { scene: TerrainScene }) {
         </Popover>
       </div>
       <HeightLegend minM={m.height_min_m} maxM={m.height_max_m} />
-      <div className="flex items-center gap-2" data-testid="terrain-lighting-disclosure">
+      <LightingDisclosure sun={sun} />
+    </>
+  );
+}
+
+const signed = (deg: number) => `${deg >= 0 ? "+" : "−"}${Math.abs(deg).toFixed(2)}°`;
+
+/**
+ * How the terrain is lit. With a selected site: the SPICE Sun direction at the epoch
+ * (MODEL), with rendered shadows labelled illustrative and the site's computed
+ * illumination shown as not computed until the timeline analysis (T-24) is served.
+ * Otherwise: the camera-relative display light, labelled as such.
+ */
+function LightingDisclosure({ sun }: { sun: TerrainSun }) {
+  if (sun.kind === "display") {
+    return (
+      <div
+        className="flex flex-col gap-0.5"
+        data-testid="terrain-lighting-disclosure"
+        data-lighting="display"
+      >
+        <div className="flex items-center gap-2">
+          <EvidenceBadge
+            kind="placeholder"
+            label="Display light"
+            detail="Shading follows the camera for legibility. It is not the computed solar direction and shows no computed shadows; quantitative illumination comes only from the API."
+          />
+          <span className="font-mono text-3xs text-muted-foreground">
+            Illustrative shading — not the computed Sun, not illumination data
+          </span>
+        </div>
+        <span className="font-mono text-3xs text-dim">{sun.reason}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1" data-testid="terrain-lighting-disclosure" data-lighting="spice">
+      <div className="flex min-w-0 items-center gap-2">
         <EvidenceBadge
-          kind="placeholder"
-          label="Display light"
-          detail="Shading follows the camera for legibility. It is not the computed solar direction and shows no computed shadows; quantitative illumination comes only from the API."
+          kind={sun.evidence.kind}
+          label="SPICE Sun"
+          detail={`${sun.evidence.statement} Light direction: C2 direction_moon_me (CN+S) for ${sun.siteName}, interpolated between hourly samples.`}
         />
-        <span className="font-mono text-3xs text-muted-foreground">
-          Illustrative shading — not the computed Sun, not illumination data
+        <span className="truncate font-mono text-3xs text-muted-foreground">
+          Sun el.{" "}
+          <span className="numeric text-foreground" data-testid="terrain-sun-elevation">
+            {signed(sun.elevationDeg)}
+          </span>{" "}
+          (astronomical) · {formatUtc(sun.epochMs)} UTC · {sun.siteName}
         </span>
       </div>
-    </>
+      <div className="flex items-center gap-2">
+        <EvidenceBadge
+          kind="placeholder"
+          label="Illustrative"
+          detail="Shadows are rendered by the 3D engine from a point-source Sun over the 240 m mesh (shadow map, no penumbra from the 0.53° disk). They are an illustration, not an illumination result."
+        />
+        <span className="font-mono text-3xs text-muted-foreground">Rendered shadows are illustrative</span>
+      </div>
+      <SiteIllumination siteName={sun.siteName} />
+    </div>
+  );
+}
+
+const pct = (f: number) => `${(f * 100).toFixed(0)} %`;
+
+/**
+ * The selected site's computed illumination (C4, D4) at the epoch, in the 3D view: the
+ * visible solar-disk fraction above the terrain horizon (or "terrain horizon not
+ * available"), the astronomical fraction, and the window summary. Never a rendered value.
+ */
+function SiteIllumination({ siteName }: { siteName: string }) {
+  const siteId = useMissionStore((s) => s.selectedSiteId);
+  const epochMs = useMissionStore((s) => s.epochMs);
+  const startMs = useMissionStore((s) => s.windowStartMs);
+  const endMs = useMissionStore((s) => s.windowEndMs);
+  const query = useSiteTimeline(siteId, startMs, endMs);
+  const value = query.data && epochMs !== null ? siteIlluminationAt(query.data, epochMs) : null;
+
+  if (!query.data || !value) {
+    const reason = query.isError
+      ? describeError(query.error)
+      : query.isPending
+        ? "computing the illumination timeline…"
+        : "epoch outside the computed window";
+    return (
+      <div
+        className="flex items-center gap-2"
+        data-testid="terrain-site-illumination"
+        data-state="not-computed"
+      >
+        <EvidenceBadge kind="not_computed" label="N/C" detail={reason} />
+        <span className="truncate font-mono text-3xs text-dim">
+          {siteName}: illumination not computed — {reason}
+        </span>
+      </div>
+    );
+  }
+  const ev = query.data.illumination.evidence;
+  const s = value.summary;
+  return (
+    <div className="flex items-start gap-2" data-testid="terrain-site-illumination" data-state="computed">
+      <EvidenceBadge
+        kind={ev.kind}
+        label="CALC"
+        detail={`${ev.statement} ${query.data.illumination.limitations.join(" ")}`.trim()}
+        className="mt-px"
+      />
+      <span className="min-w-0 font-mono text-3xs text-muted-foreground">
+        <span className="text-foreground">{siteName}</span> · Sun disk visible{" "}
+        {value.terrain === null ? (
+          <span data-testid="terrain-site-illumination-terrain">terrain horizon not available</span>
+        ) : (
+          <span className="numeric text-foreground" data-testid="terrain-site-illumination-terrain">
+            {value.terrainUpperBound ? "≤ " : ""}
+            {pct(value.terrain)} (terrain horizon)
+          </span>
+        )}{" "}
+        · {pct(value.astronomical)} (astronomical) at {formatUtc(value.sampleMs, false)} UTC
+        <br />
+        Window ({s.horizon} horizon): mean disk {pct(s.meanVisibleDiskFraction)} · any part lit{" "}
+        {pct(s.illuminatedFraction)}
+        {s.anyTruncated ? " · some rays truncated (bounds)" : ""}
+      </span>
+    </div>
   );
 }
