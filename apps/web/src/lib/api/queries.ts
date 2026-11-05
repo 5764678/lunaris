@@ -17,6 +17,7 @@ export const queryKeys = {
   datasets: ["datasets"] as const,
   sites: ["sites"] as const,
   terrainScene: (sceneId: string, gridSize: number) => ["terrain", "scene", sceneId, gridSize] as const,
+  catalog: ["catalog", "sites"] as const,
 };
 
 export interface TerrainScene {
@@ -151,4 +152,23 @@ export function useTerrainScene(sceneId: string, gridSize: number, enabled: bool
       },
     }),
   );
+}
+/** The cited south-pole site catalogue (static on the server). */
+export function useSiteCatalog() {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.catalog,
+      queryFn: ({ signal }) => api.siteCatalog(signal).then((r) => r.data),
+      staleTime: Infinity,
+    }),
+  );
+}
+
+/** Adds the cited demo trio to the registry in one request (idempotent on the server). */
+export function useRegisterDemoTrio() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.registerDemoTrio().then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sites }),
+  });
 }
