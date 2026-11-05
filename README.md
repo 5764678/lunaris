@@ -103,6 +103,22 @@ uv run lunaris-data verify lola-ldem-75s-240m           # re-hash against the re
 docker compose up --build    # API :8000, web :3000; ./data is bind-mounted
 ```
 
+## Hosted demo (Render)
+
+Two Docker web services, both built from this repository's root:
+
+| Service | Dockerfile | Environment (also passed as build args) |
+|---|---|---|
+| API | `apps/api/Dockerfile` | `LUNARIS_BAKE_DATASETS=naif-generic-kernels-lunar lola-ldem-75s-240m`, `LUNARIS_PREWARM_DEMO=1`, `LUNARIS_CORS_ORIGINS=<web URL>` |
+| Web | `apps/web/Dockerfile` | `NEXT_PUBLIC_LUNARIS_API_URL=<API URL>` |
+
+- Without a persistent disk, the API image bakes the checksum-verified kernels and the LOLA
+  DEM into `/data`, then warms the cited demo trio's horizon masks and PGDA windows.
+- The web image builds the NASA SVS globe texture in its own stage
+  (`LUNARIS_WEB_TEXTURE=0` skips it, and the globe then shows its labelled placeholder).
+- On a free plan, sites registered at runtime are lost when the instance restarts. The image
+  starts with the demo trio already registered.
+
 ## Test and check
 
 ```bash
