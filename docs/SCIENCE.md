@@ -203,17 +203,31 @@ while the mirrored-sample and flipped-line conventions are off by 300 m (median)
 1906 px × 240 m = 457.44 km; the pole falls exactly at the grid centre (0-based pixel
 1905.5, 1905.5), and the edge midpoints lie at 75.00° S.
 
-**Slope.** Horn (1981) 3 × 3 finite differences on the projected grid, with the ground
-sample distance corrected by the scale factor (240 m / k at the pixel). Slope =
-atan(√((∂h/∂x)² + (∂h/∂y)²)). Reported with the baseline (3 pixels) and resolution.
+**Slope** (implemented, T-14: `lunaris_science.terrain.analysis`). Horn (1981) 3 × 3 finite
+differences on the projected grid. The ground spacing is MAP_SCALE / k, where
+k = 1 + (ρ/2R)² is evaluated at each pixel. Slope = atan(√((∂h/∂x)² + (∂h/∂y)²)). The
+**baseline** of a slope is 2 × ground spacing, the distance between the pixel centres the
+operator differences (≈ 40 m on the PGDA 20 m DEM). Validated on synthetic planes and cones
+to < 0.1°; at ρ = 400 km (k = 1.0133) the correction changes a 30° slope by 0.33° (29.67° uncorrected). With
+projected spacing the operator equals `gdaldem slope`: < 10⁻³° on a synthetic grid, and
+5 × 10⁻⁴° (float32 rounding) over 996 004 cells of a real PGDA window at 89.45° S,
+222.69° E.
 
-**Roughness.** A defined statistic over a stated baseline (candidate: RMS of residual
-heights after removing a best-fit plane within a circular window). The definition, window
-and resolution are part of every result.
+**Roughness** (implemented). RMS of the height residuals after removing the least-squares
+plane fitted to the cells whose centres lie within a circle of ground diameter D around the
+site. **Baseline** = D, which is 2 × the footprint radius in `GET /sites/{id}/terrain`.
 
-**Hazard indicators.** Threshold classification (slope above a configured limit, fraction
-of footprint above it). Thresholds are mission-specific **assumptions**, returned with the
-result; LUNARIS ships no default "safe slope".
+**Footprint statistics.** Over cells within the footprint radius: cell count, missing
+cells (counted, never filled), height min/mean/max, and slope mean / p95 / max.
+
+**Hazard indicators.** Returned only when the caller supplies thresholds (`max_slope_deg`,
+`max_roughness_m`): fraction of footprint cells above the slope limit, whether the p95
+slope exceeds it, and whether roughness exceeds its limit. Thresholds are mission-specific
+**assumptions**, echoed as `assumption` evidence; LUNARIS ships no default "safe slope".
+
+**Source.** `GET /api/v1/sites/{id}/terrain` reads a window of the PGDA 20 m DEM around
+the site (`pgda-lola-20mpp-80s`, docs/DATA_SOURCES.md §2.4). The window is about
+2 × radius + 8 cells and is cached under `data/processed/`.
 
 **Known limitations.** DEM resolution bounds detectable hazards (boulders and small
 craters below the grid spacing are invisible); polar products contain interpolated areas
@@ -317,6 +331,30 @@ vectors, not a flat-Earth approximation). The DEM extent bounds the farthest obs
 considered — a stated limitation, important at the poles where distant ridges set the
 horizon.
 
+**Horizon mask, implemented (T-15: `lunaris_science.terrain.horizon.compute_horizon_mask`).**
+Each azimuth A is marched along the great circle leaving the site in direction
+d = cos A · north + sin A · east (C0 frame, radial "up"). The ground point at sphere
+distance s is P̂ = cos(s/R) û + sin(s/R) d, so distances are measured on the sphere and need
+no map scale-factor correction. Heights h(s) are bilinear LDEM_75S_240M samples. The exact
+elevation above the site's radial plane is e(s) = atan2((R+h)cos(s/R) − r_O, (R+h)sin(s/R)),
+with r_O = R + h_site + h_observer, and the horizon is max over s of e(s). Defaults: 0.25°
+azimuth step, 200 km range, 120 m ray step (half a DEM cell), first sample at 240 m (one
+cell, so the cell under the observer is not an obstruction). A ray that meets missing
+coverage is flagged `truncated`, and its value is a lower bound.
+
+Validation (`tests/science/test_horizon.py`):
+- On a zero-height sphere the mask equals −acos(R/(R+h_obs)) to < 0.01° for h_obs = 2,
+  100 and 1000 m.
+- On an axisymmetric bowl (rim 2 km high at 20 km) it equals the closed form maximised over
+  s to < 0.01°. The curvature term moves that maximum inside the bowl, more than 0.05° from
+  the flat-Moon rim angle.
+- A wall toward local east raises only the eastern horizon.
+- A site at 78° S is truncated toward the north (±15° of north) and not toward the pole.
+
+On the real LDEM a full mask (1440 azimuths × 1667 samples) takes ≈ 2 s. The connecting
+ridge (89.45° S, 222.69° E, h_obs = 2 m) gives a horizon of −2.7° … +0.1°; Shackleton's
+floor (89.67° S, 129.2° E) gives 19.8° … 23.4°.
+
 **Visible disk fraction (implemented: T-23).** `lunaris_science.illumination.disk_fraction`.
 For a disk of apparent angular radius α centred at (A, e) and a horizon profile H(az),
 the visible fraction f is the share of the disk's area above H. It is computed for the
@@ -374,10 +412,11 @@ separately (C4). Definitions:
 
 | Quantity | Definition |
 | --- | --- |
-| `mean_visible_disk_fraction` | Time average of f over the samples. This is the quantity comparable to the "average illumination" of published polar studies. |
-| `illuminated_fraction` (Sun) / `visible_fraction` (Earth) | Share of samples with f > 0 (any part of the disk visible). Always ≥ the mean. |
-| `fully_lit_fraction` / `fully_visible_fraction` | Share of samples with f = 1 (exact by construction: the chord sum is normalised by its own fully-visible value). |
-| Window | Maximal run of consecutive samples with f > 0. Each sample stands for [t, t + step), so a run of k samples lasts k·step, and its edges are known to ± step (`resolution_s`). |
+| `mean_visible_disk_fraction` | Time average of f, each sample weighted by its clipped interval. This is the quantity comparable to the "average illumination" of published polar studies. |
+| `illuminated_fraction` (Sun) / `visible_fraction` (Earth) | Share of the analysis window (interval-weighted) with f > 0 (any part of the disk visible). Always ≥ the mean. |
+| `fully_lit_fraction` / `fully_visible_fraction` | Share of the analysis window with f = 1 (exact by construction: the chord sum is normalised by its own fully-visible value). |
+| Sample interval | Each sample stands for [t, t + step) **clipped to the analysis window** [start, end]. With an end-inclusive grid (last epoch = end), the last sample's interval is empty: it carries weight 0. |
+| Window | Maximal run of consecutive samples with f > 0, from the first sample's epoch to the end of the last sample's clipped interval. Edges are known to ± step (`resolution_s`). Visible and hidden windows together tile [start, end] exactly (tested). |
 | Longest illumination / darkness (Sun), visibility / outage (Earth) | Longest run with f > 0 / f = 0. |
 | Censoring | A run that touches the start or end of the analysis window is **censored**: its true duration may be longer. The longest-run flags say so. A whole-window run is always censored. |
 
@@ -388,7 +427,7 @@ upper bound (D3).
 Tests: `tests/science/illumination/test_timeline.py` (definitions, censoring, leap-second
 tolerance, malformed input) and `test_analysis.py` (separate horizons, truncation
 surfaced with a count, radio-link disclaimer, and the 2026-11-04 fixture day with the real
-kernels: Sun f = 1 at all 25 samples, Earth f = 0 at all 25).
+kernels: Sun f = 1 at all 25 samples, one sunlit window 00:00 → 11-05 00:00 of exactly 86 400 s censored at both ends; Earth f = 0 at all 25).
 
 **Terrain masks.** Until S-TERRAIN's mask computation (T-15) is merged and served, results
 report the astronomical horizon only. `terrain` is null, `terrain_horizon_available` is

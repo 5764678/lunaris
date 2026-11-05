@@ -162,7 +162,7 @@ def test_fixture_day_with_real_kernels(spice_context: SpiceContext) -> None:
     assert sun.astronomical.summary.mean_visible_disk_fraction == 1.0
     assert sun.astronomical.summary.fully_visible_fraction == 1.0
     # Durations are ET differences (SI seconds): microsecond float noise at ET ≈ 8.5e8 s.
-    assert sun.astronomical.summary.longest_visible.duration_s == pytest.approx(25 * STEP, abs=1e-3)
+    assert sun.astronomical.summary.longest_visible.duration_s == pytest.approx(86_400.0, abs=1e-3)
     assert sun.astronomical.summary.longest_visible.censored
     assert earth.astronomical.summary.illuminated_fraction == 0.0
     assert earth.astronomical.summary.longest_hidden.censored

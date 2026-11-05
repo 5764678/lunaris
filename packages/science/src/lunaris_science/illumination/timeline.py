@@ -6,13 +6,16 @@ the windows in which a condition on f holds, and the summary statistics of C4.
 
 Definitions (also in ``docs/SCIENCE.md`` §5.3):
 
-* Each sample stands for the interval [t, t + step). A **window** is a maximal run of
-  consecutive samples meeting the condition. It starts at the first sample's epoch and
-  lasts ``(number of samples) × step``. Window edges are therefore known only to within
-  one step, reported as ``resolution_s``.
+* Each sample stands for the interval [t, t + step) **clipped to the analysis window**
+  [start, end]. With an end-inclusive grid (the last epoch equals ``end``), the last
+  sample's interval is empty and it carries weight 0. A **window** is a maximal run of
+  consecutive samples meeting the condition, from the first sample's epoch to the end of
+  the last sample's clipped interval. Window edges are known only to within one step
+  (``resolution_s``). Visible and hidden windows together tile [start, end] exactly.
 * A window that touches the start or end of the analysis window is **censored**: the
   body may have been visible (or hidden) before or after it. Its duration is a lower
   bound, and the summary says when the longest window is censored.
+* All fractions are weighted by each sample's clipped interval.
 * ``mean_visible_disk_fraction`` is the time average of f, comparable to the "average
   illumination" of published polar studies.
 * ``illuminated_fraction`` is the share of samples with any part of the disk visible
@@ -71,6 +74,8 @@ class FractionSummary:
     sample_count: int
     step_s: float
     resolution_s: float
+    window_start_s: float
+    window_end_s: float
     mean_visible_disk_fraction: float
     illuminated_fraction: float
     fully_visible_fraction: float
@@ -79,6 +84,8 @@ class FractionSummary:
     longest_hidden: LongestRun
     """Longest run with the disk fully hidden (f = 0)."""
     visible_windows: tuple[Window, ...]
+    hidden_windows: tuple[Window, ...]
+    """Visible and hidden windows together tile the analysis window exactly."""
     any_truncated: bool
     """True if any sample's fraction depends on a truncated horizon (an upper bound there)."""
 
@@ -103,27 +110,57 @@ def _validate(epochs_s: ArrayLike, fraction: ArrayLike) -> tuple[FloatArray, Flo
     return t, f, step
 
 
-def windows(epochs_s: ArrayLike, condition: ArrayLike) -> tuple[Window, ...]:
-    """Maximal runs of consecutive samples where ``condition`` is true."""
+def _window_end(t: FloatArray, window_end_s: float | None) -> float:
+    end = float(t[-1]) if window_end_s is None else float(window_end_s)
+    if not math.isfinite(end) or end < t[-1]:
+        raise TimelineError("the analysis window must end at or after the last sample")
+    return end
+
+
+def sample_weights(epochs_s: ArrayLike, window_end_s: float | None = None) -> FloatArray:
+    """Length of each sample's interval [t, t + step) clipped to the analysis window.
+
+    ``window_end_s`` defaults to the last epoch (an end-inclusive grid), in which case the
+    last sample has weight 0. The weights sum to ``window_end − t[0]`` exactly up to
+    floating-point rounding.
+    """
+    t = np.asarray(epochs_s, dtype=np.float64)
+    _, _, step = _validate(t, np.zeros_like(t))
+    end = _window_end(t, window_end_s)
+    weights: FloatArray = np.minimum(t + step, end) - t
+    return weights
+
+
+def windows(
+    epochs_s: ArrayLike, condition: ArrayLike, window_end_s: float | None = None
+) -> tuple[Window, ...]:
+    """Maximal runs of consecutive samples where ``condition`` is true, each sample's
+    interval clipped to the analysis window. Runs of zero clipped length are dropped."""
     t = np.asarray(epochs_s, dtype=np.float64)
     c = np.asarray(condition, dtype=np.bool_)
     _, _, step = _validate(t, c.astype(np.float64))
+    end = _window_end(t, window_end_s)
     padded = np.concatenate([[False], c, [False]])
     edges = np.flatnonzero(np.diff(padded.astype(np.int8)))
     starts, stops = edges[0::2], edges[1::2] - 1
-    last = t.size - 1
-    return tuple(
-        Window(
-            start_index=int(i),
-            end_index=int(j),
-            start_s=float(t[i]),
-            end_s=float(t[j] + step),
-            duration_s=float(t[j] + step - t[i]),
-            censored_start=bool(i == 0),
-            censored_end=bool(j == last),
+    runs = []
+    for i, j in zip(starts, stops, strict=True):
+        start_s = float(t[i])
+        end_s = min(float(t[j]) + step, end)
+        if end_s <= start_s:
+            continue
+        runs.append(
+            Window(
+                start_index=int(i),
+                end_index=int(j),
+                start_s=start_s,
+                end_s=end_s,
+                duration_s=end_s - start_s,
+                censored_start=bool(i == 0),
+                censored_end=bool(end_s >= end),
+            )
         )
-        for i, j in zip(starts, stops, strict=True)
-    )
+    return tuple(runs)
 
 
 def _longest(runs: tuple[Window, ...]) -> LongestRun:
@@ -135,14 +172,25 @@ def _longest(runs: tuple[Window, ...]) -> LongestRun:
 
 
 def summarize(
-    epochs_s: ArrayLike, fraction: ArrayLike, truncated: ArrayLike | None = None
+    epochs_s: ArrayLike,
+    fraction: ArrayLike,
+    truncated: ArrayLike | None = None,
+    *,
+    window_end_s: float | None = None,
 ) -> FractionSummary:
-    """C4 summary statistics of a visible-fraction series (definitions in the module doc)."""
+    """C4 summary statistics of a visible-fraction series (definitions in the module doc).
+
+    The analysis window is [epochs[0], window_end_s]; ``window_end_s`` defaults to the last
+    epoch (end-inclusive grid). Fractions are weighted by each sample's clipped interval.
+    """
     t, f, step = _validate(epochs_s, fraction)
+    end = _window_end(t, window_end_s)
+    weights = sample_weights(t, end)
+    total = float(np.sum(weights))
+    if total <= 0.0:
+        raise TimelineError("the analysis window has zero length")
     visible = f > 0.0
     hidden = ~visible
-    visible_runs = windows(t, visible)
-    hidden_runs = windows(t, hidden)
     any_truncated = (
         bool(np.any(np.asarray(truncated, dtype=np.bool_))) if truncated is not None else False
     )
@@ -150,12 +198,15 @@ def summarize(
         sample_count=int(t.size),
         step_s=step,
         resolution_s=step,
-        mean_visible_disk_fraction=float(np.mean(f)),
-        illuminated_fraction=float(np.mean(visible)),
-        fully_visible_fraction=float(np.mean(f >= 1.0)),
-        longest_visible=_longest(visible_runs),
-        longest_hidden=_longest(hidden_runs),
-        visible_windows=visible_runs,
+        window_start_s=float(t[0]),
+        window_end_s=end,
+        mean_visible_disk_fraction=float(np.sum(weights * f) / total),
+        illuminated_fraction=float(np.sum(weights * visible) / total),
+        fully_visible_fraction=float(np.sum(weights * (f >= 1.0)) / total),
+        longest_visible=_longest(windows(t, visible, end)),
+        longest_hidden=_longest(windows(t, hidden, end)),
+        visible_windows=windows(t, visible, end),
+        hidden_windows=windows(t, hidden, end),
         any_truncated=any_truncated,
     )
 
@@ -165,6 +216,7 @@ __all__ = [
     "LongestRun",
     "TimelineError",
     "Window",
+    "sample_weights",
     "summarize",
     "windows",
 ]

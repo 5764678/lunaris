@@ -34,13 +34,17 @@ def test_fixture_day_timeline(kernel_client: TestClient) -> None:  # noqa: F811
     assert astro["mean_visible_disk_fraction"] == 1.0
     assert astro["illuminated_fraction"] == 1.0
     assert astro["fully_lit_fraction"] == 1.0
-    assert astro["longest_illumination_s"] == pytest.approx(25 * 3600, abs=1e-3)
+    # Regression (TD review of #14): 24 h requested, so 24 h of light, not 25 h.
+    assert astro["longest_illumination_s"] == pytest.approx(86_400.0, abs=1e-3)
     assert astro["longest_illumination_censored"] is True
     assert astro["longest_darkness_s"] == 0.0
     assert len(astro["sunlit_windows"]) == 1
     window = astro["sunlit_windows"][0]
     assert window["start_utc"] == "2026-11-04T00:00:00Z"
-    assert window["end_utc"] == "2026-11-05T01:00:00Z"
+    assert window["end_utc"] == "2026-11-05T00:00:00Z"
+    assert window["duration_s"] == pytest.approx(86_400.0, abs=1e-3)
+    assert window["censored_start"] is True
+    assert window["censored_end"] is True
     sample = sun["samples"][0]
     assert sample["astronomical_visible_fraction"] == 1.0
     assert sample["terrain_visible_fraction"] is None

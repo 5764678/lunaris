@@ -129,6 +129,9 @@ class SiteGeometry:
     observer: ObserverSite
     epochs: tuple[datetime, ...]
     series: dict[Body, BodyGeometrySeries]
+    window_end_utc: datetime
+    window_end_et_s: float
+    """End of the requested window in ET (the last epoch when it falls on a step)."""
 
 
 def observer_schema(observer: ObserverSite) -> EphemerisObserver:
@@ -215,6 +218,7 @@ class EphemerisService:
         context = self._context()
         epochs = uniform_utc_grid(start_utc, end_utc, step_s)
         ets = utc_to_et(context, epochs)
+        window_end_et_s = float(utc_to_et(context, [end_utc])[0])
         try:
             series = {body: body_geometry(context, body, observer, ets) for body in Body}
         except GeometryError as exc:
@@ -222,7 +226,13 @@ class EphemerisService:
                 f"{exc}. Kernel coverage: see docs/API.md.", [location], "outside_kernel_coverage"
             ) from exc
         return SiteGeometry(
-            site_id=site.id, site_name=site.name, observer=observer, epochs=epochs, series=series
+            site_id=site.id,
+            site_name=site.name,
+            observer=observer,
+            epochs=epochs,
+            series=series,
+            window_end_utc=end_utc,
+            window_end_et_s=window_end_et_s,
         )
 
     def site_ephemeris(

@@ -118,7 +118,11 @@
             "title": "Notes"
           },
           "origin": {
-            "const": "user_defined",
+            "description": "user_defined: entered by a user; published: added from the cited site catalogue (GET /api/v1/catalog/sites), with its citation in `reference`.",
+            "enum": [
+              "user_defined",
+              "published"
+            ],
             "title": "Origin",
             "type": "string"
           },
@@ -231,6 +235,150 @@
           "limit"
         ],
         "title": "CandidateSiteList",
+        "type": "object"
+      },
+      "CatalogReferencePointSchema": {
+        "properties": {
+          "frame": {
+            "const": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitude_deg",
+          "longitude_deg",
+          "frame"
+        ],
+        "title": "CatalogReferencePointSchema",
+        "type": "object"
+      },
+      "CatalogSiteSchema": {
+        "properties": {
+          "artemis_iii_2022_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artemis Iii 2022 Region"
+          },
+          "demo_trio": {
+            "title": "Demo Trio",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pgda_site_id": {
+            "title": "Pgda Site Id",
+            "type": "string"
+          },
+          "reference_point": {
+            "$ref": "#/components/schemas/CatalogReferencePointSchema"
+          },
+          "register_url": {
+            "description": "POST here to add this site to the registry.",
+            "title": "Register Url",
+            "type": "string"
+          },
+          "tile": {
+            "$ref": "#/components/schemas/CatalogTileSchema"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "pgda_site_id",
+          "artemis_iii_2022_region",
+          "demo_trio",
+          "reference_point",
+          "tile",
+          "register_url"
+        ],
+        "title": "CatalogSiteSchema",
+        "type": "object"
+      },
+      "CatalogSourceSchema": {
+        "properties": {
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "use": {
+            "title": "Use",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "use"
+        ],
+        "title": "CatalogSourceSchema",
+        "type": "object"
+      },
+      "CatalogTileSchema": {
+        "properties": {
+          "centre_x_m": {
+            "title": "Centre X M",
+            "type": "number"
+          },
+          "centre_y_m": {
+            "title": "Centre Y M",
+            "type": "number"
+          },
+          "extent_km": {
+            "title": "Extent Km",
+            "type": "number"
+          },
+          "height_px": {
+            "title": "Height Px",
+            "type": "integer"
+          },
+          "pixel_size_m": {
+            "title": "Pixel Size M",
+            "type": "number"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "width_px": {
+            "title": "Width Px",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "url",
+          "width_px",
+          "height_px",
+          "pixel_size_m",
+          "extent_km",
+          "centre_x_m",
+          "centre_y_m"
+        ],
+        "title": "CatalogTileSchema",
         "type": "object"
       },
       "ComponentCheck": {
@@ -624,6 +772,99 @@
           "citation"
         ],
         "title": "DemProvenanceSchema",
+        "type": "object"
+      },
+      "DemWindowSchema": {
+        "properties": {
+          "bytes_requested": {
+            "title": "Bytes Requested",
+            "type": "integer"
+          },
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "etag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etag"
+          },
+          "http_retries": {
+            "title": "Http Retries",
+            "type": "integer"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified"
+          },
+          "read_at_utc": {
+            "title": "Read At Utc",
+            "type": "string"
+          },
+          "resolution_m": {
+            "title": "Resolution M",
+            "type": "number"
+          },
+          "served_from_cache": {
+            "title": "Served From Cache",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "window_col_row_width_height": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Window Col Row Width Height",
+            "type": "array"
+          },
+          "window_map_bounds_m": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Window Map Bounds M",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "title",
+          "url",
+          "etag",
+          "last_modified",
+          "resolution_m",
+          "window_col_row_width_height",
+          "window_map_bounds_m",
+          "bytes_requested",
+          "http_retries",
+          "served_from_cache",
+          "read_at_utc",
+          "citation"
+        ],
+        "title": "DemWindowSchema",
         "type": "object"
       },
       "EarthGeometrySample": {
@@ -1084,6 +1325,178 @@
         "title": "EvidenceSchema",
         "type": "object"
       },
+      "FootprintSchema": {
+        "properties": {
+          "cell_count": {
+            "title": "Cell Count",
+            "type": "integer"
+          },
+          "height_max_m": {
+            "title": "Height Max M",
+            "type": "number"
+          },
+          "height_mean_m": {
+            "title": "Height Mean M",
+            "type": "number"
+          },
+          "height_min_m": {
+            "title": "Height Min M",
+            "type": "number"
+          },
+          "missing_cell_count": {
+            "description": "Cells with no DEM value (never treated as 0).",
+            "title": "Missing Cell Count",
+            "type": "integer"
+          },
+          "radius_m": {
+            "title": "Radius M",
+            "type": "number"
+          },
+          "roughness_baseline_m": {
+            "description": "Diameter of the plane-fit window, m.",
+            "title": "Roughness Baseline M",
+            "type": "number"
+          },
+          "roughness_rms_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roughness Rms M"
+          },
+          "slope_baseline_m": {
+            "title": "Slope Baseline M",
+            "type": "number"
+          },
+          "slope_max_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Max Deg"
+          },
+          "slope_mean_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Mean Deg"
+          },
+          "slope_p95_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope P95 Deg"
+          }
+        },
+        "required": [
+          "radius_m",
+          "cell_count",
+          "missing_cell_count",
+          "height_min_m",
+          "height_max_m",
+          "height_mean_m",
+          "slope_mean_deg",
+          "slope_p95_deg",
+          "slope_max_deg",
+          "slope_baseline_m",
+          "roughness_rms_m",
+          "roughness_baseline_m"
+        ],
+        "title": "FootprintSchema",
+        "type": "object"
+      },
+      "HazardSchema": {
+        "properties": {
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "max_roughness_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Assumption supplied by the caller.",
+            "title": "Max Roughness M"
+          },
+          "max_slope_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Assumption supplied by the caller.",
+            "title": "Max Slope Deg"
+          },
+          "roughness_exceeds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roughness Exceeds"
+          },
+          "slope_fraction_above": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Fraction Above"
+          },
+          "slope_p95_exceeds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope P95 Exceeds"
+          }
+        },
+        "required": [
+          "max_slope_deg",
+          "max_roughness_m",
+          "slope_fraction_above",
+          "slope_p95_exceeds",
+          "roughness_exceeds",
+          "evidence"
+        ],
+        "title": "HazardSchema",
+        "type": "object"
+      },
       "HealthResponse": {
         "description": "Service liveness and readiness. HTTP 200 when ``ok``, 503 when ``degraded``.",
         "properties": {
@@ -1276,6 +1689,40 @@
         "title": "IlluminationSummary",
         "type": "object"
       },
+      "RegisteredCatalogSites": {
+        "properties": {
+          "already_registered": {
+            "description": "Catalogue ids whose site (same name) was already in the registry.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Already Registered",
+            "type": "array"
+          },
+          "created": {
+            "description": "Catalogue ids registered by this request.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Created",
+            "type": "array"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateSite"
+            },
+            "title": "Sites",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sites",
+          "created",
+          "already_registered"
+        ],
+        "title": "RegisteredCatalogSites",
+        "type": "object"
+      },
       "RuntimeComponentSchema": {
         "properties": {
           "available": {
@@ -1427,6 +1874,85 @@
         "title": "SelenographicCoordinateSchema",
         "type": "object"
       },
+      "SiteCatalogResponse": {
+        "properties": {
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "demo_trio_register_url": {
+            "title": "Demo Trio Register Url",
+            "type": "string"
+          },
+          "evidence_kind": {
+            "const": "derived_product",
+            "title": "Evidence Kind",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "reference_point_definition": {
+            "description": "What the coordinates mean: the DEM tile centre, NOT a landing point.",
+            "title": "Reference Point Definition",
+            "type": "string"
+          },
+          "retrieved_on": {
+            "title": "Retrieved On",
+            "type": "string"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogSiteSchema"
+            },
+            "title": "Sites",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogSourceSchema"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "evidence_kind",
+          "reference_point_definition",
+          "method",
+          "retrieved_on",
+          "citation",
+          "sources",
+          "limitations",
+          "sites",
+          "count",
+          "demo_trio_register_url"
+        ],
+        "title": "SiteCatalogResponse",
+        "type": "object"
+      },
       "SiteEphemeris": {
         "description": "Sun and Earth geometry time series for one site (C2).",
         "properties": {
@@ -1504,6 +2030,104 @@
           "limitations"
         ],
         "title": "SiteEphemeris",
+        "type": "object"
+      },
+      "SiteTerrainResponse": {
+        "properties": {
+          "dem": {
+            "$ref": "#/components/schemas/DemWindowSchema"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "footprint": {
+            "$ref": "#/components/schemas/FootprintSchema"
+          },
+          "hazard": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HazardSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when thresholds were supplied; LUNARIS ships no default."
+          },
+          "height_m": {
+            "description": "Bilinear DEM height above the 1 737 400 m sphere.",
+            "title": "Height M",
+            "type": "number"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          },
+          "scale_factor": {
+            "description": "Polar stereographic point scale factor k at the site.",
+            "title": "Scale Factor",
+            "type": "number"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "slope_at_site": {
+            "$ref": "#/components/schemas/SlopeValueSchema"
+          }
+        },
+        "required": [
+          "site_id",
+          "latitude_deg",
+          "longitude_deg",
+          "height_m",
+          "scale_factor",
+          "slope_at_site",
+          "footprint",
+          "hazard",
+          "dem",
+          "evidence",
+          "limitations"
+        ],
+        "title": "SiteTerrainResponse",
+        "type": "object"
+      },
+      "SlopeValueSchema": {
+        "properties": {
+          "baseline_m": {
+            "description": "Ground distance between the pixel centres Horn's operator differences.",
+            "title": "Baseline M",
+            "type": "number"
+          },
+          "slope_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Horn slope; null where the DEM has no value.",
+            "title": "Slope Deg"
+          }
+        },
+        "required": [
+          "slope_deg",
+          "baseline_m"
+        ],
+        "title": "SlopeValueSchema",
         "type": "object"
       },
       "SoftwareComponent": {
@@ -2236,6 +2860,153 @@
         ]
       }
     },
+    "/api/v1/catalog/demo-trio/register": {
+      "post": {
+        "description": "Idempotent: sites already registered under the same name are returned, not duplicated.",
+        "operationId": "register_demo_trio_api_v1_catalog_demo_trio_register_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredCatalogSites"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Registry full."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Add the three demo sites (demo_trio) to the registry in one action",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/sites": {
+      "get": {
+        "description": "The 27 PGDA product 78 sites with their sources, method, limitations and the\ndefinition of the reference point (the DEM tile centre, not a landing point).",
+        "operationId": "get_site_catalog_api_v1_catalog_sites_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Cited south-pole candidate-site catalogue",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/sites/{catalog_site_id}/register": {
+      "post": {
+        "operationId": "register_catalog_site_api_v1_catalog_sites__catalog_site_id__register_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "catalog_site_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9][a-z0-9-]{1,63}$",
+              "title": "Catalog Site Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateSite"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown catalogue site."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Already registered, or registry full."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "summary": "Add a catalogue site to the registry (origin: published)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/datasets": {
       "get": {
         "description": "Every dataset LUNARIS knows about, with provenance metadata, URL verification\nstatus and whether it is present in the local data store. Status is computed from\nfile presence and sizes; full checksum verification is done with\n``lunaris-data verify``.",
@@ -2653,6 +3424,135 @@
         "summary": "Sun and Earth geometry for a site",
         "tags": [
           "ephemeris"
+        ]
+      }
+    },
+    "/api/v1/sites/{site_id}/terrain": {
+      "get": {
+        "description": "Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness\nand footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every\nslope and roughness carries its baseline. Hazard flags appear only when thresholds\nare supplied; they are the caller's assumptions.",
+        "operationId": "get_site_terrain_api_v1_sites__site_id__terrain_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9-]+$",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Footprint radius, m.",
+            "in": "query",
+            "name": "footprint_radius_m",
+            "required": false,
+            "schema": {
+              "default": 50.0,
+              "description": "Footprint radius, m.",
+              "exclusiveMinimum": 0,
+              "maximum": 2000.0,
+              "title": "Footprint Radius M",
+              "type": "number"
+            }
+          },
+          {
+            "description": "Hazard threshold (assumption).",
+            "in": "query",
+            "name": "max_slope_deg",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 90,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hazard threshold (assumption).",
+              "title": "Max Slope Deg"
+            }
+          },
+          {
+            "description": "Hazard threshold (assumption).",
+            "in": "query",
+            "name": "max_roughness_m",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hazard threshold (assumption).",
+              "title": "Max Roughness M"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteTerrainResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input or site outside coverage."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "DEM window could not be read."
+          }
+        },
+        "summary": "Terrain analysis at a site (height, slope, roughness, hazards)",
+        "tags": [
+          "terrain"
         ]
       }
     },
