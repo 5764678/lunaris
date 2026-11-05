@@ -453,13 +453,30 @@ function syntheticTimeline(req: TimelineRequest, terrain: number | null) {
         terrain_truncated: terrain === null ? null : true,
       })),
     },
+    // Contract-shaped Earth result (C4): evidence with a kind, samples with fractions and LOS state.
     earth_visibility: {
       body: "earth",
-      evidence: {},
-      limitations: [],
-      astronomical: {},
+      evidence: {
+        kind: "calculation",
+        statement: "SYNTHETIC E2E FIXTURE.",
+        sources: [],
+        method: "x",
+        assumptions: [],
+      },
+      limitations: ["Geometric visibility does not imply a radio link."],
+      astronomical: summary(1, false),
       terrain: null,
-      samples: [],
+      samples: Array.from({ length: n }, (_, i) => ({
+        epoch_utc: new Date(start + i * step).toISOString(),
+        azimuth_deg: 0,
+        elevation_deg: 5,
+        earth_radius_deg: 0.95,
+        astronomical_visible_fraction: 1,
+        terrain_horizon_elevation_deg: null,
+        terrain_visible_fraction: null,
+        terrain_truncated: null,
+        line_of_sight: "clear",
+      })),
     },
   };
 }

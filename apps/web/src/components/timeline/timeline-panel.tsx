@@ -8,7 +8,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DAY_MS, HOUR_MS, PLAYBACK_RATES, formatOffset, formatUtc } from "@/lib/time/time";
 import { describeError } from "@/lib/api/client";
-import { useSitesQuery, useSiteEphemeris } from "@/lib/api/queries";
+import { useSitesQuery, useSiteEphemeris, useSiteTimeline } from "@/lib/api/queries";
+import { fractionSeriesFromTimeline } from "@/lib/timeline/fractions";
 import { SeriesError, seriesFromEphemeris } from "@/lib/timeline/series";
 import { useMissionStore } from "@/store/mission-store";
 
@@ -70,7 +71,10 @@ export function TimelinePanel() {
   useEffect(() => initializeTime(Date.now()), [initializeTime]);
   usePlayback();
   const ready = epochMs !== null && startMs !== null && endMs !== null;
-  const { lanes, geometryNote, siteName } = useGeometryLanes(startMs, endMs);
+  const geometry = useGeometryLanes(startMs, endMs);
+  const fractions = useFractionLanes(startMs, endMs);
+  const { geometryNote, siteName } = geometry;
+  const lanes = useMemo(() => ({ ...geometry.lanes, ...fractions.lanes }), [geometry.lanes, fractions.lanes]);
 
   return (
     <section aria-label="Timeline" className="border-t border-border bg-panel px-4 pt-2.5 pb-3">
@@ -139,10 +143,10 @@ export function TimelinePanel() {
           </ToggleGroup>
         </div>
       </div>
-      <TimelineTrack lanes={lanes} geometryNote={geometryNote} />
+      <TimelineTrack lanes={lanes} geometryNote={geometryNote} fractionNote={fractions.note} />
       <p className="mt-2 text-3xs text-dim" data-testid="timeline-note">
         {siteName
-          ? `Sun and Earth elevation for ${siteName}: SPICE apparent direction (CN+S) above the local horizontal plane of the 1737.4 km sphere, hourly. Astronomical horizon only (dotted line); the terrain horizon arrives with the illumination lanes.`
+          ? `Sun and Earth elevation for ${siteName}: SPICE apparent direction (CN+S) above the local horizontal plane of the 1737.4 km sphere, hourly. Illumination and Earth line of sight: visible-disk fraction (timeline analysis), terrain horizon solid where a horizon mask is served, astronomical horizon dotted; geometric line of sight does not imply a radio link.`
           : "Select a candidate site to compute its Sun and Earth elevation over the window."}
       </p>
     </section>
@@ -165,6 +169,27 @@ function useGeometryLanes(startMs: number | null, endMs: number | null) {
     } catch (error) {
       const reason = error instanceof SeriesError ? error.message : "invalid ephemeris";
       return { lanes: {}, geometryNote: `Not computed · ${reason}`, siteName: site.name };
+    }
+  }, [site, query.isError, query.error, query.data]);
+}
+
+/** Illumination and Earth line-of-sight lanes (C4) for the selected site, or why they are empty. */
+function useFractionLanes(startMs: number | null, endMs: number | null) {
+  const selectedSiteId = useMissionStore((s) => s.selectedSiteId);
+  const site = useSitesQuery().data?.sites.find((s) => s.id === selectedSiteId) ?? null;
+  const query = useSiteTimeline(site?.id ?? null, startMs, endMs);
+  return useMemo((): { lanes: LaneData; note: string } => {
+    if (!site) return { lanes: {}, note: "Not computed · select a site" };
+    if (query.isError) return { lanes: {}, note: `Not computed · ${describeError(query.error)}` };
+    if (!query.data) return { lanes: {}, note: "Computing · timeline analysis" };
+    try {
+      const { illumination, los } = fractionSeriesFromTimeline(query.data);
+      return { lanes: { illumination, los }, note: "" };
+    } catch (error) {
+      return {
+        lanes: {},
+        note: `Not computed · ${error instanceof SeriesError ? error.message : "invalid timeline"}`,
+      };
     }
   }, [site, query.isError, query.error, query.data]);
 }

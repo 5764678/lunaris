@@ -196,16 +196,45 @@ const isSiteCatalog: Guard<SiteCatalog> = (v): v is SiteCatalog =>
 const isRegisteredCatalogSites: Guard<RegisteredCatalogSites> = (v): v is RegisteredCatalogSites =>
   isObject(v) && Array.isArray(v.created) && Array.isArray(v.already_registered) && Array.isArray(v.sites);
 
-const isTimelineAnalysis: Guard<TimelineAnalysis> = (v): v is TimelineAnalysis =>
+const EVIDENCE_KINDS = new Set([
+  "observation",
+  "derived_product",
+  "model",
+  "calculation",
+  "assumption",
+  "placeholder",
+]);
+
+/** Evidence the UI renders as a badge: a known kind and a statement. */
+const isEvidence = (v: unknown): boolean =>
+  isObject(v) && typeof v.kind === "string" && EVIDENCE_KINDS.has(v.kind) && typeof v.statement === "string";
+
+const isFractionSample = (v: unknown): boolean =>
+  isObject(v) &&
+  typeof v.epoch_utc === "string" &&
+  typeof v.astronomical_visible_fraction === "number" &&
+  (v.terrain_visible_fraction === null || typeof v.terrain_visible_fraction === "number");
+
+const isTimelineResult = (v: unknown): boolean =>
+  isObject(v) &&
+  isEvidence(v.evidence) &&
+  isObject(v.astronomical) &&
+  Array.isArray(v.limitations) &&
+  Array.isArray(v.samples) &&
+  v.samples.every(isFractionSample);
+
+/**
+ * C4 timeline. Both results are checked down to the fields the lanes and the 3D view
+ * render (evidence kind, sample fractions), so a malformed response becomes a labelled
+ * "not computed" state instead of a rendering error.
+ */
+export const isTimelineAnalysis: Guard<TimelineAnalysis> = (v): v is TimelineAnalysis =>
   isObject(v) &&
   typeof v.site_id === "string" &&
+  typeof v.step_s === "number" &&
   typeof v.terrain_horizon_available === "boolean" &&
-  isObject(v.illumination) &&
-  Array.isArray(v.illumination.samples) &&
-  isObject(v.illumination.astronomical) &&
-  isObject(v.illumination.evidence) &&
-  isObject(v.earth_visibility) &&
-  Array.isArray(v.earth_visibility.samples);
+  isTimelineResult(v.illumination) &&
+  isTimelineResult(v.earth_visibility);
 
 const isSiteComparison: Guard<SiteComparison> = (v): v is SiteComparison =>
   isObject(v) &&
