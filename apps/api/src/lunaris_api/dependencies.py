@@ -97,20 +97,13 @@ CatalogServiceDep = Annotated[CatalogService, Depends(get_catalog_service)]
 
 
 # ── Illumination and visibility timelines (S-GEOMETRY, T-24) ───────────────
-from lunaris_api.services.illumination import (  # noqa: E402
-    LocalHorizonMaskProvider,
-    TimelineService,
-)
+from lunaris_api.services.illumination import TimelineService  # noqa: E402
 
 
 def get_timeline_service(
-    request: Request,
     ephemeris: Annotated[EphemerisService, Depends(get_ephemeris_service)],
-    sites: Annotated[SiteService, Depends(get_site_service)],
+    masks: Annotated[HorizonMaskService, Depends(get_horizon_mask_service)],
 ) -> TimelineService:
-    masks = LocalHorizonMaskProvider(
-        request.app.state.dataset_registry, request.app.state.data_layout, sites
-    )
     return TimelineService(ephemeris, masks)
 
 

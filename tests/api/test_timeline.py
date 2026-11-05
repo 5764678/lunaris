@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -165,6 +166,20 @@ def test_terrain_fallback_states_its_reason(kernel_client: TestClient) -> None: 
     site_id = _create_site(kernel_client)
     body = kernel_client.post(URL, json={"site_id": site_id, **DAY}).json()
     assert body["terrain_horizon_available"] is False
+    # Reason from S-TERRAIN's HorizonMaskService (DatasetUnavailableError), passed through.
     assert any(
-        "lola-ldem-75s-240m DEM is not acquired" in x for x in body["illumination"]["limitations"]
+        "lola-ldem-75s-240m" in x and "lunaris-data acquire" in x
+        for x in body["illumination"]["limitations"]
     )
+
+
+def test_timeline_masks_come_from_the_file_cached_horizon_service(
+    terrain_client: TestClient,
+) -> None:
+    """One mask path: the timeline uses S-TERRAIN's HorizonMaskService, so a mask computed
+    for the timeline is the same cached file GET /sites/{id}/horizon serves."""
+    site_id = _create_site(terrain_client, lat=-89.4632, lon=222.51)
+    assert terrain_client.post(URL, json={"site_id": site_id, **DAY}).status_code == 200
+    settings = terrain_client.app.state.settings  # type: ignore[attr-defined]
+    cache = Path(settings.data_dir) / "processed" / "lola-ldem-75s-240m" / "horizon-masks"
+    assert any(cache.iterdir())

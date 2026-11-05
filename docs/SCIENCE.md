@@ -429,10 +429,11 @@ tolerance, malformed input) and `test_analysis.py` (separate horizons, truncatio
 surfaced with a count, radio-link disclaimer, and the 2026-11-04 fixture day with the real
 kernels: Sun f = 1 at all 25 samples, one sunlit window 00:00 → 11-05 00:00 of exactly 86 400 s censored at both ends; Earth f = 0 at all 25).
 
-**Terrain masks.** The API takes each site's C1 mask from a horizon-mask provider:
-S-TERRAIN's `HorizonMaskService` (T-16, file-cached) once merged, and until then T-15's
-`compute_horizon_mask` on the checksum-verified LDEM_75S_240M (0.25° step, 200 km,
-cached in memory). The eye point is 2 m above the DEM surface, and the C2 observer sits
+**Terrain masks.** The API takes each site's C1 mask from S-TERRAIN's
+`HorizonMaskService` (T-16): T-15's `compute_horizon_mask` on the checksum-verified
+LDEM_75S_240M (0.25° step, 200 km), file-cached under `data/processed/` and keyed by the
+DEM SHA-256, site, eye height and method version. It is the same mask that
+`GET /api/v1/sites/{id}/horizon` serves. The eye point is 2 m above the DEM surface, and the C2 observer sits
 at R + surface height + 2 m. If no mask can be produced (DEM missing or failing
 verification, site outside 75°–90° S), the result is astronomical-only and the
 limitation states the reason.
