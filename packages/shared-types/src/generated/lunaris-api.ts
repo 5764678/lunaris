@@ -107,6 +107,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/horizon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Terrain horizon mask of a site (LOLA 240 m, 0.25° step, 200 km)
+         * @description Horizon elevation versus azimuth computed by ray marching LDEM_75S_240M (curvature
+         *     included, distances on the sphere). Computed once per site and parameters, then served
+         *     from a file cache. Truncated azimuths are lower bounds.
+         */
+        get: operations["get_site_horizon_api_v1_sites__site_id__horizon_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/runtime": {
         parameters: {
             query?: never;
@@ -615,6 +637,75 @@ export interface components {
              * @description Release version of the API service.
              */
             version: string;
+        };
+        /** HorizonDemSchema */
+        HorizonDemSchema: {
+            /** Citation */
+            citation: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Resolution M */
+            resolution_m: number;
+            /**
+             * Sha256
+             * @description SHA-256 of the DEM file the mask was computed from.
+             */
+            sha256: string;
+            /** Source Url */
+            source_url: string;
+            /** Title */
+            title: string;
+        };
+        /** HorizonMaskResponse */
+        HorizonMaskResponse: {
+            /**
+             * Azimuth Deg
+             * @description Uniform, from 0, clockwise from local north.
+             */
+            azimuth_deg: number[];
+            /** Azimuth Step Deg */
+            azimuth_step_deg: number;
+            dem: components["schemas"]["HorizonDemSchema"];
+            /**
+             * Elevation Deg
+             * @description Horizon elevation above the site's radial horizontal plane (C0).
+             */
+            elevation_deg: number[];
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Frame
+             * @default MOON_ME
+             */
+            frame: string;
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Limitations */
+            limitations: string[];
+            /** Longitude Deg */
+            longitude_deg: number;
+            /** Max Range M */
+            max_range_m: number;
+            /** Method */
+            method: string;
+            /**
+             * Observer Height M
+             * @description Eye height above the DEM surface, m.
+             */
+            observer_height_m: number;
+            /** Site Id */
+            site_id: string;
+            /**
+             * Surface Height M
+             * @description DEM height at the site above the 1 737 400 m sphere.
+             */
+            surface_height_m: number;
+            /**
+             * Truncated
+             * @description True where the ray left DEM coverage before max_range_m: the elevation there is only a lower bound.
+             */
+            truncated: boolean[];
+            /** Truncated Count */
+            truncated_count: number;
         };
         /** RuntimeComponentSchema */
         RuntimeComponentSchema: {
@@ -1210,6 +1301,67 @@ export interface operations {
                 };
             };
             /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_site_horizon_api_v1_sites__site_id__horizon_get: {
+        parameters: {
+            query?: {
+                /** @description Eye height above the surface, m. */
+                observer_height_m?: number;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HorizonMaskResponse"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input or site outside LDEM coverage. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description LDEM not acquired or not verified. */
             503: {
                 headers: {
                     [name: string]: unknown;
