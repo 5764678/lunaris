@@ -774,6 +774,312 @@
         "title": "DemProvenanceSchema",
         "type": "object"
       },
+      "DemWindowSchema": {
+        "properties": {
+          "bytes_requested": {
+            "title": "Bytes Requested",
+            "type": "integer"
+          },
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "etag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etag"
+          },
+          "http_retries": {
+            "title": "Http Retries",
+            "type": "integer"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified"
+          },
+          "read_at_utc": {
+            "title": "Read At Utc",
+            "type": "string"
+          },
+          "resolution_m": {
+            "title": "Resolution M",
+            "type": "number"
+          },
+          "served_from_cache": {
+            "title": "Served From Cache",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "window_col_row_width_height": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Window Col Row Width Height",
+            "type": "array"
+          },
+          "window_map_bounds_m": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Window Map Bounds M",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "title",
+          "url",
+          "etag",
+          "last_modified",
+          "resolution_m",
+          "window_col_row_width_height",
+          "window_map_bounds_m",
+          "bytes_requested",
+          "http_retries",
+          "served_from_cache",
+          "read_at_utc",
+          "citation"
+        ],
+        "title": "DemWindowSchema",
+        "type": "object"
+      },
+      "EarthGeometrySample": {
+        "properties": {
+          "astronomical_visible_fraction": {
+            "description": "Fraction of the Earth's disk above the astronomical horizon, [0, 1].",
+            "title": "Astronomical Visible Fraction",
+            "type": "number"
+          },
+          "azimuth_deg": {
+            "title": "Azimuth Deg",
+            "type": "number"
+          },
+          "earth_radius_deg": {
+            "description": "Apparent angular radius of the Earth.",
+            "title": "Earth Radius Deg",
+            "type": "number"
+          },
+          "elevation_deg": {
+            "description": "Of the Earth's centre, above the C0 plane.",
+            "title": "Elevation Deg",
+            "type": "number"
+          },
+          "epoch_utc": {
+            "format": "date-time",
+            "title": "Epoch Utc",
+            "type": "string"
+          },
+          "line_of_sight": {
+            "enum": [
+              "clear",
+              "terrain_obstructed",
+              "below_geometric_horizon"
+            ],
+            "title": "Line Of Sight",
+            "type": "string"
+          },
+          "terrain_horizon_elevation_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Terrain horizon at the Earth's azimuth; null without a horizon mask.",
+            "title": "Terrain Horizon Elevation Deg"
+          },
+          "terrain_truncated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True when the terrain fraction is an upper bound (truncated mask rays).",
+            "title": "Terrain Truncated"
+          },
+          "terrain_visible_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Fraction of the disk above the terrain horizon; null without a mask.",
+            "title": "Terrain Visible Fraction"
+          }
+        },
+        "required": [
+          "epoch_utc",
+          "azimuth_deg",
+          "elevation_deg",
+          "earth_radius_deg",
+          "astronomical_visible_fraction",
+          "terrain_horizon_elevation_deg",
+          "terrain_visible_fraction",
+          "terrain_truncated",
+          "line_of_sight"
+        ],
+        "title": "EarthGeometrySample",
+        "type": "object"
+      },
+      "EarthVisibilityResult": {
+        "properties": {
+          "astronomical": {
+            "$ref": "#/components/schemas/EarthVisibilitySummary"
+          },
+          "body": {
+            "const": "earth",
+            "title": "Body",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "limitations": {
+            "description": "Always includes the statement that geometric visibility does not imply a radio link.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/EarthGeometrySample"
+            },
+            "title": "Samples",
+            "type": "array"
+          },
+          "terrain": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EarthVisibilitySummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when no horizon mask is available for the site."
+          }
+        },
+        "required": [
+          "body",
+          "samples",
+          "astronomical",
+          "terrain",
+          "evidence",
+          "limitations"
+        ],
+        "title": "EarthVisibilityResult",
+        "type": "object"
+      },
+      "EarthVisibilitySummary": {
+        "properties": {
+          "any_truncated": {
+            "title": "Any Truncated",
+            "type": "boolean"
+          },
+          "fully_visible_fraction": {
+            "description": "Share of samples with the whole disk visible.",
+            "title": "Fully Visible Fraction",
+            "type": "number"
+          },
+          "horizon": {
+            "enum": [
+              "astronomical",
+              "terrain"
+            ],
+            "title": "Horizon",
+            "type": "string"
+          },
+          "longest_outage_censored": {
+            "title": "Longest Outage Censored",
+            "type": "boolean"
+          },
+          "longest_outage_s": {
+            "title": "Longest Outage S",
+            "type": "number"
+          },
+          "longest_visibility_censored": {
+            "description": "The longest run touches the window edge: its duration is a lower bound.",
+            "title": "Longest Visibility Censored",
+            "type": "boolean"
+          },
+          "longest_visibility_s": {
+            "title": "Longest Visibility S",
+            "type": "number"
+          },
+          "mean_visible_disk_fraction": {
+            "description": "Time average of the disk fraction.",
+            "title": "Mean Visible Disk Fraction",
+            "type": "number"
+          },
+          "resolution_s": {
+            "description": "Sample step: window edges are known to ± this.",
+            "title": "Resolution S",
+            "type": "number"
+          },
+          "visible_fraction": {
+            "description": "Share of samples with any part of the Earth's disk visible.",
+            "title": "Visible Fraction",
+            "type": "number"
+          },
+          "windows": {
+            "description": "Direct-to-Earth geometric visibility windows (any part of the disk visible).",
+            "items": {
+              "$ref": "#/components/schemas/VisibilityWindow"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "horizon",
+          "visible_fraction",
+          "mean_visible_disk_fraction",
+          "fully_visible_fraction",
+          "longest_visibility_s",
+          "longest_visibility_censored",
+          "longest_outage_s",
+          "longest_outage_censored",
+          "resolution_s",
+          "any_truncated",
+          "windows"
+        ],
+        "title": "EarthVisibilitySummary",
+        "type": "object"
+      },
       "EphemerisObserver": {
         "properties": {
           "frame": {
@@ -1019,6 +1325,178 @@
         "title": "EvidenceSchema",
         "type": "object"
       },
+      "FootprintSchema": {
+        "properties": {
+          "cell_count": {
+            "title": "Cell Count",
+            "type": "integer"
+          },
+          "height_max_m": {
+            "title": "Height Max M",
+            "type": "number"
+          },
+          "height_mean_m": {
+            "title": "Height Mean M",
+            "type": "number"
+          },
+          "height_min_m": {
+            "title": "Height Min M",
+            "type": "number"
+          },
+          "missing_cell_count": {
+            "description": "Cells with no DEM value (never treated as 0).",
+            "title": "Missing Cell Count",
+            "type": "integer"
+          },
+          "radius_m": {
+            "title": "Radius M",
+            "type": "number"
+          },
+          "roughness_baseline_m": {
+            "description": "Diameter of the plane-fit window, m.",
+            "title": "Roughness Baseline M",
+            "type": "number"
+          },
+          "roughness_rms_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roughness Rms M"
+          },
+          "slope_baseline_m": {
+            "title": "Slope Baseline M",
+            "type": "number"
+          },
+          "slope_max_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Max Deg"
+          },
+          "slope_mean_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Mean Deg"
+          },
+          "slope_p95_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope P95 Deg"
+          }
+        },
+        "required": [
+          "radius_m",
+          "cell_count",
+          "missing_cell_count",
+          "height_min_m",
+          "height_max_m",
+          "height_mean_m",
+          "slope_mean_deg",
+          "slope_p95_deg",
+          "slope_max_deg",
+          "slope_baseline_m",
+          "roughness_rms_m",
+          "roughness_baseline_m"
+        ],
+        "title": "FootprintSchema",
+        "type": "object"
+      },
+      "HazardSchema": {
+        "properties": {
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "max_roughness_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Assumption supplied by the caller.",
+            "title": "Max Roughness M"
+          },
+          "max_slope_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Assumption supplied by the caller.",
+            "title": "Max Slope Deg"
+          },
+          "roughness_exceeds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roughness Exceeds"
+          },
+          "slope_fraction_above": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Fraction Above"
+          },
+          "slope_p95_exceeds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope P95 Exceeds"
+          }
+        },
+        "required": [
+          "max_slope_deg",
+          "max_roughness_m",
+          "slope_fraction_above",
+          "slope_p95_exceeds",
+          "roughness_exceeds",
+          "evidence"
+        ],
+        "title": "HazardSchema",
+        "type": "object"
+      },
       "HealthResponse": {
         "description": "Service liveness and readiness. HTTP 200 when ``ok``, 503 when ``degraded``.",
         "properties": {
@@ -1227,6 +1705,131 @@
           "limitations"
         ],
         "title": "HorizonMaskResponse",
+        "type": "object"
+      },
+      "IlluminationResult": {
+        "properties": {
+          "astronomical": {
+            "$ref": "#/components/schemas/IlluminationSummary"
+          },
+          "body": {
+            "const": "sun",
+            "title": "Body",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/SolarGeometrySample"
+            },
+            "title": "Samples",
+            "type": "array"
+          },
+          "terrain": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IlluminationSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when no horizon mask is available for the site."
+          }
+        },
+        "required": [
+          "body",
+          "samples",
+          "astronomical",
+          "terrain",
+          "evidence",
+          "limitations"
+        ],
+        "title": "IlluminationResult",
+        "type": "object"
+      },
+      "IlluminationSummary": {
+        "properties": {
+          "any_truncated": {
+            "title": "Any Truncated",
+            "type": "boolean"
+          },
+          "fully_lit_fraction": {
+            "description": "Share of samples with the whole disk visible.",
+            "title": "Fully Lit Fraction",
+            "type": "number"
+          },
+          "horizon": {
+            "enum": [
+              "astronomical",
+              "terrain"
+            ],
+            "title": "Horizon",
+            "type": "string"
+          },
+          "illuminated_fraction": {
+            "description": "Share of samples with any part of the solar disk visible (≥ the mean).",
+            "title": "Illuminated Fraction",
+            "type": "number"
+          },
+          "longest_darkness_censored": {
+            "title": "Longest Darkness Censored",
+            "type": "boolean"
+          },
+          "longest_darkness_s": {
+            "title": "Longest Darkness S",
+            "type": "number"
+          },
+          "longest_illumination_censored": {
+            "description": "The longest run touches the window edge: its duration is a lower bound.",
+            "title": "Longest Illumination Censored",
+            "type": "boolean"
+          },
+          "longest_illumination_s": {
+            "title": "Longest Illumination S",
+            "type": "number"
+          },
+          "mean_visible_disk_fraction": {
+            "description": "Time average of the visible solar-disk fraction: the quantity comparable to published average polar illumination (docs/SCIENCE.md §5.3).",
+            "title": "Mean Visible Disk Fraction",
+            "type": "number"
+          },
+          "resolution_s": {
+            "description": "Sample step: window edges are known to ± this.",
+            "title": "Resolution S",
+            "type": "number"
+          },
+          "sunlit_windows": {
+            "items": {
+              "$ref": "#/components/schemas/VisibilityWindow"
+            },
+            "title": "Sunlit Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "horizon",
+          "mean_visible_disk_fraction",
+          "illuminated_fraction",
+          "fully_lit_fraction",
+          "longest_illumination_s",
+          "longest_illumination_censored",
+          "longest_darkness_s",
+          "longest_darkness_censored",
+          "resolution_s",
+          "any_truncated",
+          "sunlit_windows"
+        ],
+        "title": "IlluminationSummary",
         "type": "object"
       },
       "RegisteredCatalogSites": {
@@ -1572,6 +2175,226 @@
         "title": "SiteEphemeris",
         "type": "object"
       },
+      "SiteTerrainResponse": {
+        "properties": {
+          "dem": {
+            "$ref": "#/components/schemas/DemWindowSchema"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "footprint": {
+            "$ref": "#/components/schemas/FootprintSchema"
+          },
+          "hazard": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HazardSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when thresholds were supplied; LUNARIS ships no default."
+          },
+          "height_m": {
+            "description": "Bilinear DEM height above the 1 737 400 m sphere.",
+            "title": "Height M",
+            "type": "number"
+          },
+          "latitude_deg": {
+            "title": "Latitude Deg",
+            "type": "number"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "longitude_deg": {
+            "title": "Longitude Deg",
+            "type": "number"
+          },
+          "scale_factor": {
+            "description": "Polar stereographic point scale factor k at the site.",
+            "title": "Scale Factor",
+            "type": "number"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "slope_at_site": {
+            "$ref": "#/components/schemas/SlopeValueSchema"
+          }
+        },
+        "required": [
+          "site_id",
+          "latitude_deg",
+          "longitude_deg",
+          "height_m",
+          "scale_factor",
+          "slope_at_site",
+          "footprint",
+          "hazard",
+          "dem",
+          "evidence",
+          "limitations"
+        ],
+        "title": "SiteTerrainResponse",
+        "type": "object"
+      },
+      "SlopeValueSchema": {
+        "properties": {
+          "baseline_m": {
+            "description": "Ground distance between the pixel centres Horn's operator differences.",
+            "title": "Baseline M",
+            "type": "number"
+          },
+          "slope_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Horn slope; null where the DEM has no value.",
+            "title": "Slope Deg"
+          }
+        },
+        "required": [
+          "slope_deg",
+          "baseline_m"
+        ],
+        "title": "SlopeValueSchema",
+        "type": "object"
+      },
+      "SoftwareComponent": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "SoftwareComponent",
+        "type": "object"
+      },
+      "SoftwareProvenance": {
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/SoftwareComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "service_version": {
+            "title": "Service Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_version",
+          "components"
+        ],
+        "title": "SoftwareProvenance",
+        "type": "object"
+      },
+      "SolarGeometrySample": {
+        "properties": {
+          "astronomical_visible_fraction": {
+            "description": "Fraction of the solar disk above the astronomical horizon, [0, 1].",
+            "title": "Astronomical Visible Fraction",
+            "type": "number"
+          },
+          "azimuth_deg": {
+            "title": "Azimuth Deg",
+            "type": "number"
+          },
+          "elevation_deg": {
+            "description": "Of the Sun's centre, above the C0 plane.",
+            "title": "Elevation Deg",
+            "type": "number"
+          },
+          "epoch_utc": {
+            "format": "date-time",
+            "title": "Epoch Utc",
+            "type": "string"
+          },
+          "solar_radius_deg": {
+            "description": "Apparent angular radius of the Sun.",
+            "title": "Solar Radius Deg",
+            "type": "number"
+          },
+          "terrain_horizon_elevation_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Terrain horizon at the Sun's azimuth; null without a horizon mask.",
+            "title": "Terrain Horizon Elevation Deg"
+          },
+          "terrain_truncated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True when the terrain fraction is an upper bound (truncated mask rays).",
+            "title": "Terrain Truncated"
+          },
+          "terrain_visible_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Fraction of the solar disk above the terrain horizon; null without a mask.",
+            "title": "Terrain Visible Fraction"
+          }
+        },
+        "required": [
+          "epoch_utc",
+          "azimuth_deg",
+          "elevation_deg",
+          "solar_radius_deg",
+          "astronomical_visible_fraction",
+          "terrain_horizon_elevation_deg",
+          "terrain_visible_fraction",
+          "terrain_truncated"
+        ],
+        "title": "SolarGeometrySample",
+        "type": "object"
+      },
       "SourceReferenceSchema": {
         "properties": {
           "citation": {
@@ -1911,6 +2734,118 @@
         "title": "TerrainSceneSummary",
         "type": "object"
       },
+      "TimelineAnalysis": {
+        "description": "Illumination and Earth-visibility timelines for one site over a UTC window (C4).",
+        "properties": {
+          "computed_at_utc": {
+            "format": "date-time",
+            "title": "Computed At Utc",
+            "type": "string"
+          },
+          "earth_visibility": {
+            "$ref": "#/components/schemas/EarthVisibilityResult"
+          },
+          "end_utc": {
+            "format": "date-time",
+            "title": "End Utc",
+            "type": "string"
+          },
+          "illumination": {
+            "$ref": "#/components/schemas/IlluminationResult"
+          },
+          "max_samples": {
+            "title": "Max Samples",
+            "type": "integer"
+          },
+          "observer": {
+            "$ref": "#/components/schemas/EphemerisObserver"
+          },
+          "sample_count": {
+            "title": "Sample Count",
+            "type": "integer"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "site_name": {
+            "title": "Site Name",
+            "type": "string"
+          },
+          "software": {
+            "$ref": "#/components/schemas/SoftwareProvenance"
+          },
+          "start_utc": {
+            "format": "date-time",
+            "title": "Start Utc",
+            "type": "string"
+          },
+          "step_s": {
+            "title": "Step S",
+            "type": "number"
+          },
+          "terrain_horizon_available": {
+            "title": "Terrain Horizon Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "site_id",
+          "site_name",
+          "observer",
+          "start_utc",
+          "end_utc",
+          "step_s",
+          "sample_count",
+          "max_samples",
+          "terrain_horizon_available",
+          "illumination",
+          "earth_visibility",
+          "computed_at_utc",
+          "software"
+        ],
+        "title": "TimelineAnalysis",
+        "type": "object"
+      },
+      "TimelineRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "end_utc": {
+            "description": "Window end (inclusive when on a step), UTC.",
+            "format": "date-time",
+            "title": "End Utc",
+            "type": "string"
+          },
+          "site_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9-]+$",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "start_utc": {
+            "description": "Window start, ISO 8601 UTC.",
+            "format": "date-time",
+            "title": "Start Utc",
+            "type": "string"
+          },
+          "step_s": {
+            "description": "Sample spacing, seconds.",
+            "maximum": 2592000.0,
+            "minimum": 1.0,
+            "title": "Step S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "site_id",
+          "start_utc",
+          "end_utc",
+          "step_s"
+        ],
+        "title": "TimelineRequest",
+        "type": "object"
+      },
       "UrlVerificationSchema": {
         "properties": {
           "checked_on": {
@@ -1946,6 +2881,45 @@
         ],
         "title": "UrlVerificationSchema",
         "type": "object"
+      },
+      "VisibilityWindow": {
+        "description": "A maximal run of samples meeting a condition. Each sample stands for one step, so\nthe edges are known to within ``resolution_s``.",
+        "properties": {
+          "censored_end": {
+            "description": "Run touches the end of the analysis window.",
+            "title": "Censored End",
+            "type": "boolean"
+          },
+          "censored_start": {
+            "description": "Run touches the start of the analysis window.",
+            "title": "Censored Start",
+            "type": "boolean"
+          },
+          "duration_s": {
+            "title": "Duration S",
+            "type": "number"
+          },
+          "end_utc": {
+            "description": "Epoch of the last sample in the run + step.",
+            "format": "date-time",
+            "title": "End Utc",
+            "type": "string"
+          },
+          "start_utc": {
+            "format": "date-time",
+            "title": "Start Utc",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_utc",
+          "end_utc",
+          "duration_s",
+          "censored_start",
+          "censored_end"
+        ],
+        "title": "VisibilityWindow",
+        "type": "object"
       }
     }
   },
@@ -1957,6 +2931,78 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/analysis/timeline": {
+      "post": {
+        "description": "Visible fraction of the solar and Earth disks at every step from ``start_utc`` to\n``end_utc``, against the astronomical horizon and, when a horizon mask exists, the\nterrain horizon (reported separately). Summaries: mean visible disk fraction,\nilluminated / visible fraction, longest illumination and darkness (or visibility and\noutage) with censoring, and windows. Same window rules, cap (10 000 samples) and error\ncodes as the ephemeris endpoint. Earth results are geometric line of sight only and do\nnot imply a radio link.",
+        "operationId": "post_timeline_api_v1_analysis_timeline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimelineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelineAnalysis"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "SPICE kernels not acquired or failing verification on this server."
+          }
+        },
+        "summary": "Illumination and Earth-visibility timelines for a site",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
     "/api/v1/catalog/demo-trio/register": {
       "post": {
         "description": "Idempotent: sites already registered under the same name are returned, not duplicated.",
@@ -2609,6 +3655,135 @@
           }
         },
         "summary": "Terrain horizon mask of a site (LOLA 240 m, 0.25° step, 200 km)",
+        "tags": [
+          "terrain"
+        ]
+      }
+    },
+    "/api/v1/sites/{site_id}/terrain": {
+      "get": {
+        "description": "Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness\nand footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every\nslope and roughness carries its baseline. Hazard flags appear only when thresholds\nare supplied; they are the caller's assumptions.",
+        "operationId": "get_site_terrain_api_v1_sites__site_id__terrain_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9-]+$",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Footprint radius, m.",
+            "in": "query",
+            "name": "footprint_radius_m",
+            "required": false,
+            "schema": {
+              "default": 50.0,
+              "description": "Footprint radius, m.",
+              "exclusiveMinimum": 0,
+              "maximum": 2000.0,
+              "title": "Footprint Radius M",
+              "type": "number"
+            }
+          },
+          {
+            "description": "Hazard threshold (assumption).",
+            "in": "query",
+            "name": "max_slope_deg",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 90,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hazard threshold (assumption).",
+              "title": "Max Slope Deg"
+            }
+          },
+          {
+            "description": "Hazard threshold (assumption).",
+            "in": "query",
+            "name": "max_roughness_m",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hazard threshold (assumption).",
+              "title": "Max Roughness M"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteTerrainResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unknown site."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input or site outside coverage."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "DEM window could not be read."
+          }
+        },
+        "summary": "Terrain analysis at a site (height, slope, roughness, hazards)",
         "tags": [
           "terrain"
         ]

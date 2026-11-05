@@ -203,17 +203,31 @@ while the mirrored-sample and flipped-line conventions are off by 300 m (median)
 1906 px × 240 m = 457.44 km; the pole falls exactly at the grid centre (0-based pixel
 1905.5, 1905.5), and the edge midpoints lie at 75.00° S.
 
-**Slope.** Horn (1981) 3 × 3 finite differences on the projected grid, with the ground
-sample distance corrected by the scale factor (240 m / k at the pixel). Slope =
-atan(√((∂h/∂x)² + (∂h/∂y)²)). Reported with the baseline (3 pixels) and resolution.
+**Slope** (implemented, T-14: `lunaris_science.terrain.analysis`). Horn (1981) 3 × 3 finite
+differences on the projected grid. The ground spacing is MAP_SCALE / k, where
+k = 1 + (ρ/2R)² is evaluated at each pixel. Slope = atan(√((∂h/∂x)² + (∂h/∂y)²)). The
+**baseline** of a slope is 2 × ground spacing, the distance between the pixel centres the
+operator differences (≈ 40 m on the PGDA 20 m DEM). Validated on synthetic planes and cones
+to < 0.1°; at ρ = 400 km (k = 1.0133) the correction changes a 30° slope by 0.33° (29.67° uncorrected). With
+projected spacing the operator equals `gdaldem slope`: < 10⁻³° on a synthetic grid, and
+5 × 10⁻⁴° (float32 rounding) over 996 004 cells of a real PGDA window at 89.45° S,
+222.69° E.
 
-**Roughness.** A defined statistic over a stated baseline (candidate: RMS of residual
-heights after removing a best-fit plane within a circular window). The definition, window
-and resolution are part of every result.
+**Roughness** (implemented). RMS of the height residuals after removing the least-squares
+plane fitted to the cells whose centres lie within a circle of ground diameter D around the
+site. **Baseline** = D, which is 2 × the footprint radius in `GET /sites/{id}/terrain`.
 
-**Hazard indicators.** Threshold classification (slope above a configured limit, fraction
-of footprint above it). Thresholds are mission-specific **assumptions**, returned with the
-result; LUNARIS ships no default "safe slope".
+**Footprint statistics.** Over cells within the footprint radius: cell count, missing
+cells (counted, never filled), height min/mean/max, and slope mean / p95 / max.
+
+**Hazard indicators.** Returned only when the caller supplies thresholds (`max_slope_deg`,
+`max_roughness_m`): fraction of footprint cells above the slope limit, whether the p95
+slope exceeds it, and whether roughness exceeds its limit. Thresholds are mission-specific
+**assumptions**, echoed as `assumption` evidence; LUNARIS ships no default "safe slope".
+
+**Source.** `GET /api/v1/sites/{id}/terrain` reads a window of the PGDA 20 m DEM around
+the site (`pgda-lola-20mpp-80s`, docs/DATA_SOURCES.md §2.4). The window is about
+2 × radius + 8 cells and is cached under `data/processed/`.
 
 **Known limitations.** DEM resolution bounds detectable hazards (boulders and small
 craters below the grid spacing are invisible); polar products contain interpolated areas
@@ -390,21 +404,51 @@ rejected. Limb darkening is neglected, so f is a fraction of area, not of flux.
 (through interpolation) is truncated, the result is flagged. The mask elevation there is
 only a lower bound, so f is an upper bound and is never reported as exact.
 
-**Outputs.** Time series of f; illuminated fraction; longest continuous darkness and
-illumination; each with the window, step, ephemeris and DEM provenance. The astronomical
-horizon (0°) and the terrain horizon are reported separately; rays that leave DEM coverage
-are flagged as truncated, never treated as zero elevation (D3, D4). Out of scope:
-earthshine, light scattered from nearby terrain, and regional illumination maps.
+**Timelines and summaries (T-24).** `lunaris_science.illumination.timeline` and
+`.analysis`; endpoint `POST /api/v1/analysis/timeline`. For each body, the visible
+fraction f is computed at every step against the **astronomical horizon** (H ≡ 0°) and,
+when a C1 horizon mask exists, the **terrain horizon**. The two are always reported
+separately (C4). Definitions:
 
-### 5.4 Earth visibility — Milestone 04
+| Quantity | Definition |
+| --- | --- |
+| `mean_visible_disk_fraction` | Time average of f, each sample weighted by its clipped interval. This is the quantity comparable to the "average illumination" of published polar studies. |
+| `illuminated_fraction` (Sun) / `visible_fraction` (Earth) | Share of the analysis window (interval-weighted) with f > 0 (any part of the disk visible). Always ≥ the mean. |
+| `fully_lit_fraction` / `fully_visible_fraction` | Share of the analysis window with f = 1 (exact by construction: the chord sum is normalised by its own fully-visible value). |
+| Sample interval | Each sample stands for [t, t + step) **clipped to the analysis window** [start, end]. With an end-inclusive grid (last epoch = end), the last sample's interval is empty: it carries weight 0. |
+| Window | Maximal run of consecutive samples with f > 0, from the first sample's epoch to the end of the last sample's clipped interval. Edges are known to ± step (`resolution_s`). Visible and hidden windows together tile [start, end] exactly (tested). |
+| Longest illumination / darkness (Sun), visibility / outage (Earth) | Longest run with f > 0 / f = 0. |
+| Censoring | A run that touches the start or end of the analysis window is **censored**: its true duration may be longer. The longest-run flags say so. A whole-window run is always censored. |
 
-The same horizon profile is applied to the Earth's centre (and disk fraction using α⊕).
-Outputs: line-of-sight state per epoch (`clear` / `terrain_obstructed` /
-`below_geometric_horizon`) and direct-to-Earth visibility windows.
+Durations are differences of ephemeris time, so they are SI seconds (a leap second inside
+the window counts). Truncated terrain samples are counted and reported: there f is an
+upper bound (D3).
+
+Tests: `tests/science/illumination/test_timeline.py` (definitions, censoring, leap-second
+tolerance, malformed input) and `test_analysis.py` (separate horizons, truncation
+surfaced with a count, radio-link disclaimer, and the 2026-11-04 fixture day with the real
+kernels: Sun f = 1 at all 25 samples, one sunlit window 00:00 → 11-05 00:00 of exactly 86 400 s censored at both ends; Earth f = 0 at all 25).
+
+**Terrain masks.** Until S-TERRAIN's mask computation (T-15) is merged and served, results
+report the astronomical horizon only. `terrain` is null, `terrain_horizon_available` is
+false, and a limitation says terrain can hide a body that is above 0°.
+
+### 5.4 Earth visibility — Milestone 04 (implemented: T-24)
+
+The same disk-fraction method is applied to the Earth (α⊕ per epoch). The line-of-sight
+state per epoch (`lunaris_science.visibility.classify_line_of_sight`) is:
+
+| State | Condition |
+| --- | --- |
+| `clear` | f > 0 against the horizon used (the terrain horizon when a mask exists, otherwise the astronomical horizon). From a peak the terrain horizon can dip below 0°, so `clear` is possible with the whole disk below the astronomical horizon. |
+| `terrain_obstructed` | f > 0 against the astronomical horizon, f = 0 against the terrain horizon. |
+| `below_geometric_horizon` | f = 0 against both. |
+
+Direct-to-Earth geometric visibility windows are the runs with f > 0 (definitions above).
 
 **Geometric visibility is necessary but not sufficient for communication.** Link budgets,
-antenna patterns, pointing, ground-station availability and multipath are out of scope;
-every result states this.
+antenna patterns, pointing, ground-station availability and multipath are out of scope.
+Every Earth result states this as its first limitation.
 
 ### 5.5 Energy estimation — future extension
 

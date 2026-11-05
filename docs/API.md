@@ -186,6 +186,31 @@ the SHA-256 pinned in its manifest. Measured locally with the real DEM: the firs
 request (reads and hashes the 29 MB DEM, builds the grid) takes ≈ 0.8 s; later requests
 are served from the in-process cache.
 
+<<<<<<< HEAD
+### `GET /api/v1/sites/{site_id}/terrain`
+
+Terrain analysis at a registered site (T-14; owner S-TERRAIN), computed from a window of
+the PGDA LOLA 20 m south-pole DEM read over HTTP byte ranges (`pgda-lola-20mpp-80s`).
+
+Query: `footprint_radius_m` (default 50, max 2000), and the optional hazard thresholds
+`max_slope_deg` (0–90) and `max_roughness_m` (> 0). The response holds:
+- `height_m`: bilinear, above the 1 737 400 m sphere;
+- `scale_factor`: k at the site;
+- `slope_at_site`: `slope_deg`, `baseline_m`;
+- `footprint`: cell counts including `missing_cell_count`, height range, slope mean / p95 /
+  max with `slope_baseline_m`, `roughness_rms_m` with `roughness_baseline_m`;
+- `hazard`: `null` unless thresholds are given; otherwise the flags plus `assumption`
+  evidence;
+- `dem`: window provenance (URL, ETag, Last-Modified, window, bytes requested, retries,
+  cache use);
+- `evidence`: `calculation`, with method and source;
+- `limitations`.
+
+**404** for an unknown site, **422** for invalid input or `out_of_coverage` (outside about
+80°S–90°S), **503** `dataset_unavailable` when the window cannot be read. The first
+request for a site reads the window remotely (≈ 10–15 s); repeats are served from the
+window cache under `data/processed/`.
+=======
 ### `GET /api/v1/sites/{site_id}/ephemeris`
 
 Apparent Sun and Earth geometry from a registered site (contract C2, `docs/SCIENCE.md`
@@ -243,6 +268,7 @@ Response **200** (`SiteEphemeris`, abridged):
 | 422 | `validation_error` / `topocentric_frame_undefined` | Site at latitude exactly ±90° (C0) |
 | 422 | `validation_error` | Malformed query (missing field, naive timestamp, `step_s` out of range) |
 | 503 | `kernels_unavailable` | Kernels not acquired or failing SHA-256 verification; run `uv run lunaris-data acquire naif-generic-kernels-lunar` |
+>>>>>>> origin/main
 
 ### `GET /api/v1/sites/{site_id}/horizon`
 
@@ -290,6 +316,68 @@ The cited south-pole candidate-site catalogue (T-03; data from T-02,
   in `already_registered`.
 
 `CandidateSite.origin` is now `"user_defined" | "published"` (wire-contract change).
+
+### `POST /api/v1/analysis/timeline`
+
+Illumination and Earth-visibility timelines for a registered site (contract C4,
+`docs/SCIENCE.md` §5.3–5.4).
+
+Request (`TimelineRequest`; unknown fields are rejected):
+
+```json
+{ "site_id": "…", "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T00:00:00Z", "step_s": 3600 }
+```
+
+Window rules, the 10 000-sample cap and the error codes are those of the ephemeris
+endpoint. Validation errors point at the body, for example `["body", "step_s"]`.
+
+Response **200** (`TimelineAnalysis`, abridged):
+
+```json
+{
+  "site_id": "…", "site_name": "…", "observer": { "…": "…" },
+  "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T00:00:00Z", "step_s": 3600.0,
+  "sample_count": 25, "max_samples": 10000, "terrain_horizon_available": false,
+  "illumination": {
+    "body": "sun",
+    "samples": [ { "epoch_utc": "…", "azimuth_deg": 248.586138, "elevation_deg": 1.304694,
+                   "solar_radius_deg": 0.268933, "astronomical_visible_fraction": 1.0,
+                   "terrain_horizon_elevation_deg": null, "terrain_visible_fraction": null,
+                   "terrain_truncated": null } ],
+    "astronomical": { "horizon": "astronomical", "mean_visible_disk_fraction": 1.0,
+                      "illuminated_fraction": 1.0, "fully_lit_fraction": 1.0,
+                      "longest_illumination_s": 86400.0, "longest_illumination_censored": true,
+                      "longest_darkness_s": 0.0, "longest_darkness_censored": false,
+                      "resolution_s": 3600.0, "any_truncated": false,
+                      "sunlit_windows": [ { "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-05T00:00:00Z",
+                                            "duration_s": 86400.0, "censored_start": true, "censored_end": true } ] },
+    "terrain": null,
+    "evidence": { "kind": "calculation", "…": "…" },
+    "limitations": [ "…", "Terrain horizon not available for this site: …" ]
+  },
+  "earth_visibility": {
+    "body": "earth",
+    "samples": [ { "…": "…", "earth_radius_deg": 0.961446, "line_of_sight": "below_geometric_horizon" } ],
+    "astronomical": { "horizon": "astronomical", "visible_fraction": 0.0, "windows": [], "…": "…" },
+    "terrain": null,
+    "evidence": { "…": "…" },
+    "limitations": [ "Geometric line of sight only: Earth visibility does not imply a radio link. …", "…" ]
+  },
+  "computed_at_utc": "…",
+  "software": { "service_version": "0.1.0", "components": [ { "name": "cspice", "version": "CSPICE_N0067" } ] }
+}
+```
+
+- Each sample carries the astronomical **and** the terrain fraction. The terrain fields are
+  `null` when no horizon mask exists for the site (`terrain_horizon_available: false`;
+  masks arrive with S-TERRAIN T-15).
+- Each sample's interval [t, t + step) is clipped to the requested window, so durations
+  and fractions never extend past `end_utc` (the last sample of an end-inclusive grid has
+  weight 0).
+- `*_censored: true` means the run touches the analysis window edge, so its duration is a
+  lower bound. Window edges are known to ± `resolution_s`.
+- `terrain_truncated: true` means the mask ray left DEM coverage. There the terrain
+  fraction is an upper bound.
 
 ## Changing the contract
 

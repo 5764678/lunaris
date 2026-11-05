@@ -2,13 +2,20 @@
 
 import { TriangleAlert } from "lucide-react";
 import dynamic from "next/dynamic";
-import { Component, useCallback, useState, type ErrorInfo, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+
+import { useTerrainScene } from "@/lib/api/queries";
+import { useMissionStore } from "@/store/mission-store";
 
 import { LabelLayer } from "./label-layer";
 import { LabelRegistry } from "./label-registry";
 import { useSurfaceLabels } from "./surface-labels";
 import { useSurfaceSource, type SurfaceSource, type TextureLoadState } from "./surface-source";
+import { TERRAIN_SCENE_ID, TerrainView, useTerrainGridSize } from "./terrain/terrain-view";
 import { ViewportOverlay } from "./viewport-overlay";
+
+/** Globe camera descent to the pole before the terrain scene takes over (matches the camera tween). */
+const DESCENT_HANDOVER_MS = 1150;
 
 const MoonCanvas = dynamic(() => import("./moon-canvas"), {
   ssr: false,
@@ -61,34 +68,68 @@ class RendererBoundary extends Component<{ children: ReactNode }, { error: Error
 }
 
 export function MoonViewport() {
+  const scene = useMissionStore((s) => s.scene);
+  const descending = useMissionStore((s) => s.sceneTransition === "descending");
+  const completeDescent = useMissionStore((s) => s.completeDescent);
+  const [labelRegistry] = useState(() => new LabelRegistry());
+  const gridSize = useTerrainGridSize();
+  // Start downloading the terrain while the globe flies down, so the handover is quick.
+  useTerrainScene(TERRAIN_SCENE_ID, gridSize ?? 0, gridSize !== null && (descending || scene === "terrain"));
+
+  useEffect(() => {
+    if (!descending) return;
+    const timer = setTimeout(completeDescent, DESCENT_HANDOVER_MS);
+    return () => clearTimeout(timer);
+  }, [descending, completeDescent]);
+
+  return (
+    <section
+      aria-label="Lunar visualization"
+      className="hud-grid relative h-full min-h-[22rem] overflow-hidden"
+      data-scene={scene}
+    >
+      <RendererBoundary>
+        {scene === "terrain" ? (
+          <TerrainView labelRegistry={labelRegistry} />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{
+              opacity: descending ? 0 : 1,
+              transition: descending ? "opacity 350ms ease 750ms" : "none",
+            }}
+          >
+            <GlobeView labelRegistry={labelRegistry} />
+          </div>
+        )}
+      </RendererBoundary>
+    </section>
+  );
+}
+
+function GlobeView({ labelRegistry }: { labelRegistry: LabelRegistry }) {
   const resolved = useSurfaceSource();
   const [textureError, setTextureError] = useState<string | null>(null);
   const [textureState, setTextureState] = useState<TextureLoadState>("loading");
   const onSurfaceError = useCallback((reason: string) => setTextureError(reason), []);
   const onSurfaceLoaded = useCallback(() => setTextureState("loaded"), []);
-  const [labelRegistry] = useState(() => new LabelRegistry());
   const labels = useSurfaceLabels();
   const surface: SurfaceSource =
     textureError && resolved.kind === "texture" ? { kind: "procedural", reason: textureError } : resolved;
   return (
-    <section
-      aria-label="Lunar visualization"
-      className="hud-grid relative h-full min-h-[22rem] overflow-hidden"
-    >
-      <RendererBoundary>
-        {surface.kind === "resolving" ? (
-          <ViewportMessage title="Initializing renderer" detail="Resolving surface source…" pulse />
-        ) : (
-          <MoonCanvas
-            surface={surface}
-            onSurfaceError={onSurfaceError}
-            onSurfaceLoaded={onSurfaceLoaded}
-            labelRegistry={labelRegistry}
-          />
-        )}
-      </RendererBoundary>
+    <>
+      {surface.kind === "resolving" ? (
+        <ViewportMessage title="Initializing renderer" detail="Resolving surface source…" pulse />
+      ) : (
+        <MoonCanvas
+          surface={surface}
+          onSurfaceError={onSurfaceError}
+          onSurfaceLoaded={onSurfaceLoaded}
+          labelRegistry={labelRegistry}
+        />
+      )}
       <LabelLayer registry={labelRegistry} labels={labels} />
       <ViewportOverlay surface={surface} textureState={textureState} />
-    </section>
+    </>
   );
 }

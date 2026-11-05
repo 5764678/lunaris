@@ -7,15 +7,22 @@ manifest pin) and scenes are cached in memory per (DEM checksum, scene, grid siz
 from __future__ import annotations
 
 import hashlib
+import math
 import threading
 from dataclasses import dataclass
 from pathlib import Path
 
 from lunaris_api.errors import ApiError, NotFoundError
 from lunaris_api.schemas.common import EvidenceSchema, SourceReferenceSchema
+from lunaris_api.schemas.sites import CandidateSite
 from lunaris_api.schemas.terrain import (
     DemProvenanceSchema,
+    DemWindowSchema,
+    FootprintSchema,
+    HazardSchema,
     SceneBinaryLayoutSchema,
+    SiteTerrainResponse,
+    SlopeValueSchema,
     TerrainSceneListResponse,
     TerrainSceneMetadata,
     TerrainSceneSummary,
@@ -23,8 +30,18 @@ from lunaris_api.schemas.terrain import (
 from lunaris_data.manifest import DatasetManifest, FileRole
 from lunaris_data.readers.ldem import read_ldem_polar
 from lunaris_data.registry import DatasetRegistry
+from lunaris_data.remote.window import DemWindow, RemoteWindowError, read_window, remote_source
 from lunaris_data.store import DataLayout, DatasetStatus, inspect_dataset
+from lunaris_science.terrain.analysis import (
+    ROUGHNESS_METHOD,
+    SLOPE_METHOD,
+    HazardThresholds,
+    SiteTerrain,
+    TerrainAnalysisError,
+    analyze_site,
+)
 from lunaris_science.terrain.dem import PolarDem
+from lunaris_science.terrain.polar_stereographic import SouthPolarStereographic
 from lunaris_science.terrain.scene import (
     SCENE_ALGORITHM_VERSION,
     SCENE_METHOD,
@@ -262,12 +279,179 @@ class TerrainSceneService:
         )
 
 
+# ── Site terrain analysis (T-14) ────────────────────────────────────────────
+
+ANALYSIS_DATASET = "pgda-lola-20mpp-80s"
+MAX_FOOTPRINT_RADIUS_M = 2000.0
+TERRAIN_LIMITATIONS = [
+    "DEM resolution bounds what is detectable: boulders and craters smaller than a few "
+    "grid cells (20 m) are invisible to slope and roughness.",
+    "Polar LOLA products interpolate between altimetry tracks; values there are less "
+    "constrained than on tracks.",
+    "Slope and roughness depend on their baseline; compare values only at equal baselines.",
+]
+
+
+class OutOfCoverageError(ApiError):
+    status_code = 422
+    code = "out_of_coverage"
+
+
+def _finite_or_none(value: float) -> float | None:
+    return value if math.isfinite(value) else None
+
+
+class SiteTerrainService:
+    """Terrain values for a registered site from a PGDA 20 m window."""
+
+    def __init__(self, registry: DatasetRegistry, layout: DataLayout) -> None:
+        self._registry = registry
+        self._layout = layout
+
+    def analyze(
+        self,
+        site: CandidateSite,
+        *,
+        footprint_radius_m: float,
+        thresholds: HazardThresholds | None,
+    ) -> SiteTerrainResponse:
+        manifest = self._registry.get(ANALYSIS_DATASET)
+        source = remote_source(manifest)
+        lat, lon = site.coordinate.latitude_deg, site.coordinate.longitude_deg
+        k = (
+            float(SouthPolarStereographic(source.reference_radius_m).scale_factor(lat))
+            if lat < 0
+            else 1.0
+        )
+        cell_m = manifest.spatial.nominal_resolution_m if manifest.spatial else 20.0
+        side_px = math.ceil(2.0 * footprint_radius_m * k / (cell_m or 20.0)) + 8
+        cache_dir = self._layout.processed / ANALYSIS_DATASET / "windows"
+        try:
+            window = read_window(
+                source, latitude_deg=lat, longitude_deg=lon, side_px=side_px, cache_dir=cache_dir
+            )
+        except RemoteWindowError as exc:
+            if "outside the raster" in str(exc):
+                raise OutOfCoverageError(
+                    f"Site {site.id!r} is outside the {ANALYSIS_DATASET} coverage "
+                    "(about 80°S–90°S)."
+                ) from None
+            raise DatasetUnavailableError(f"Could not read {ANALYSIS_DATASET}: {exc}") from None
+        try:
+            result = analyze_site(
+                window.dem, lat, lon, footprint_radius_m=footprint_radius_m, thresholds=thresholds
+            )
+        except TerrainAnalysisError as exc:
+            raise OutOfCoverageError(
+                f"Terrain analysis not possible at {site.id!r}: {exc}"
+            ) from None
+        return self._response(site, result, window, manifest)
+
+    def _response(
+        self,
+        site: CandidateSite,
+        result: SiteTerrain,
+        window: DemWindow,
+        manifest: DatasetManifest,
+    ) -> SiteTerrainResponse:
+        p = window.provenance
+        source_ref = SourceReferenceSchema(
+            source_id=manifest.id,
+            title=manifest.title,
+            url=p.url,
+            version=f"ETag {p.etag}; Last-Modified {p.last_modified}",
+            citation=manifest.citation,
+        )
+        fp = result.footprint
+        hazard = None
+        if result.hazard is not None:
+            t = result.hazard.thresholds
+            hazard = HazardSchema(
+                max_slope_deg=t.max_slope_deg,
+                max_roughness_m=t.max_roughness_m,
+                slope_fraction_above=result.hazard.slope_fraction_above,
+                slope_p95_exceeds=result.hazard.slope_exceeds,
+                roughness_exceeds=result.hazard.roughness_exceeds,
+                evidence=EvidenceSchema(
+                    kind="assumption",
+                    statement=(
+                        "Hazard flags compare computed values with caller-supplied thresholds."
+                    ),
+                    assumptions=[
+                        f"{name} = {value}"
+                        for name, value in (
+                            ("max_slope_deg", t.max_slope_deg),
+                            ("max_roughness_m", t.max_roughness_m),
+                        )
+                        if value is not None
+                    ],
+                ),
+            )
+        return SiteTerrainResponse(
+            site_id=site.id,
+            latitude_deg=result.latitude_deg,
+            longitude_deg=result.longitude_deg,
+            height_m=result.height_m,
+            scale_factor=result.scale_factor,
+            slope_at_site=SlopeValueSchema(
+                slope_deg=_finite_or_none(result.slope_at_site.slope_deg),
+                baseline_m=result.slope_at_site.baseline_m,
+            ),
+            footprint=FootprintSchema(
+                radius_m=fp.radius_m,
+                cell_count=fp.cell_count,
+                missing_cell_count=fp.missing_cell_count,
+                height_min_m=fp.height_min_m,
+                height_max_m=fp.height_max_m,
+                height_mean_m=fp.height_mean_m,
+                slope_mean_deg=_finite_or_none(fp.slope_mean_deg),
+                slope_p95_deg=_finite_or_none(fp.slope_p95_deg),
+                slope_max_deg=_finite_or_none(fp.slope_max_deg),
+                slope_baseline_m=fp.slope_baseline_m,
+                roughness_rms_m=_finite_or_none(fp.roughness_rms_m),
+                roughness_baseline_m=fp.roughness_baseline_m,
+            ),
+            hazard=hazard,
+            dem=DemWindowSchema(
+                dataset_id=manifest.id,
+                title=manifest.title,
+                url=p.url,
+                etag=p.etag,
+                last_modified=p.last_modified,
+                resolution_m=p.resolution_m,
+                window_col_row_width_height=list(p.window_col_row_width_height),
+                window_map_bounds_m=list(p.window_map_bounds_m),
+                bytes_requested=p.bytes_requested,
+                http_retries=p.http_retries,
+                served_from_cache=p.served_from_cache,
+                read_at_utc=p.read_at_utc,
+                citation=manifest.citation,
+            ),
+            evidence=EvidenceSchema(
+                kind="calculation",
+                statement=(
+                    "Height, slope, roughness and footprint statistics computed by LUNARIS "
+                    f"from a window of {manifest.title}."
+                ),
+                sources=[source_ref],
+                method=f"Height: bilinear. Slope: {SLOPE_METHOD} Roughness: {ROUGHNESS_METHOD}",
+                assumptions=[
+                    f"Footprint radius {result.footprint.radius_m} m (request parameter).",
+                    "Heights are relative to the 1 737 400 m reference sphere.",
+                ],
+            ),
+            limitations=list(TERRAIN_LIMITATIONS),
+        )
+
+
 __all__ = [
     "CACHE",
     "DEFAULT_GRID_SIZE",
     "SCENES",
     "DatasetUnavailableError",
+    "OutOfCoverageError",
     "SceneResult",
+    "SiteTerrainService",
     "TerrainSceneService",
     "scene_etag",
 ]

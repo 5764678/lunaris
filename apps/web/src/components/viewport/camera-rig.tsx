@@ -76,7 +76,12 @@ export function CameraRig() {
   useEffect(() => {
     if (view.requestId === 0) return;
     const preset = VIEW_PRESETS[view.preset];
-    tween.current = makeTween(get().camera.position, preset.lat, preset.lon, preset.distance);
+    tween.current = makeTween(
+      get().camera.position,
+      preset.lat,
+      preset.lon,
+      view.distance ?? preset.distance,
+    );
     get().invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- respond to explicit requests only
   }, [view.requestId]);

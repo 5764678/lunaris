@@ -4,6 +4,32 @@
  */
 
 export interface paths {
+    "/api/v1/analysis/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Illumination and Earth-visibility timelines for a site
+         * @description Visible fraction of the solar and Earth disks at every step from ``start_utc`` to
+         *     ``end_utc``, against the astronomical horizon and, when a horizon mask exists, the
+         *     terrain horizon (reported separately). Summaries: mean visible disk fraction,
+         *     illuminated / visible fraction, longest illumination and darkness (or visibility and
+         *     outage) with censoring, and windows. Same window rules, cap (10 000 samples) and error
+         *     codes as the ephemeris endpoint. Earth results are geometric line of sight only and do
+         *     not imply a radio link.
+         */
+        post: operations["post_timeline_api_v1_analysis_timeline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/demo-trio/register": {
         parameters: {
             query?: never;
@@ -179,6 +205,29 @@ export interface paths {
          *     from a file cache. Truncated azimuths are lower bounds.
          */
         get: operations["get_site_horizon_api_v1_sites__site_id__horizon_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/terrain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Terrain analysis at a site (height, slope, roughness, hazards)
+         * @description Height (bilinear), Horn slope with scale-corrected spacing, plane-fit RMS roughness
+         *     and footprint statistics from a window of the PGDA LOLA 20 m south-pole DEM. Every
+         *     slope and roughness carries its baseline. Hazard flags appear only when thresholds
+         *     are supplied; they are the caller's assumptions.
+         */
+        get: operations["get_site_terrain_api_v1_sites__site_id__terrain_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -597,6 +646,145 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** DemWindowSchema */
+        DemWindowSchema: {
+            /** Bytes Requested */
+            bytes_requested: number;
+            /** Citation */
+            citation: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Etag */
+            etag: string | null;
+            /** Http Retries */
+            http_retries: number;
+            /** Last Modified */
+            last_modified: string | null;
+            /** Read At Utc */
+            read_at_utc: string;
+            /** Resolution M */
+            resolution_m: number;
+            /** Served From Cache */
+            served_from_cache: boolean;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Window Col Row Width Height */
+            window_col_row_width_height: number[];
+            /** Window Map Bounds M */
+            window_map_bounds_m: number[];
+        };
+        /** EarthGeometrySample */
+        EarthGeometrySample: {
+            /**
+             * Astronomical Visible Fraction
+             * @description Fraction of the Earth's disk above the astronomical horizon, [0, 1].
+             */
+            astronomical_visible_fraction: number;
+            /** Azimuth Deg */
+            azimuth_deg: number;
+            /**
+             * Earth Radius Deg
+             * @description Apparent angular radius of the Earth.
+             */
+            earth_radius_deg: number;
+            /**
+             * Elevation Deg
+             * @description Of the Earth's centre, above the C0 plane.
+             */
+            elevation_deg: number;
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Line Of Sight
+             * @enum {string}
+             */
+            line_of_sight: "clear" | "terrain_obstructed" | "below_geometric_horizon";
+            /**
+             * Terrain Horizon Elevation Deg
+             * @description Terrain horizon at the Earth's azimuth; null without a horizon mask.
+             */
+            terrain_horizon_elevation_deg: number | null;
+            /**
+             * Terrain Truncated
+             * @description True when the terrain fraction is an upper bound (truncated mask rays).
+             */
+            terrain_truncated: boolean | null;
+            /**
+             * Terrain Visible Fraction
+             * @description Fraction of the disk above the terrain horizon; null without a mask.
+             */
+            terrain_visible_fraction: number | null;
+        };
+        /** EarthVisibilityResult */
+        EarthVisibilityResult: {
+            astronomical: components["schemas"]["EarthVisibilitySummary"];
+            /**
+             * Body
+             * @constant
+             */
+            body: "earth";
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Limitations
+             * @description Always includes the statement that geometric visibility does not imply a radio link.
+             */
+            limitations: string[];
+            /** Samples */
+            samples: components["schemas"]["EarthGeometrySample"][];
+            /** @description Null when no horizon mask is available for the site. */
+            terrain: components["schemas"]["EarthVisibilitySummary"] | null;
+        };
+        /** EarthVisibilitySummary */
+        EarthVisibilitySummary: {
+            /** Any Truncated */
+            any_truncated: boolean;
+            /**
+             * Fully Visible Fraction
+             * @description Share of samples with the whole disk visible.
+             */
+            fully_visible_fraction: number;
+            /**
+             * Horizon
+             * @enum {string}
+             */
+            horizon: "astronomical" | "terrain";
+            /** Longest Outage Censored */
+            longest_outage_censored: boolean;
+            /** Longest Outage S */
+            longest_outage_s: number;
+            /**
+             * Longest Visibility Censored
+             * @description The longest run touches the window edge: its duration is a lower bound.
+             */
+            longest_visibility_censored: boolean;
+            /** Longest Visibility S */
+            longest_visibility_s: number;
+            /**
+             * Mean Visible Disk Fraction
+             * @description Time average of the disk fraction.
+             */
+            mean_visible_disk_fraction: number;
+            /**
+             * Resolution S
+             * @description Sample step: window edges are known to ± this.
+             */
+            resolution_s: number;
+            /**
+             * Visible Fraction
+             * @description Share of samples with any part of the Earth's disk visible.
+             */
+            visible_fraction: number;
+            /**
+             * Windows
+             * @description Direct-to-Earth geometric visibility windows (any part of the disk visible).
+             */
+            windows: components["schemas"]["VisibilityWindow"][];
+        };
         /** EphemerisObserver */
         EphemerisObserver: {
             /**
@@ -714,6 +902,59 @@ export interface components {
             /** Statement */
             statement: string;
         };
+        /** FootprintSchema */
+        FootprintSchema: {
+            /** Cell Count */
+            cell_count: number;
+            /** Height Max M */
+            height_max_m: number;
+            /** Height Mean M */
+            height_mean_m: number;
+            /** Height Min M */
+            height_min_m: number;
+            /**
+             * Missing Cell Count
+             * @description Cells with no DEM value (never treated as 0).
+             */
+            missing_cell_count: number;
+            /** Radius M */
+            radius_m: number;
+            /**
+             * Roughness Baseline M
+             * @description Diameter of the plane-fit window, m.
+             */
+            roughness_baseline_m: number;
+            /** Roughness Rms M */
+            roughness_rms_m: number | null;
+            /** Slope Baseline M */
+            slope_baseline_m: number;
+            /** Slope Max Deg */
+            slope_max_deg: number | null;
+            /** Slope Mean Deg */
+            slope_mean_deg: number | null;
+            /** Slope P95 Deg */
+            slope_p95_deg: number | null;
+        };
+        /** HazardSchema */
+        HazardSchema: {
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Max Roughness M
+             * @description Assumption supplied by the caller.
+             */
+            max_roughness_m: number | null;
+            /**
+             * Max Slope Deg
+             * @description Assumption supplied by the caller.
+             */
+            max_slope_deg: number | null;
+            /** Roughness Exceeds */
+            roughness_exceeds: boolean | null;
+            /** Slope Fraction Above */
+            slope_fraction_above: number | null;
+            /** Slope P95 Exceeds */
+            slope_p95_exceeds: boolean | null;
+        };
         /**
          * HealthResponse
          * @description Service liveness and readiness. HTTP 200 when ``ok``, 503 when ``degraded``.
@@ -823,6 +1064,65 @@ export interface components {
             truncated: boolean[];
             /** Truncated Count */
             truncated_count: number;
+        };
+        /** IlluminationResult */
+        IlluminationResult: {
+            astronomical: components["schemas"]["IlluminationSummary"];
+            /**
+             * Body
+             * @constant
+             */
+            body: "sun";
+            evidence: components["schemas"]["EvidenceSchema"];
+            /** Limitations */
+            limitations: string[];
+            /** Samples */
+            samples: components["schemas"]["SolarGeometrySample"][];
+            /** @description Null when no horizon mask is available for the site. */
+            terrain: components["schemas"]["IlluminationSummary"] | null;
+        };
+        /** IlluminationSummary */
+        IlluminationSummary: {
+            /** Any Truncated */
+            any_truncated: boolean;
+            /**
+             * Fully Lit Fraction
+             * @description Share of samples with the whole disk visible.
+             */
+            fully_lit_fraction: number;
+            /**
+             * Horizon
+             * @enum {string}
+             */
+            horizon: "astronomical" | "terrain";
+            /**
+             * Illuminated Fraction
+             * @description Share of samples with any part of the solar disk visible (≥ the mean).
+             */
+            illuminated_fraction: number;
+            /** Longest Darkness Censored */
+            longest_darkness_censored: boolean;
+            /** Longest Darkness S */
+            longest_darkness_s: number;
+            /**
+             * Longest Illumination Censored
+             * @description The longest run touches the window edge: its duration is a lower bound.
+             */
+            longest_illumination_censored: boolean;
+            /** Longest Illumination S */
+            longest_illumination_s: number;
+            /**
+             * Mean Visible Disk Fraction
+             * @description Time average of the visible solar-disk fraction: the quantity comparable to published average polar illumination (docs/SCIENCE.md §5.3).
+             */
+            mean_visible_disk_fraction: number;
+            /**
+             * Resolution S
+             * @description Sample step: window edges are known to ± this.
+             */
+            resolution_s: number;
+            /** Sunlit Windows */
+            sunlit_windows: components["schemas"]["VisibilityWindow"][];
         };
         /** RegisteredCatalogSites */
         RegisteredCatalogSites: {
@@ -1004,6 +1304,100 @@ export interface components {
             /** Step S */
             step_s: number;
         };
+        /** SiteTerrainResponse */
+        SiteTerrainResponse: {
+            dem: components["schemas"]["DemWindowSchema"];
+            evidence: components["schemas"]["EvidenceSchema"];
+            footprint: components["schemas"]["FootprintSchema"];
+            /** @description Present only when thresholds were supplied; LUNARIS ships no default. */
+            hazard: components["schemas"]["HazardSchema"] | null;
+            /**
+             * Height M
+             * @description Bilinear DEM height above the 1 737 400 m sphere.
+             */
+            height_m: number;
+            /** Latitude Deg */
+            latitude_deg: number;
+            /** Limitations */
+            limitations: string[];
+            /** Longitude Deg */
+            longitude_deg: number;
+            /**
+             * Scale Factor
+             * @description Polar stereographic point scale factor k at the site.
+             */
+            scale_factor: number;
+            /** Site Id */
+            site_id: string;
+            slope_at_site: components["schemas"]["SlopeValueSchema"];
+        };
+        /** SlopeValueSchema */
+        SlopeValueSchema: {
+            /**
+             * Baseline M
+             * @description Ground distance between the pixel centres Horn's operator differences.
+             */
+            baseline_m: number;
+            /**
+             * Slope Deg
+             * @description Horn slope; null where the DEM has no value.
+             */
+            slope_deg: number | null;
+        };
+        /** SoftwareComponent */
+        SoftwareComponent: {
+            /** Name */
+            name: string;
+            /** Version */
+            version: string | null;
+        };
+        /** SoftwareProvenance */
+        SoftwareProvenance: {
+            /** Components */
+            components: components["schemas"]["SoftwareComponent"][];
+            /** Service Version */
+            service_version: string;
+        };
+        /** SolarGeometrySample */
+        SolarGeometrySample: {
+            /**
+             * Astronomical Visible Fraction
+             * @description Fraction of the solar disk above the astronomical horizon, [0, 1].
+             */
+            astronomical_visible_fraction: number;
+            /** Azimuth Deg */
+            azimuth_deg: number;
+            /**
+             * Elevation Deg
+             * @description Of the Sun's centre, above the C0 plane.
+             */
+            elevation_deg: number;
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Solar Radius Deg
+             * @description Apparent angular radius of the Sun.
+             */
+            solar_radius_deg: number;
+            /**
+             * Terrain Horizon Elevation Deg
+             * @description Terrain horizon at the Sun's azimuth; null without a horizon mask.
+             */
+            terrain_horizon_elevation_deg: number | null;
+            /**
+             * Terrain Truncated
+             * @description True when the terrain fraction is an upper bound (truncated mask rays).
+             */
+            terrain_truncated: boolean | null;
+            /**
+             * Terrain Visible Fraction
+             * @description Fraction of the solar disk above the terrain horizon; null without a mask.
+             */
+            terrain_visible_fraction: number | null;
+        };
         /** SourceReferenceSchema */
         SourceReferenceSchema: {
             /** Citation */
@@ -1133,6 +1527,65 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * TimelineAnalysis
+         * @description Illumination and Earth-visibility timelines for one site over a UTC window (C4).
+         */
+        TimelineAnalysis: {
+            /**
+             * Computed At Utc
+             * Format: date-time
+             */
+            computed_at_utc: string;
+            earth_visibility: components["schemas"]["EarthVisibilityResult"];
+            /**
+             * End Utc
+             * Format: date-time
+             */
+            end_utc: string;
+            illumination: components["schemas"]["IlluminationResult"];
+            /** Max Samples */
+            max_samples: number;
+            observer: components["schemas"]["EphemerisObserver"];
+            /** Sample Count */
+            sample_count: number;
+            /** Site Id */
+            site_id: string;
+            /** Site Name */
+            site_name: string;
+            software: components["schemas"]["SoftwareProvenance"];
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+            /** Step S */
+            step_s: number;
+            /** Terrain Horizon Available */
+            terrain_horizon_available: boolean;
+        };
+        /** TimelineRequest */
+        TimelineRequest: {
+            /**
+             * End Utc
+             * Format: date-time
+             * @description Window end (inclusive when on a step), UTC.
+             */
+            end_utc: string;
+            /** Site Id */
+            site_id: string;
+            /**
+             * Start Utc
+             * Format: date-time
+             * @description Window start, ISO 8601 UTC.
+             */
+            start_utc: string;
+            /**
+             * Step S
+             * @description Sample spacing, seconds.
+             */
+            step_s: number;
+        };
         /** UrlVerificationSchema */
         UrlVerificationSchema: {
             /**
@@ -1148,6 +1601,36 @@ export interface components {
              */
             status: "unverified" | "verified";
         };
+        /**
+         * VisibilityWindow
+         * @description A maximal run of samples meeting a condition. Each sample stands for one step, so
+         *     the edges are known to within ``resolution_s``.
+         */
+        VisibilityWindow: {
+            /**
+             * Censored End
+             * @description Run touches the end of the analysis window.
+             */
+            censored_end: boolean;
+            /**
+             * Censored Start
+             * @description Run touches the start of the analysis window.
+             */
+            censored_start: boolean;
+            /** Duration S */
+            duration_s: number;
+            /**
+             * End Utc
+             * Format: date-time
+             * @description Epoch of the last sample in the run + step.
+             */
+            end_utc: string;
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -1157,6 +1640,66 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    post_timeline_api_v1_analysis_timeline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimelineRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineAnalysis"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     register_demo_trio_api_v1_catalog_demo_trio_register_post: {
         parameters: {
             query?: never;
@@ -1652,6 +2195,71 @@ export interface operations {
                 };
             };
             /** @description LDEM not acquired or not verified. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_site_terrain_api_v1_sites__site_id__terrain_get: {
+        parameters: {
+            query?: {
+                /** @description Footprint radius, m. */
+                footprint_radius_m?: number;
+                /** @description Hazard threshold (assumption). */
+                max_slope_deg?: number | null;
+                /** @description Hazard threshold (assumption). */
+                max_roughness_m?: number | null;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteTerrainResponse"];
+                };
+            };
+            /** @description Unknown site. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input or site outside coverage. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEM window could not be read. */
             503: {
                 headers: {
                     [name: string]: unknown;
