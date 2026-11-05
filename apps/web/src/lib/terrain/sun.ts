@@ -7,6 +7,7 @@ export interface BodyDirectionSeries {
   epochsMs: number[];
   directions: Direction[];
   elevationDeg: number[];
+  azimuthDeg: number[];
 }
 
 /** Prepares C2 samples (already validated by the client guard) for per-frame lookup. */
@@ -19,6 +20,7 @@ export function toDirectionSeries(samples: readonly BodyGeometrySample[]): BodyD
       s.direction_moon_me[2]!,
     ]),
     elevationDeg: samples.map((s) => s.elevation_deg),
+    azimuthDeg: samples.map((s) => s.azimuth_deg),
   };
 }
 
@@ -60,4 +62,22 @@ export function elevationAtMs(series: BodyDirectionSeries, ms: number): number |
   if (!b) return null;
   const [lo, hi, f] = b;
   return series.elevationDeg[lo]! + f * (series.elevationDeg[hi]! - series.elevationDeg[lo]!);
+}
+
+/**
+ * Display interpolation of azimuth (C0: clockwise from north, [0, 360)) and elevation at
+ * `ms`. Azimuth takes the short way across 0°/360°. Null outside the sampled span.
+ */
+export function azElAt(
+  series: BodyDirectionSeries,
+  ms: number,
+): { azimuthDeg: number; elevationDeg: number } | null {
+  const b = bracket(series.epochsMs, ms);
+  if (!b) return null;
+  const [lo, hi, f] = b;
+  const a0 = series.azimuthDeg[lo]!;
+  const delta = ((((series.azimuthDeg[hi]! - a0) % 360) + 540) % 360) - 180;
+  const az = (((a0 + f * delta) % 360) + 360) % 360;
+  const el = series.elevationDeg[lo]! + f * (series.elevationDeg[hi]! - series.elevationDeg[lo]!);
+  return { azimuthDeg: az, elevationDeg: el };
 }

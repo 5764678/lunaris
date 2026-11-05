@@ -186,11 +186,11 @@ function LightingDisclosure({ sun }: { sun: TerrainSun }) {
           detail={`${sun.evidence.statement} Light direction: C2 direction_moon_me (CN+S) for ${sun.siteName}, interpolated between hourly samples.`}
         />
         <span className="truncate font-mono text-3xs text-muted-foreground">
-          {formatUtc(sun.epochMs)} UTC · Sun elevation at {sun.siteName}{" "}
+          Sun el.{" "}
           <span className="numeric text-foreground" data-testid="terrain-sun-elevation">
             {signed(sun.elevationDeg)}
           </span>{" "}
-          (astronomical horizon)
+          (astronomical) · {formatUtc(sun.epochMs)} UTC · {sun.siteName}
         </span>
       </div>
       <div className="flex items-center gap-2">

@@ -3,7 +3,11 @@
 import { Crosshair } from "lucide-react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
-import { useSitesQuery } from "@/lib/api/queries";
+import { useMemo } from "react";
+
+import { describeError } from "@/lib/api/client";
+import { useSiteEphemeris, useSitesQuery } from "@/lib/api/queries";
+import { azElAt, toDirectionSeries } from "@/lib/terrain/sun";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { useMissionStore } from "@/store/mission-store";
 
@@ -13,16 +17,6 @@ const NOT_COMPUTED_ROWS: { label: string; milestone: string; detail: string }[] 
   { label: "Height", milestone: "M02", detail: "Sampled from a LOLA DEM in Milestone 02." },
   { label: "Slope", milestone: "M02", detail: "Horn (1981) slope on the polar grid — Milestone 02." },
   { label: "Roughness", milestone: "M02", detail: "Defined roughness statistic — Milestone 02." },
-  {
-    label: "Sun az / el",
-    milestone: "M03",
-    detail: "SPICE-derived solar geometry at the epoch — Milestone 03.",
-  },
-  {
-    label: "Earth az / el",
-    milestone: "M03",
-    detail: "SPICE-derived Earth geometry at the epoch — Milestone 03.",
-  },
   { label: "Illumination", milestone: "M04", detail: "Terrain-aware illumination — Milestone 04." },
   { label: "Earth LOS", milestone: "M04", detail: "Terrain-obstructed line of sight — Milestone 04." },
 ];
@@ -68,6 +62,7 @@ export function SelectedSite() {
             {km(position.x_m)}, {km(position.y_m)}, {km(position.z_m)}
           </span>
         </DataRow>
+        <GeometryRows siteId={site.id} />
         {NOT_COMPUTED_ROWS.map((row) => (
           <DataRow key={row.label} label={row.label}>
             <span className="text-dim">—</span>
@@ -76,5 +71,60 @@ export function SelectedSite() {
         ))}
       </dl>
     </PanelSection>
+  );
+}
+
+const fmtSigned = (deg: number) => `${deg >= 0 ? "+" : "−"}${Math.abs(deg).toFixed(2)}°`;
+
+/**
+ * Sun and Earth azimuth/elevation at the epoch (C2, SPICE via the API), shared with the
+ * timeline lanes' query. Shown as not computed, with the reason, when unavailable.
+ */
+function GeometryRows({ siteId }: { siteId: string }) {
+  const epochMs = useMissionStore((s) => s.epochMs);
+  const startMs = useMissionStore((s) => s.windowStartMs);
+  const endMs = useMissionStore((s) => s.windowEndMs);
+  const query = useSiteEphemeris(siteId, startMs, endMs);
+  const bodies = useMemo(
+    () =>
+      (query.data?.bodies ?? []).map((b) => ({
+        body: b.body,
+        evidence: b.evidence,
+        series: toDirectionSeries(b.samples),
+      })),
+    [query.data],
+  );
+  return (
+    <>
+      {(["sun", "earth"] as const).map((id) => {
+        const label = id === "sun" ? "Sun az / el" : "Earth az / el";
+        const body = bodies.find((b) => b.body === id);
+        const value = body && epochMs !== null ? azElAt(body.series, epochMs) : null;
+        if (!body || !value) {
+          const reason = query.isError
+            ? describeError(query.error)
+            : query.isPending
+              ? "Computing SPICE geometry…"
+              : "Epoch outside the computed window.";
+          return (
+            <DataRow key={id} label={label}>
+              <span className="text-dim">—</span>
+              <EvidenceBadge kind="not_computed" label="N/C" detail={reason} />
+            </DataRow>
+          );
+        }
+        return (
+          <DataRow key={id} label={label}>
+            <EvidenceBadge
+              kind={body.evidence.kind}
+              detail={`${body.evidence.statement} Interpolated between hourly samples for display; elevation is above the astronomical horizon (C0 plane), not the terrain horizon.`}
+            />
+            <span className="numeric" data-testid={`selected-site-${id}-azel`}>
+              {value.azimuthDeg.toFixed(1)}° / {fmtSigned(value.elevationDeg)}
+            </span>
+          </DataRow>
+        );
+      })}
+    </>
   );
 }

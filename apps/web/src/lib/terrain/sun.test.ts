@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { directionAt, elevationAtMs, toDirectionSeries } from "./sun";
+import { azElAt, directionAt, elevationAtMs, toDirectionSeries } from "./sun";
 
 // SYNTHETIC samples: the direction rotates 90° about +Z between two epochs.
 const T0 = Date.UTC(2026, 10, 5, 0);
@@ -36,5 +36,19 @@ describe("directionAt", () => {
 
   it("interpolates the elevation for the readout", () => {
     expect(elevationAtMs(series, T0 + H / 4)).toBeCloseTo(1.25, 12);
+  });
+});
+
+describe("azElAt", () => {
+  it("interpolates azimuth the short way across 0°/360°", () => {
+    const wrap = toDirectionSeries([
+      { ...sample(0, [1, 0, 0], 1), azimuth_deg: 350 },
+      { ...sample(1, [1, 0, 0], 3), azimuth_deg: 10 },
+    ]);
+    const mid = azElAt(wrap, T0 + H / 2)!;
+    expect(mid.azimuthDeg).toBeCloseTo(0, 9);
+    expect(mid.elevationDeg).toBeCloseTo(2, 12);
+    expect(azElAt(wrap, T0 + H / 4)!.azimuthDeg).toBeCloseTo(355, 9);
+    expect(azElAt(wrap, T0 + 2 * H)).toBeNull();
   });
 });
