@@ -18,7 +18,17 @@ export interface FractionSeries {
   anyUpperBound: boolean;
   evidence: Evidence;
   stepMs: number;
+  /** Earth line-of-sight state per sample (C4); empty for illumination. */
+  states: LineOfSight[];
 }
+
+export type LineOfSight = "clear" | "terrain_obstructed" | "below_geometric_horizon";
+
+export const LINE_OF_SIGHT_LABEL: Record<LineOfSight, string> = {
+  clear: "clear",
+  terrain_obstructed: "terrain-obstructed",
+  below_geometric_horizon: "below horizon",
+};
 
 export function fractionSeriesFromTimeline(analysis: TimelineAnalysis): {
   illumination: FractionSeries;
@@ -32,6 +42,7 @@ export function fractionSeriesFromTimeline(analysis: TimelineAnalysis): {
       astronomical_visible_fraction: number;
       terrain_visible_fraction?: number | null;
       terrain_truncated?: boolean | null;
+      line_of_sight?: LineOfSight;
     }[],
     evidence: Evidence,
   ): FractionSeries => {
@@ -45,6 +56,7 @@ export function fractionSeriesFromTimeline(analysis: TimelineAnalysis): {
       anyUpperBound: samples.some((s) => s.terrain_truncated === true),
       evidence,
       stepMs,
+      states: samples.flatMap((s) => (s.line_of_sight ? [s.line_of_sight] : [])),
     };
   };
   return {
@@ -57,10 +69,14 @@ export function fractionSeriesFromTimeline(analysis: TimelineAnalysis): {
 export function fractionAt(
   series: FractionSeries,
   ms: number,
-): { astronomical: number; terrain: number | null } | null {
+): { astronomical: number; terrain: number | null; state: LineOfSight | null } | null {
   if (series.epochsMs.length === 0) return null;
   const i = Math.round((ms - series.epochsMs[0]!) / series.stepMs);
   if (i < 0 || i >= series.epochsMs.length) return null;
   if (Math.abs(series.epochsMs[i]! - ms) > series.stepMs / 2 + 1) return null;
-  return { astronomical: series.astronomical[i]!, terrain: series.terrain[i]! };
+  return {
+    astronomical: series.astronomical[i]!,
+    terrain: series.terrain[i]!,
+    state: series.states[i] ?? null,
+  };
 }

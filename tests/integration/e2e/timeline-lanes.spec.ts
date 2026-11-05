@@ -228,6 +228,7 @@ for (const terrain of [null, 0.42]) {
           await expect(readout).toHaveText("≤ 42 % · astro 100 %");
         }
       }
+      await expect(page.getByTestId("lane-los-state")).toHaveText("clear · geometric only, not a radio link");
     } finally {
       await request.delete(`${API}/api/v1/sites/${id}`);
     }

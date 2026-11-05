@@ -4,7 +4,7 @@ import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from "react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { DAY_MS, HOUR_MS, dayTicks, formatUtc } from "@/lib/time/time";
-import { fractionAt, type FractionSeries } from "@/lib/timeline/fractions";
+import { LINE_OF_SIGHT_LABEL, fractionAt, type FractionSeries } from "@/lib/timeline/fractions";
 import { elevationAt, type ElevationSeries } from "@/lib/timeline/series";
 import { useMissionStore } from "@/store/mission-store";
 
@@ -246,6 +246,12 @@ export function TimelineTrack({
                   detail={[fraction.evidence.statement, fraction.evidence.method].filter(Boolean).join(" · ")}
                 />
               </span>
+              {lane.id === "los" && (
+                <span className="font-mono text-3xs text-foreground" data-testid="lane-los-state">
+                  {value?.state ? LINE_OF_SIGHT_LABEL[value.state] : "—"}
+                  <span className="text-dim"> · geometric only, not a radio link</span>
+                </span>
+              )}
               <span
                 className="numeric font-mono text-3xs text-foreground"
                 data-testid={`lane-readout-${lane.id}`}

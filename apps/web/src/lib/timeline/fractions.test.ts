@@ -16,6 +16,7 @@ function analysis(mask: boolean): TimelineAnalysis {
       astronomical_visible_fraction: 1 - h * 0.5,
       terrain_visible_fraction: mask ? (h === 1 ? null : 0.25 * h) : null,
       terrain_truncated: mask ? truncated : null,
+      line_of_sight: h === 2 ? "below_geometric_horizon" : "clear",
     }));
   return {
     step_s: 3600,
@@ -45,8 +46,16 @@ describe("fractionSeriesFromTimeline", () => {
 describe("fractionAt", () => {
   it("returns the nearest computed sample and nothing outside the window", () => {
     const { illumination } = fractionSeriesFromTimeline(analysis(true));
-    expect(fractionAt(illumination, T0 + 1.6 * H)).toEqual({ astronomical: 0, terrain: 0.5 });
-    expect(fractionAt(illumination, T0 + 1.2 * H)).toEqual({ astronomical: 0.5, terrain: null });
+    expect(fractionAt(illumination, T0 + 1.6 * H)).toMatchObject({ astronomical: 0, terrain: 0.5 });
+    expect(fractionAt(illumination, T0 + 1.2 * H)).toMatchObject({ astronomical: 0.5, terrain: null });
     expect(fractionAt(illumination, T0 - H)).toBeNull();
+  });
+});
+
+describe("line-of-sight states", () => {
+  it("carries the per-sample state for the Earth lane", () => {
+    const { los } = fractionSeriesFromTimeline(analysis(true));
+    expect(fractionAt(los, T0)!.state).toBe("clear");
+    expect(fractionAt(los, T0 + 2 * H)!.state).toBe("below_geometric_horizon");
   });
 });
