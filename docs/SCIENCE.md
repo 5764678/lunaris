@@ -525,7 +525,9 @@ containing the reference point, and the 3 × 3 (720 m) spread.
 
   With the eye at 2 m, every difference is ≤ 0.042, and four of the six values lie
   within the published local spread. Site07 is slightly above its spread (Sun +0.040,
-  Earth +0.001). Stated causes:
+  Earth +0.001). The analysis period is **ruled out** as the cause: a one-year (2026)
+  preview first gave Site07 Sun 0.879, and over the published 2001–2018 period the value
+  is still 0.881. Stated causes:
   1. *Observer height.* The labels state none. It matters at the 0.1 level (Site01 Sun:
      0.730 at 2 m, 0.661 at 0 m), and 2 m agrees better overall (mean absolute
      difference 0.022, against 0.044 at 0 m).
