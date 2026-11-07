@@ -14,7 +14,7 @@ import { FractionLane } from "./fraction-lane";
 export const ANALYSIS_LANES = [
   { id: "sun", label: "Sun elevation", milestone: "M03", note: "SPICE solar geometry" },
   { id: "earth", label: "Earth elevation", milestone: "M03", note: "SPICE Earth geometry" },
-  { id: "illumination", label: "Illumination", milestone: "M04", note: "terrain horizon" },
+  { id: "illumination", label: "Sunlight", milestone: "M04", note: "terrain horizon" },
   { id: "los", label: "Earth line of sight", milestone: "M04", note: "terrain-obstructed DTE" },
 ] as const;
 
@@ -259,8 +259,8 @@ export function TimelineTrack({
                 {value === null
                   ? "—"
                   : value.terrain === null
-                    ? `astro ${pct(value.astronomical)} · terrain n/a`
-                    : `${fraction.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · astro ${pct(value.astronomical)}`}
+                    ? `no hills ${pct(value.astronomical)} · terrain n/a`
+                    : `${fraction.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · no hills ${pct(value.astronomical)}`}
               </span>
             </div>
           );

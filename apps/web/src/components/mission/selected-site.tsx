@@ -8,6 +8,7 @@ import { useMemo } from "react";
 import { CellEvidence } from "@/components/evidence/cell-evidence";
 import { describeError, type CompareCell, type CompareRow } from "@/lib/api/client";
 import { useSiteComparison, useSiteEphemeris, useSitesQuery } from "@/lib/api/queries";
+import { formatPeriodUtc, metricCopy } from "@/lib/comparison/labels";
 import { azElAt, toDirectionSeries } from "@/lib/terrain/sun";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { useMissionStore } from "@/store/mission-store";
@@ -15,13 +16,16 @@ import { useMissionStore } from "@/store/mission-store";
 import { DataRow, PanelSection } from "./panel-section";
 import { SiteOriginBadge, TILE_CENTRE_NOTE } from "./site-origin";
 
-/** Selected-site cells filled from the T-17 comparison row for this site. */
-const COMPARISON_ROWS: { label: string; key: keyof CompareRow }[] = [
-  { label: "Height", key: "surface_height_m" },
-  { label: "Slope", key: "slope_at_site_deg" },
-  { label: "Roughness", key: "roughness_rms_m" },
-  { label: "Illumination", key: "sun_mean_visible_disk_fraction" },
-  { label: "Earth LOS", key: "earth_visible_fraction" },
+/**
+ * Selected-site cells filled from the T-17 comparison row for this site. Names and
+ * explanations come from `metricCopy`, so they match the comparison table.
+ */
+const COMPARISON_KEYS: (keyof CompareRow)[] = [
+  "surface_height_m",
+  "slope_at_site_deg",
+  "roughness_rms_m",
+  "sun_mean_visible_disk_fraction",
+  "earth_visible_fraction",
 ];
 
 export function SelectedSite() {
@@ -108,7 +112,7 @@ function GeometryRows({ siteId }: { siteId: string }) {
           const reason = query.isError
             ? describeError(query.error)
             : query.isPending
-              ? "Computing SPICE geometry…"
+              ? "Loading Sun and Earth positions…"
               : "Epoch outside the computed window.";
           return (
             <DataRow key={id} label={label}>
@@ -134,9 +138,10 @@ function GeometryRows({ siteId }: { siteId: string }) {
 }
 
 /**
- * Height, slope, roughness, illumination and Earth visibility from the site comparison
+ * Height, slope, bumpiness, average sunlight and Earth visibility from the site comparison
  * (T-17, default window). Each value opens its own evidence; while computing or on error
- * the rows say so (N/C with the reason), never 0.
+ * the rows say so (N/C with the reason), never 0. The dates the values cover are shown,
+ * because the sunlight and Earth numbers are averages over them.
  */
 function ComparisonRows({ siteId }: { siteId: string }) {
   const query = useSiteComparison([siteId]);
@@ -144,11 +149,12 @@ function ComparisonRows({ siteId }: { siteId: string }) {
   const reason = query.isError
     ? describeError(query.error)
     : query.isPending
-      ? "computing site comparison…"
+      ? "calculating site values…"
       : "site missing from the comparison";
   return (
     <>
-      {COMPARISON_ROWS.map(({ label, key }) => {
+      {COMPARISON_KEYS.map((key) => {
+        const { label, tip } = metricCopy(key, key);
         const cell = row?.[key] as CompareCell | undefined;
         return (
           <DataRow key={key} label={label}>
@@ -156,6 +162,7 @@ function ComparisonRows({ siteId }: { siteId: string }) {
               <CellEvidence
                 cell={cell}
                 label={`${label} (${siteLabel(row)})`}
+                meaning={tip}
                 align="end"
                 testId={`selected-site-${key}`}
               />
@@ -168,6 +175,17 @@ function ComparisonRows({ siteId }: { siteId: string }) {
           </DataRow>
         );
       })}
+      {query.data && (
+        <DataRow label="Dates used">
+          <span
+            className="min-w-0 text-2xs whitespace-normal text-muted-foreground"
+            title={`Exact window: ${query.data.start_utc} → ${query.data.end_utc}`}
+            data-testid="selected-site-period"
+          >
+            {formatPeriodUtc(query.data.start_utc, query.data.end_utc)}
+          </span>
+        </DataRow>
+      )}
     </>
   );
 }

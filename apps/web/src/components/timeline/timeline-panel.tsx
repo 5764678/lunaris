@@ -146,9 +146,20 @@ export function TimelinePanel() {
       <TimelineTrack lanes={lanes} geometryNote={geometryNote} fractionNote={fractions.note} />
       <p className="mt-2 text-3xs text-dim" data-testid="timeline-note">
         {siteName
-          ? `Sun and Earth elevation for ${siteName}: SPICE apparent direction (CN+S) above the local horizontal plane of the 1737.4 km sphere, hourly. Illumination and Earth line of sight: visible-disk fraction (timeline analysis), terrain horizon solid where a horizon mask is served, astronomical horizon dotted; geometric line of sight does not imply a radio link.`
-          : "Select a candidate site to compute its Sun and Earth elevation over the window."}
+          ? `Sun and Earth lanes: how high each one appears above a level horizon at ${siteName}. The dashed line is that level horizon and the band is the width of the Sun or Earth. Sunlight and Earth line-of-sight lanes: how much of the disk is above the skyline. The solid line includes the terrain around the site; the dotted line ("no hills") assumes a smooth Moon. Line of sight is geometry only and does not imply a radio link.`
+          : "Select a candidate site to see how high the Sun and Earth appear above its horizon over this window."}
       </p>
+      {siteName && (
+        <details className="mt-1 text-3xs text-dim" data-testid="timeline-method">
+          <summary className="w-fit cursor-pointer">Method</summary>
+          <p className="mt-1">
+            Directions come from NASA&apos;s SPICE toolkit: the apparent direction, corrected for the time
+            light takes to travel and for the small shift in direction caused by motion. Heights are measured
+            above the local horizontal plane of the 1,737.4 km reference sphere, sampled hourly. The skyline
+            comes from a terrain horizon mask where one is available.
+          </p>
+        </details>
+      )}
     </section>
   );
 }
@@ -163,7 +174,9 @@ function useGeometryLanes(startMs: number | null, endMs: number | null) {
     if (query.isError) {
       return { lanes: {}, geometryNote: `Not computed · ${describeError(query.error)}`, siteName: site.name };
     }
-    if (!query.data) return { lanes: {}, geometryNote: "Computing · SPICE geometry", siteName: site.name };
+    if (!query.data) {
+      return { lanes: {}, geometryNote: "Loading Sun and Earth positions…", siteName: site.name };
+    }
     try {
       return { lanes: seriesFromEphemeris(query.data), geometryNote: "", siteName: site.name };
     } catch (error) {
@@ -181,7 +194,7 @@ function useFractionLanes(startMs: number | null, endMs: number | null) {
   return useMemo((): { lanes: LaneData; note: string } => {
     if (!site) return { lanes: {}, note: "Not computed · select a site" };
     if (query.isError) return { lanes: {}, note: `Not computed · ${describeError(query.error)}` };
-    if (!query.data) return { lanes: {}, note: "Computing · timeline analysis" };
+    if (!query.data) return { lanes: {}, note: "Loading sunlight and Earth visibility…" };
     try {
       const { illumination, los } = fractionSeriesFromTimeline(query.data);
       return { lanes: { illumination, los }, note: "" };
