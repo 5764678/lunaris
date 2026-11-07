@@ -49,6 +49,11 @@ export class ApiError extends Error {
   readonly code: string | null;
   readonly details: ErrorDetail[];
   readonly requestId: string | null;
+  /**
+   * For `network` and `timeout` errors: how long the request ran before it failed. Tells a
+   * connection refused at once (nothing is listening) from one that failed after a long wait.
+   */
+  readonly elapsedMs: number | null;
 
   constructor(init: {
     kind: ApiErrorKind;
@@ -57,6 +62,7 @@ export class ApiError extends Error {
     code?: string | null;
     details?: ErrorDetail[];
     requestId?: string | null;
+    elapsedMs?: number | null;
   }) {
     super(init.message);
     this.name = "ApiError";
@@ -65,6 +71,7 @@ export class ApiError extends Error {
     this.code = init.code ?? null;
     this.details = init.details ?? [];
     this.requestId = init.requestId ?? null;
+    this.elapsedMs = init.elapsedMs ?? null;
   }
 }
 
@@ -286,6 +293,7 @@ export function createApiClient(options: ApiClientOptions) {
         message: timedOut
           ? `LUNARIS API did not respond within ${(requestTimeoutMs ?? timeoutMs) / 1000} s (${baseUrl}).`
           : `LUNARIS API unreachable at ${baseUrl}.`,
+        elapsedMs: now() - started,
       });
     } finally {
       clearTimeout(timer);
@@ -429,6 +437,7 @@ export function createApiClient(options: ApiClientOptions) {
           message: timedOut
             ? `Terrain data did not arrive within ${SCENE_DATA_TIMEOUT_MS / 1000} s.`
             : `LUNARIS API unreachable at ${baseUrl}.`,
+          elapsedMs: now() - started,
         });
       }
       const requestId = response.headers.get("x-request-id");

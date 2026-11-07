@@ -20,7 +20,7 @@ import { SiteOriginBadge } from "./site-origin";
 export function SiteRegistry() {
   const sites = useSitesQuery();
   const connection = useConnection();
-  const offline = connection.kind === "offline";
+  const unreachable = connection.kind === "offline" || connection.kind === "waking";
 
   return (
     <PanelSection
@@ -69,7 +69,7 @@ export function SiteRegistry() {
           </ul>
         )}
       </div>
-      <SiteForm disabled={offline} />
+      <SiteForm disabled={unreachable} />
     </PanelSection>
   );
 }

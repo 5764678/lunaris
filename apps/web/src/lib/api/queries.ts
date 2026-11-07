@@ -8,6 +8,7 @@ import {
   useQueryClient,
   type UseQueryResult,
 } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { shouldRetryComparison } from "@/lib/comparison/progress";
 import { config } from "@/lib/config";
@@ -17,6 +18,7 @@ import { decodeTerrainScene, type DecodedTerrain } from "@/lib/terrain/scene-dat
 
 import { ApiError, type TerrainSceneMetadata } from "./client";
 import { api } from "./instance";
+import { useWaking } from "./waking";
 
 export const queryKeys = {
   health: ["health"] as const,
@@ -84,6 +86,8 @@ export function useHealthQuery() {
 
 export type ConnectionState =
   | { kind: "connecting" }
+  /** The first answer is slow or failing the way a sleeping free-plan server does (see `useWaking`). */
+  | { kind: "waking"; error: ApiError | Error | null }
   | { kind: "online"; health: HealthResponse; latencyMs: number; checkedAt: number }
   | { kind: "degraded"; health: HealthResponse; latencyMs: number; checkedAt: number }
   | { kind: "incompatible"; health: HealthResponse; latencyMs: number; checkedAt: number }
@@ -92,6 +96,9 @@ export type ConnectionState =
 /** Interprets the health query as a single connection state for status indicators. */
 export function useConnection(): ConnectionState {
   const query = useHealthQuery();
+  const error = query.isError ? query.error : null;
+  const waking = useWaking(query.data !== undefined, error);
+  if (waking) return { kind: "waking", error };
   if (query.isError) {
     return { kind: "offline", error: query.error, checkedAt: query.errorUpdatedAt };
   }
@@ -100,6 +107,23 @@ export function useConnection(): ConnectionState {
   const base = { health, latencyMs, checkedAt: query.dataUpdatedAt };
   if (health.api_version !== config.expectedApiVersion) return { kind: "incompatible", ...base };
   return health.status === "ok" ? { kind: "online", ...base } : { kind: "degraded", ...base };
+}
+
+/**
+ * Once the server answers for the first time in a visit, retries at once every request that
+ * failed before it did, whether it has given up (error) or is still waiting out its next retry.
+ * The first calls to a sleeping server time out, so without this the page would sit on errors or
+ * on a long retry delay after the server woke up.
+ */
+export function useRetryFailedRequestsOnceAnswered() {
+  const queryClient = useQueryClient();
+  const answered = useHealthQuery().data !== undefined;
+  useEffect(() => {
+    if (!answered) return;
+    void queryClient.invalidateQueries({
+      predicate: (query) => query.state.status === "error" || query.state.fetchFailureCount > 0,
+    });
+  }, [answered, queryClient]);
 }
 
 export function useRuntimeQuery() {

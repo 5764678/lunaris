@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
+import { WakingBanner } from "./waking-banner";
 
 /** Fixed mission-control frame: top bar, module navigation, workspace. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -12,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main id="workspace" className="min-h-0 min-w-0 overflow-y-auto lg:overflow-hidden">
         {children}
       </main>
+      <WakingBanner />
     </div>
   );
 }
