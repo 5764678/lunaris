@@ -138,6 +138,24 @@ test("reads partly ready, in amber, and names each dataset that is not ready", a
   await expect(card).not.toContainText("In web app");
 });
 
+test("the Data page introduction says how the app gets each dataset, not that nothing is bundled", async ({
+  page,
+}) => {
+  await serveDatasets(page, "acquired");
+  await serveTexture(page, true);
+  await page.goto("/data");
+
+  const intro = page.getByTestId("data-intro");
+  await expect(intro).not.toContainText("Nothing here is bundled");
+  // The three ways the status pills read, as the introduction names them.
+  await expect(intro).toContainText("Acquired (stored on the server)");
+  await expect(intro).toContainText("Remote (read from NASA when needed)");
+  await expect(intro).toContainText("In web app");
+  // ...and the pills really read that way on this page.
+  const card = page.getByTestId("dataset-card").filter({ hasText: MOON_KIT });
+  await expect(card).toContainText("In web app");
+});
+
 test("says unavailable, in red, when the dataset list cannot be loaded", async ({ page }) => {
   await page.route(DATASETS, (route) =>
     route.fulfill({
