@@ -18,9 +18,10 @@ function isHttps(url: string | null | undefined): url is string {
 }
 
 /**
- * One computed value as a button; clicking opens its own evidence: kind, statement,
- * method, sources (link, SHA-256 or HTTP validators, citation), assumptions, limitations
- * and the measurement baseline. A null value shows its reason — never 0, never blank.
+ * One computed value as a button; clicking opens its own evidence: what the number means,
+ * kind, statement, method, sources (link, SHA-256 or HTTP validators, citation),
+ * assumptions, limitations and the measurement baseline. A null value shows its reason —
+ * never 0, never blank.
  */
 export function CellEvidence({
   cell,
@@ -28,12 +29,15 @@ export function CellEvidence({
   testId,
   align = "start",
   className,
+  meaning,
 }: {
   cell: CompareCell;
   label: string;
   testId?: string;
   align?: "start" | "end";
   className?: string;
+  /** Plain-language explanation of what the number means, shown first in the popover. */
+  meaning?: string;
 }) {
   const value = formatCellValue(cell);
   const baseline = formatBaseline(cell);
@@ -86,6 +90,11 @@ export function CellEvidence({
           {baseline && <span className="text-dim"> · baseline {baseline.slice(2)}</span>}
           <span className="text-dim"> · unit {cell.unit}</span>
         </p>
+        {meaning && (
+          <p className="mt-1 text-foreground/90" data-testid="cell-evidence-meaning">
+            {meaning}
+          </p>
+        )}
         {value === null && (
           <p className="mt-1 text-muted-foreground" data-testid="cell-evidence-reason">
             Reason: {cell.reason ?? "not given"}

@@ -11,6 +11,7 @@ import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import { describeError, type CompareCell, type CompareRow } from "@/lib/api/client";
 import { useSiteCatalog, useSiteComparison, useSitesQuery } from "@/lib/api/queries";
+import { formatPeriodUtc, metricCopy, metricTitle } from "@/lib/comparison/labels";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { cn } from "@/lib/utils";
 
@@ -91,8 +92,8 @@ export function ComparisonView() {
       ) : !comparison.data ? (
         <div className="space-y-2" aria-label="Computing comparison">
           <p className="font-mono text-3xs text-dim">
-            Computing the comparison (DEM windows, horizon masks, a year of hourly geometry)… first run takes
-            seconds per site.
+            Working out terrain, sunlight and Earth visibility for these sites… The first run can take up to a
+            minute.
           </p>
           <Skeleton className="h-28" />
         </div>
@@ -106,10 +107,14 @@ export function ComparisonView() {
 function ComparisonTable({ data }: { data: NonNullable<ReturnType<typeof useSiteComparison>["data"]> }) {
   return (
     <section aria-label="Comparison table" className="space-y-2">
-      <p className="font-mono text-3xs text-dim" data-testid="compare-window">
-        Window {data.start_utc} → {data.end_utc} · step {data.step_s / 3600} h · observer height{" "}
-        {data.observer_height_m} m · footprint radius {data.footprint_radius_m} m · {data.sample_count}{" "}
-        samples
+      <p
+        className="font-mono text-3xs text-dim"
+        data-testid="compare-window"
+        title={`Exact window: ${data.start_utc} → ${data.end_utc}`}
+      >
+        Dates {formatPeriodUtc(data.start_utc, data.end_utc)} · one reading every {data.step_s / 3600} h ·
+        viewpoint {data.observer_height_m} m above ground · footprint radius {data.footprint_radius_m} m ·{" "}
+        {data.sample_count.toLocaleString("en-US")} readings
       </p>
       <HorizontalScroll label="Comparison table (scrolls sideways)" testId="compare-scroll">
         <table className="w-max min-w-full border-collapse text-left" data-testid="compare-table">
@@ -122,10 +127,12 @@ function ComparisonTable({ data }: { data: NonNullable<ReturnType<typeof useSite
                 <th
                   key={c.key}
                   scope="col"
-                  title={c.description}
+                  title={metricTitle(c.key, c.label, c.description)}
                   className="px-2 py-1.5 align-bottom font-mono text-3xs font-medium text-muted-foreground"
                 >
-                  <span className="block max-w-28 whitespace-normal">{c.label}</span>
+                  <span className="block max-w-28 whitespace-normal">
+                    {metricCopy(c.key, c.label, c.description).label}
+                  </span>
                   <span className="text-dim">({UNIT_LABEL[c.unit] ?? c.unit})</span>
                 </th>
               ))}
@@ -149,12 +156,14 @@ function ComparisonTable({ data }: { data: NonNullable<ReturnType<typeof useSite
                 </th>
                 {data.columns.map((c) => {
                   const cell = (row as unknown as Record<string, CompareCell | undefined>)[c.key];
+                  const copy = metricCopy(c.key, c.label, c.description);
                   return (
                     <td key={c.key} className="max-w-44 px-1 py-1 align-top">
                       {cell ? (
                         <CellEvidence
                           cell={cell}
-                          label={`${row.name} · ${c.label}`}
+                          label={`${row.name} · ${copy.label}`}
+                          meaning={copy.tip}
                           testId={`cell-${c.key}`}
                         />
                       ) : (
