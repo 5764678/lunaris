@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Site comparison" };
 export default function ComparePage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin">
-      <div className="mx-auto max-w-7xl space-y-4 px-4 py-5 sm:px-6">
+      <div className="space-y-4 px-4 py-5 sm:px-6">
         <header className="space-y-1.5">
           <p className="label-caps">Mission intelligence · site comparison</p>
           <h1 className="text-lg font-medium text-foreground">Candidate site comparison</h1>

@@ -7,6 +7,7 @@ import { CellEvidence } from "@/components/evidence/cell-evidence";
 import { CatalogDemoTrio } from "@/components/mission/catalog-demo-trio";
 import { SiteOriginBadge } from "@/components/mission/site-origin";
 import { Button } from "@/components/ui/button";
+import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import { describeError, type CompareCell, type CompareRow } from "@/lib/api/client";
 import { useSiteCatalog, useSiteComparison, useSitesQuery } from "@/lib/api/queries";
@@ -110,10 +111,7 @@ function ComparisonTable({ data }: { data: NonNullable<ReturnType<typeof useSite
         {data.observer_height_m} m · footprint radius {data.footprint_radius_m} m · {data.sample_count}{" "}
         samples
       </p>
-      <div
-        className="overflow-x-auto rounded-md border border-hairline scrollbar-thin"
-        data-testid="compare-scroll"
-      >
+      <HorizontalScroll label="Comparison table (scrolls sideways)" testId="compare-scroll">
         <table className="w-max min-w-full border-collapse text-left" data-testid="compare-table">
           <thead>
             <tr className="border-b border-hairline bg-panel-sunken/60">
@@ -169,7 +167,7 @@ function ComparisonTable({ data }: { data: NonNullable<ReturnType<typeof useSite
             ))}
           </tbody>
         </table>
-      </div>
+      </HorizontalScroll>
       {data.assumptions.length > 0 && (
         <ul className="space-y-0.5 text-3xs text-dim">
           {data.assumptions.map((a) => (
