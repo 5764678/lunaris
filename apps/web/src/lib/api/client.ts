@@ -34,6 +34,8 @@ export type TerrainSceneMetadata = components["schemas"]["TerrainSceneMetadata"]
 
 const MAX_SCENE_GRID = 1024;
 const SCENE_DATA_TIMEOUT_MS = 60_000;
+/** How long one site's comparison may run before the client gives up. The first run of a site is the slow one. */
+export const SITE_COMPARISON_TIMEOUT_MS = 90_000;
 /** Cited site catalogue (T-03, generated contract). */
 export type SiteCatalog = components["schemas"]["SiteCatalogResponse"];
 export type CatalogSite = components["schemas"]["CatalogSiteSchema"];
@@ -358,7 +360,7 @@ export function createApiClient(options: ApiClientOptions) {
       request<SiteComparison>(
         "GET",
         `/api/v1/analysis/site-comparison?${new URLSearchParams({ site_ids: siteIds.join(",") }).toString()}`,
-        { signal, guard: isSiteComparison, timeoutMs: 120_000 },
+        { signal, guard: isSiteComparison, timeoutMs: SITE_COMPARISON_TIMEOUT_MS },
       ),
     analysisTimeline: (
       siteId: string,
