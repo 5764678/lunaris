@@ -221,10 +221,10 @@ for (const terrain of [null, 0.42]) {
         const readout = page.getByTestId(`lane-readout-${lane}`);
         if (terrain === null) {
           await expect(page.getByTestId(`lane-note-${lane}`)).toContainText("Terrain horizon not available");
-          await expect(readout).toHaveText("astro 100 % · terrain n/a");
+          await expect(readout).toHaveText("no hills 100 % · terrain n/a");
         } else {
           await expect(page.getByTestId(`lane-note-${lane}`)).toHaveCount(0);
-          await expect(readout).toHaveText("≤ 42 % · astro 100 %");
+          await expect(readout).toHaveText("≤ 42 % · no hills 100 %");
         }
       }
       await expect(page.getByTestId("lane-los-state")).toHaveText("clear · geometric only, not a radio link");
