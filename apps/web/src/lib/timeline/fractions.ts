@@ -80,3 +80,20 @@ export function fractionAt(
     state: series.states[i] ?? null,
   };
 }
+
+const pct = (fraction: number) => `${Math.round(fraction * 100)} %`;
+
+/**
+ * The text a fraction lane and the selected-site card both show for one moment: the share of the
+ * disk above the skyline with terrain in the way (an upper bound where mask rays ran out of map)
+ * next to the share with no hills, or the no-hills share alone where no terrain mask is served.
+ * One function, so the lane and the card cannot give different answers for the same moment.
+ */
+export function formatFractionReadout(
+  series: Pick<FractionSeries, "anyUpperBound">,
+  value: { astronomical: number; terrain: number | null } | null,
+): string {
+  if (value === null) return "—";
+  if (value.terrain === null) return `no hills ${pct(value.astronomical)} · terrain n/a`;
+  return `${series.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · no hills ${pct(value.astronomical)}`;
+}

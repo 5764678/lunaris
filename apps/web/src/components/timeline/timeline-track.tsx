@@ -4,7 +4,12 @@ import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from "react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { DAY_MS, HOUR_MS, dayTicks, formatUtc } from "@/lib/time/time";
-import { LINE_OF_SIGHT_LABEL, fractionAt, type FractionSeries } from "@/lib/timeline/fractions";
+import {
+  LINE_OF_SIGHT_LABEL,
+  formatFractionReadout,
+  fractionAt,
+  type FractionSeries,
+} from "@/lib/timeline/fractions";
 import { elevationAt, type ElevationSeries } from "@/lib/timeline/series";
 import { useMissionStore } from "@/store/mission-store";
 
@@ -27,8 +32,6 @@ export type LaneData = Partial<Record<"sun" | "earth", ElevationSeries>> &
 function laneFraction(data: LaneData, id: LaneId): FractionSeries | undefined {
   return id === "illumination" || id === "los" ? data[id] : undefined;
 }
-
-const pct = (f: number) => `${Math.round(f * 100)} %`;
 
 const EMPTY_LANE_HEIGHT_PX = 18;
 
@@ -256,11 +259,7 @@ export function TimelineTrack({
                 className="numeric font-mono text-3xs text-foreground"
                 data-testid={`lane-readout-${lane.id}`}
               >
-                {value === null
-                  ? "—"
-                  : value.terrain === null
-                    ? `no hills ${pct(value.astronomical)} · terrain n/a`
-                    : `${fraction.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · no hills ${pct(value.astronomical)}`}
+                {formatFractionReadout(fraction, value)}
               </span>
             </div>
           );

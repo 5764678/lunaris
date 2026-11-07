@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateUtc, formatPeriodUtc, metricCopy, metricTitle } from "./labels";
+import { calendarYearOf, formatDateUtc, formatPeriodUtc, metricCopy, metricTitle } from "./labels";
 
 describe("metricCopy", () => {
   it("gives the plain name and explanation for a known column", () => {
@@ -68,5 +68,23 @@ describe("dates", () => {
     expect(formatPeriodUtc("2027-01-01T00:00:00Z", "2028-01-01T00:00:00Z")).toBe(
       "1 Jan 2027 to 1 Jan 2028 (UTC)",
     );
+  });
+});
+
+describe("calendarYearOf", () => {
+  it("names the year when the dates are exactly one calendar year (UTC)", () => {
+    expect(calendarYearOf("2027-01-01T00:00:00Z", "2028-01-01T00:00:00Z")).toBe(2027);
+    expect(calendarYearOf("2028-01-01T00:00:00+00:00", "2029-01-01T00:00:00Z")).toBe(2028);
+  });
+
+  it("is null for any other stretch of time, so a row never claims a year it does not cover", () => {
+    expect(calendarYearOf("2027-01-01T00:00:00Z", "2027-07-01T00:00:00Z")).toBeNull();
+    expect(calendarYearOf("2027-01-01T00:00:00Z", "2029-01-01T00:00:00Z")).toBeNull();
+    expect(calendarYearOf("2027-03-01T00:00:00Z", "2028-03-01T00:00:00Z")).toBeNull();
+    expect(calendarYearOf("2027-01-01T00:00:00Z", "2028-01-01T00:00:01Z")).toBeNull();
+  });
+
+  it("is null for something that is not a date", () => {
+    expect(calendarYearOf("soon", "later")).toBeNull();
   });
 });
