@@ -65,7 +65,7 @@ export function SelectedSite() {
         {site.origin === "published" && (
           <DataRow label="Source">
             <span
-              className="min-w-0 text-2xs whitespace-normal text-muted-foreground"
+              className="min-w-0 text-2xs [overflow-wrap:anywhere] whitespace-normal text-muted-foreground"
               data-testid="selected-site-source"
             >
               {site.reference ?? "Published catalogue"} · {TILE_CENTRE_NOTE}

@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 
 /**
  * C1: the selected-site card keeps values that cover different stretches of time apart, in three
@@ -35,8 +35,28 @@ const cell = (value: number, unit: string, what: string) => ({
   limitations: [],
 });
 
-function syntheticComparison(url: string, [start, end]: [string, string]) {
+/** A value the API could not compute: no number, no evidence, only the reason. */
+const missing = (unit: string, reason: string) => ({
+  value: null,
+  unit,
+  baseline_m: null,
+  reason,
+  evidence: null,
+  limitations: [],
+});
+
+/**
+ * The reason the hosted demo gave when NASA's server refused its request: a web address with no
+ * spaces in it, longer than the whole value column of the card.
+ */
+const REFUSED_BY_NASA =
+  "terrain analysis not available: Could not read pgda-lola-20mpp-80s: HEAD " +
+  "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF failed: 403 Forbidden";
+
+function syntheticComparison(url: string, [start, end]: [string, string], missingReason?: string) {
   const ids = new URL(url).searchParams.get("site_ids")!.split(",");
+  const metric = (value: number, unit: string, what: string) =>
+    missingReason === undefined ? cell(value, unit, what) : missing(unit, missingReason);
   return {
     start_utc: start,
     end_utc: end,
@@ -58,11 +78,11 @@ function syntheticComparison(url: string, [start, end]: [string, string]) {
       origin: "published",
       latitude_deg: -89,
       longitude_deg: 10 * i,
-      surface_height_m: cell(1942.16, "m", "height"),
-      slope_at_site_deg: cell(5.45, "deg", "slope"),
-      roughness_rms_m: cell(0.448, "m", "roughness"),
-      sun_mean_visible_disk_fraction: cell(0.685, "fraction", "sun average"),
-      earth_visible_fraction: cell(0.542, "fraction", "earth average"),
+      surface_height_m: metric(1942.16, "m", "height"),
+      slope_at_site_deg: metric(5.45, "deg", "slope"),
+      roughness_rms_m: metric(0.448, "m", "roughness"),
+      sun_mean_visible_disk_fraction: metric(0.685, "fraction", "sun average"),
+      earth_visible_fraction: metric(0.542, "fraction", "earth average"),
     })),
   };
 }
@@ -157,15 +177,20 @@ type Setup = {
   window?: [string, string];
   terrain?: "varying" | null;
   timelineFails?: boolean;
+  /** Serve every comparison value as "not computed" with this reason. */
+  notComputedReason?: string;
 };
 
 /** Serves the synthetic responses, opens the dashboard and selects the first listed site. */
-async function openCard(page: Page, { window = YEAR_2027, terrain = "varying", timelineFails }: Setup = {}) {
+async function openCard(
+  page: Page,
+  { window = YEAR_2027, terrain = "varying", timelineFails, notComputedReason }: Setup = {},
+) {
   await page.route(COMPARE, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(syntheticComparison(route.request().url(), window)),
+      body: JSON.stringify(syntheticComparison(route.request().url(), window, notComputedReason)),
     }),
   );
   await page.route(TIMELINE, (route) =>
@@ -194,6 +219,52 @@ const groups = (page: Page) => ({
   ground: page.getByRole("group", { name: "Ground at the site" }),
   average: page.getByRole("group", { name: /^Over / }),
 });
+
+/**
+ * Fails when any line of the text in `element` lies outside the cell it is in: the value column (`dd`)
+ * of a card row, or a table cell. Text that overflows is drawn over the row's label or the next column,
+ * or runs past the edge of the panel and is cut off.
+ */
+async function expectTextInsideCell(element: Locator, what: string) {
+  const bounds = await element.evaluate((node) => {
+    const cell = node.closest("dd, td")!.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const lines = [...range.getClientRects()].filter((rect) => rect.width > 0);
+    return {
+      cellLeft: cell.left,
+      cellRight: cell.right,
+      textLeft: Math.min(...lines.map((rect) => rect.left)),
+      textRight: Math.max(...lines.map((rect) => rect.right)),
+    };
+  });
+  expect(bounds.textLeft, `${what} runs past the left edge of its cell`).toBeGreaterThanOrEqual(
+    bounds.cellLeft - 1,
+  );
+  expect(bounds.textRight, `${what} runs past the right edge of its cell`).toBeLessThanOrEqual(
+    bounds.cellRight + 1,
+  );
+}
+
+/** Every comparison value the card shows, as the group it sits in and its column key. */
+const COMPARISON_ROWS = [
+  ["ground", "surface_height_m"],
+  ["ground", "slope_at_site_deg"],
+  ["ground", "roughness_rms_m"],
+  ["average", "sun_mean_visible_disk_fraction"],
+  ["average", "earth_visible_fraction"],
+] as const;
+
+/** A refusal from NASA's server names a web address that cannot be broken at a space. */
+async function expectLongReasonsInsideRows(page: Page) {
+  await openCard(page, { notComputedReason: REFUSED_BY_NASA });
+  const panel = groups(page);
+  for (const [group, key] of COMPARISON_ROWS) {
+    const reason = panel[group].getByTestId(`selected-site-${key}`).getByText(/^N\/C/);
+    await expect(reason).toContainText("403 Forbidden");
+    await expectTextInsideCell(reason, `The reason for ${key}`);
+  }
+}
 
 test.describe("selected-site card groups", () => {
   let ids: string[] = [];
@@ -302,6 +373,33 @@ test.describe("selected-site card groups", () => {
     // The rest of the card is unaffected: the averages still show their numbers.
     await expect(average.getByTestId("selected-site-sun_mean_visible_disk_fraction")).toContainText("68.5 %");
   });
+
+  test("a long web address in a 'not computed' reason wraps inside its row", async ({ page }) => {
+    await expectLongReasonsInsideRows(page);
+  });
+
+  test("the Source row of a catalogue site stays inside its row", async ({ page }) => {
+    await openCard(page);
+    await expectTextInsideCell(page.getByTestId("selected-site-source"), "The Source row");
+  });
+
+  test("the Compare table, which shows the same 'not computed' text, wraps it inside each cell", async ({
+    page,
+  }) => {
+    await page.route(COMPARE, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(syntheticComparison(route.request().url(), YEAR_2027, REFUSED_BY_NASA)),
+      }),
+    );
+    await page.goto("/compare");
+    for (const [, key] of COMPARISON_ROWS) {
+      const reason = page.getByTestId(`cell-${key}`).first().getByText(/^N\/C/);
+      await expect(reason).toContainText("403 Forbidden");
+      await expectTextInsideCell(reason, `The reason for ${key}`);
+    }
+  });
 });
 
 test.describe("phone width", () => {
@@ -318,6 +416,25 @@ test.describe("phone width", () => {
           .evaluate((element) => element.scrollWidth > element.clientWidth + 1);
         expect(clipped, `${testId} is cut off`).toBe(false);
       }
+    } finally {
+      await cleanup(request, ids);
+    }
+  });
+
+  test("a long web address in a 'not computed' reason wraps inside its row", async ({ page, request }) => {
+    const ids = await registerTrio(request);
+    try {
+      await expectLongReasonsInsideRows(page);
+    } finally {
+      await cleanup(request, ids);
+    }
+  });
+
+  test("the Source row of a catalogue site stays inside its row", async ({ page, request }) => {
+    const ids = await registerTrio(request);
+    try {
+      await openCard(page);
+      await expectTextInsideCell(page.getByTestId("selected-site-source"), "The Source row");
     } finally {
       await cleanup(request, ids);
     }
