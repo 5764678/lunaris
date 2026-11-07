@@ -38,7 +38,7 @@ test("dashboard connects to the API and discloses placeholders", async ({ page }
   await expect(page.getByTestId("moon-canvas").locator("canvas")).toBeVisible();
   await expect(page.getByTestId("surface-disclosure")).toContainText(/placeholder|NASA SVS/i);
   await expect(page.getByTestId("lighting-disclosure")).toContainText("not the computed Sun direction");
-  await expect(page.getByTestId("data-status")).toContainText("/3 acquired");
+  await expect(page.getByTestId("data-status")).toContainText(/\d+\/\d+ ready/);
 
   // Planned modules are visibly unavailable, not fake views.
   // Modules with served endpoints are available; Mission Intelligence links to the comparison.
