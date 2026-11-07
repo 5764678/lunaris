@@ -15,21 +15,26 @@ async function registerTrio(request: APIRequestContext) {
   return ((await response.json()) as { sites: { id: string }[] }).sites.map((s) => s.id);
 }
 
-async function cleanup(request: APIRequestContext, ids: string[]) {
-  for (const id of ids) await request.delete(`${API}/api/v1/sites/${id}`);
+/**
+ * Removes every registered site, not just the ones this test made: a cited site brought back
+ * from the page gets a new id, and one left behind would change what the next spec sees.
+ */
+async function clearSites(request: APIRequestContext) {
+  const { sites } = (await (await request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string }[] };
+  for (const { id } of sites) await request.delete(`${API}/api/v1/sites/${id}`);
 }
 
 test("cited sites show a lock, not a delete button; a visitor's own site keeps its delete button", async ({
   page,
   request,
 }) => {
-  const ids = await registerTrio(request);
+  await clearSites(request);
+  await registerTrio(request);
   const ownName = `E2E own site ${Date.now()}`;
   const own = await request.post(`${API}/api/v1/sites`, {
     data: { name: ownName, latitude_deg: -89.2, longitude_deg: 40 },
   });
   expect(own.ok()).toBe(true);
-  ids.push(((await own.json()) as { id: string }).id);
   try {
     await page.goto("/");
     const list = page.getByTestId("site-list");
@@ -48,11 +53,12 @@ test("cited sites show a lock, not a delete button; a visitor's own site keeps i
     await lock.focus();
     await expect(page.getByRole("tooltip")).toContainText("Cited demo sites cannot be deleted");
   } finally {
-    await cleanup(request, ids);
+    await clearSites(request);
   }
 });
 
 test("a cited site that went missing comes back with one click", async ({ page, request }) => {
+  await clearSites(request);
   const ids = await registerTrio(request);
   try {
     await request.delete(`${API}/api/v1/sites/${ids[0]}`); // removed straight through the API
@@ -63,6 +69,6 @@ test("a cited site that went missing comes back with one click", async ({ page, 
     await expect(list.locator("li")).toHaveCount(3);
     await expect(list.getByTestId("site-locked")).toHaveCount(3);
   } finally {
-    await cleanup(request, ids);
+    await clearSites(request);
   }
 });
