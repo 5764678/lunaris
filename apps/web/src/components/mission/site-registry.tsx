@@ -1,11 +1,12 @@
 "use client";
 
 import type { CandidateSite } from "@lunaris/shared-types";
-import { MapPin, RotateCcw, Trash2 } from "lucide-react";
+import { Lock, MapPin, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { describeError } from "@/lib/api/client";
 import { useConnection, useDeleteSite, useSitesQuery } from "@/lib/api/queries";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
@@ -111,26 +112,46 @@ function SiteRow({ site }: { site: CandidateSite }) {
         </span>
       </button>
       <SiteOriginBadge site={site} />
-      <Button
-        size="icon-xs"
-        variant={confirming ? "destructive" : "ghost"}
-        aria-label={confirming ? `Confirm deletion of ${site.name}` : `Delete ${site.name}`}
-        disabled={deleteSite.isPending}
-        onClick={() => {
-          if (!confirming) {
-            setConfirming(true);
-            return;
-          }
-          deleteSite.mutate(site.id, {
-            onSuccess: () => {
-              if (selected) selectSite(null);
-            },
-          });
-        }}
-        className={cn(!confirming && "opacity-60 group-hover:opacity-100")}
-      >
-        <Trash2 />
-      </Button>
+      {site.origin === "published" ? (
+        // Cited demo sites are shared by every visitor, so they cannot be deleted from here.
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              tabIndex={0}
+              data-testid="site-locked"
+              aria-label={`${site.name} is a cited demo site and cannot be deleted`}
+              className="grid size-6 shrink-0 cursor-help place-items-center rounded-md text-dim outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              <Lock className="size-3" aria-hidden="true" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            Cited demo sites cannot be deleted. If one goes missing, the Add button in the Cited demo sites
+            box brings it back.
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <Button
+          size="icon-xs"
+          variant={confirming ? "destructive" : "ghost"}
+          aria-label={confirming ? `Confirm deletion of ${site.name}` : `Delete ${site.name}`}
+          disabled={deleteSite.isPending}
+          onClick={() => {
+            if (!confirming) {
+              setConfirming(true);
+              return;
+            }
+            deleteSite.mutate(site.id, {
+              onSuccess: () => {
+                if (selected) selectSite(null);
+              },
+            });
+          }}
+          className={cn(!confirming && "opacity-60 group-hover:opacity-100")}
+        >
+          <Trash2 />
+        </Button>
+      )}
     </li>
   );
 }

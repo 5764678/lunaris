@@ -132,3 +132,42 @@ def test_registry_limit(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> 
 
 def test_invalid_site_id_path(client: TestClient) -> None:
     assert client.get("/api/v1/sites/not%20valid").status_code == 422
+
+
+def _register_demo_trio(client: TestClient) -> list[str]:
+    response = client.post("/api/v1/catalog/demo-trio/register")
+    assert response.status_code == 200, response.text
+    return [site["id"] for site in response.json()["sites"]]
+
+
+def test_cited_sites_can_be_deleted_by_default(client: TestClient) -> None:
+    ids = _register_demo_trio(client)
+    assert client.delete(f"/api/v1/sites/{ids[0]}").status_code == 204
+    assert client.get("/api/v1/sites").json()["count"] == 2
+
+
+def test_protected_server_refuses_to_delete_cited_sites(settings: Settings) -> None:
+    protected = settings.model_copy(update={"protect_published_sites": True})
+    with TestClient(create_app(protected)) as client:
+        ids = _register_demo_trio(client)
+        refused = client.delete(f"/api/v1/sites/{ids[0]}")
+        assert refused.status_code == 403
+        error = refused.json()["error"]
+        assert error["code"] == "forbidden"
+        assert "cited demo site" in error["message"]
+        assert client.get(f"/api/v1/sites/{ids[0]}").status_code == 200
+        assert client.get("/api/v1/sites").json()["count"] == 3
+
+        # Sites a visitor added themselves can still be deleted, and unknown ids are still 404.
+        own = _create(client, name="Visitor site")
+        assert client.delete(f"/api/v1/sites/{own['id']}").status_code == 204
+        assert client.delete("/api/v1/sites/no-such-site").status_code == 404
+
+        # Registering again changes nothing, so the demo sites are always there to come back to.
+        again = client.post("/api/v1/catalog/demo-trio/register").json()
+        assert again["created"] == []
+        assert client.get("/api/v1/sites").json()["count"] == 3
+
+
+def test_protection_defaults_to_off(settings: Settings) -> None:
+    assert settings.protect_published_sites is False

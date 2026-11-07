@@ -10,7 +10,7 @@ from lunaris_api.db.repositories import (
     SiteRepository,
     name_key,
 )
-from lunaris_api.errors import ConflictError, NotFoundError
+from lunaris_api.errors import ConflictError, ForbiddenError, NotFoundError
 from lunaris_api.schemas.common import EvidenceSchema, SourceReferenceSchema
 from lunaris_api.schemas.sites import (
     BodyFixedPositionSchema,
@@ -184,9 +184,15 @@ class SiteService:
             raise ConflictError(f"A site named {entity.name!r} already exists.") from None
         return to_schema(stored)
 
-    def delete_site(self, site_id: str) -> None:
-        if not self._repository.delete(site_id):
+    def delete_site(self, site_id: str, *, protect_published: bool = False) -> None:
+        entity = self._repository.get(site_id)
+        if entity is None:
             raise NotFoundError(f"Candidate site {site_id!r} does not exist.")
+        if protect_published and entity.origin == ORIGIN_PUBLISHED:
+            raise ForbiddenError(
+                f"{entity.name!r} is a cited demo site and cannot be deleted on this server."
+            )
+        self._repository.delete(site_id)
 
 
 __all__ = ["MAX_SITES", "SiteService", "body_fixed_position", "to_schema"]
