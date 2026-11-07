@@ -39,6 +39,13 @@ test("opens with the best-known cited site already selected", async ({ page, req
 test("a visitor who deselects the site keeps an empty selection", async ({ page, request }) => {
   await clearSites(request);
   await registerTrio(request);
+  // A site of the visitor's own. Deleting it from the list is how the registry changes below: a
+  // cited site is not a safe choice for that, because a server may give those no delete button.
+  const ownName = `E2E own site ${Date.now()}`;
+  const created = await request.post(`${API}/api/v1/sites`, {
+    data: { name: ownName, latitude_deg: -89.2, longitude_deg: 12.5 },
+  });
+  expect(created.ok()).toBe(true);
   try {
     await page.goto("/");
     await expect(page.getByTestId("selected-site-name")).toHaveText(DEFAULT_SITE);
@@ -48,9 +55,9 @@ test("a visitor who deselects the site keeps an empty selection", async ({ page,
     await expect(row.locator("button[aria-pressed]")).toHaveAttribute("aria-pressed", "false");
 
     // The registry changes (another site is deleted, the list is fetched again): still no selection.
-    const other = list.locator("li", { hasText: "Connecting ridge" });
-    await other.getByRole("button", { name: "Delete Connecting ridge" }).click();
-    await other.getByRole("button", { name: "Confirm deletion of Connecting ridge" }).click();
+    const other = list.locator("li", { hasText: ownName });
+    await other.getByRole("button", { name: `Delete ${ownName}` }).click();
+    await other.getByRole("button", { name: `Confirm deletion of ${ownName}` }).click();
     await expect(other).toHaveCount(0);
     await expect(page.getByTestId("selected-site-name")).toHaveCount(0);
     await expect(row.locator("button[aria-pressed]")).toHaveAttribute("aria-pressed", "false");
