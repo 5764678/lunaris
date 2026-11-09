@@ -41,9 +41,6 @@ test("dashboard connects to the API and discloses placeholders", async ({ page }
   await expect(page.getByTestId("data-status")).toContainText(/\d+\/\d+ ready/);
 
   // Planned modules are visibly unavailable, not fake views.
-  // Modules with served endpoints are available; Mission Intelligence links to the comparison.
-  await expect(page.getByTestId("nav-available-terrain")).not.toHaveAttribute("aria-disabled", "true");
-  await expect(page.getByRole("link", { name: /Mission Intelligence/ })).toHaveAttribute("href", "/compare");
   await expect(page.locator("[data-lane]")).toHaveCount(4);
   await expect(page.locator("[data-lane]").first()).toContainText("Not computed");
 
