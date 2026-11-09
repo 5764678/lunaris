@@ -14,7 +14,8 @@ export default function ComparePage() {
           <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">
             One row per site, one column per measure, with its unit. Click any value to see what it means,
             where it came from, how it was worked out and its limits. A value that cannot be computed shows
-            the reason instead; it is never shown as 0. No score or ranking is computed.
+            the reason instead; it is never shown as 0. The summary comes from the measures alone; a score
+            appears only if you pick a mission profile, with its weights shown.
           </p>
         </header>
         <ComparisonView />

@@ -9,37 +9,48 @@ traceable evidence: *Is this landing site physically suitable? How does its illu
 change over time? When is the Earth geometrically visible? Does terrain obstruct the Sun
 or the Earth? How do candidate sites compare, and what are the trade-offs?*
 
-> **Status: Milestone 01 — foundation.** Architecture, data provenance, API, contracts
-> and the mission-control client are in place. Terrain, geometry, illumination and
-> visibility analyses are **not implemented yet**; the UI marks every such value as not
-> computed. LUNARIS is a preliminary planning and research tool, **not a certified
-> spacecraft landing system**.
+> **Status: v0.9.0, a working research prototype.** Terrain, celestial geometry,
+> illumination, Earth line of sight and site comparison are implemented, and every
+> computed number opens its data source, method and limitations. The results are checked
+> against independent references (below). LUNARIS is a preliminary planning and research
+> tool, **not a certified spacecraft landing system**.
+
+**Live demo:** <https://lunaris-demo.onrender.com> (free plan: open it a minute early, the
+server sleeps when idle).
 
 ![LUNARIS mission overview](docs/images/mission-overview.jpg)
 
-*Mission overview with the NASA SVS CGI Moon Kit color map, acquired with `lunaris-data`.
-A fresh clone shows a clearly labeled procedural placeholder surface until the data is
-acquired (commands below). Lighting is view-relative and labeled as such; the site is
-user-defined.*
+*Mission overview: the NASA SVS CGI Moon Kit color map lit by the SPICE Sun at the timeline
+epoch (here 9 Nov 2026, near New Moon: the sub-solar point is at 179°E, so the Earth-facing
+side is dark), the cited south-pole
+sites, and the Sun, Earth, sunlight and line-of-sight lanes for the selected site.*
 
-## What works in Milestone 01
+## What it does
 
-- **Mission-control web client** (Next.js 16, React 19, Tailwind v4, shadcn/ui, React
-  Three Fiber): module navigation, live API status, UTC clock, 3D lunar globe in the
-  `MOON_ME` frame (south-polar views, graticule, selectable site markers), mission panel,
-  analysis timeline with time controls, data-sources page.
-- **Candidate sites** (user-defined): create/list/select/delete, validated on both sides,
-  persisted in SQLite, shown on the globe.
-- **FastAPI backend**: `GET /health`, toolchain report, dataset registry with local
-  provenance status, sites API; uniform error envelope, request ids, CORS.
-- **Reproducible data acquisition**: manifests for LOLA GDR, NAIF lunar SPICE kernels and
-  the SVS CGI Moon Kit — URLs verified and SHA-256 pinned; acquisition records; integrity
-  verification. Proven against the real NASA archives: all three datasets acquired and
-  verified with matching checksums.
-- **Contracts**: TypeScript types generated from the API's OpenAPI document, drift-checked
-  in CI; draft contracts for future modules.
-- **Tests**: 117 Python tests (science, data, API, live-server integration), 42 web unit
-  tests, 4 Playwright end-to-end tests.
+| Page | What you get |
+| --- | --- |
+| **Overview** `/` | 3D globe in `MOON_ME`, lit by the Moon-centred apparent Sun direction (SPICE, CN+S) at the timeline epoch, with the sub-solar point; the cited south-pole sites (PGDA product 78); a LOLA south-pole terrain scene; timeline lanes for Sun and Earth elevation, terrain-aware sunlight and Earth line of sight |
+| **Illumination & Earth** `/illumination` | Sky chart per site: the terrain skyline (1440 azimuths, 200 km, curvature-corrected; truncated azimuths drawn as lower bounds) with the Sun and Earth tracks and their disk widths; sunlit and Earth-visible fractions and windows, with censored runs shown as "≥" |
+| **Terrain** `/terrain` | Height, slope at the site, footprint slope (p95) and roughness from the PGDA 20 m DEM, read remotely by HTTP range requests, each with its baseline; optional slope/roughness thresholds, labelled as your assumptions |
+| **Compare** `/compare` | Up to 10 sites over 2027, one column per measure. A summary with each measure's direction, the leaders, Pareto dominance and a verdict generated from them, never from hidden weights. Optional mission profiles (power, comms, landing) add a score whose weights are shown as assumptions |
+| **Data Sources** `/data` | Every dataset with its provenance, SHA-256 and acquisition status |
+
+Behind it: a FastAPI service (OpenAPI contract, typed errors, evidence on every value) and a
+pure scientific core (`lunaris-science`) using NAIF SPICE, NASA LOLA and PGDA data.
+
+**Checked against independent references**
+- Sun and Earth directions match JPL Horizons to 0.002″. The sub-solar point matches
+  Horizons to 0.005″ under Horizons' own light-time convention.
+- Horizon masks match an independent implementation to < 0.0001°.
+- Over 2001–2018, illumination at the demo sites is within 0.042 of the published maps of
+  Mazarico et al. (2011). The one value above its published range is reported with its causes.
+
+**Tests:** 427 Python tests (plus 4 opt-in tests against live NASA services), 253 web unit
+tests and 77 browser end-to-end tests, all in CI.
+
+**How it was built:** a small team working with AI coding assistants (Anthropic's Claude)
+under human direction and review. Results are trusted because they are tested and checked
+against the references above, not because of who or what wrote the code.
 
 ## Repository layout
 
@@ -106,27 +117,27 @@ docker compose up --build    # API :8000, web :3000; ./data is bind-mounted
 ## Two-minute demo
 
 Live at <https://lunaris-demo.onrender.com>. Open it a minute early: free instances sleep
-after about 15 minutes idle.
+after about 15 minutes idle, and the page says so while the server wakes.
 
-1. **Globe.** The NASA SVS color map with the cited south-pole sites. Click one. It shows its
-   source (PGDA product 78, Barker et al. 2021) and the note "tile centre, not a landing
-   point".
-2. **Pole Terrain.** A 250 km square of LOLA heights at true vertical scale, lit by the SPICE
-   Sun for the selected time. Scrub the time slider and long shadows cross the craters.
-   Rendered shadows are labelled illustrative. The numbers come from the API.
-3. **Timeline lanes.** For the selected site: Sun and Earth elevation over 30 days, terrain
-   illumination, and Earth line of sight. Line of sight is geometric only; it is not a radio
-   link.
-4. **Compare** (`/compare`, about 20 s on the free plan). The demo trio over 2027: height,
-   slope with its baseline, roughness, horizon, sunlight, longest darkness, Earth visibility.
-   Click any number for its method, sources (with SHA-256) and limitations.
-5. **Where the numbers come from:**
-   - SPICE geometry matches JPL Horizons to 0.002″.
-   - Horizon masks match an independent implementation to < 0.0001°.
-   - Over 2001–2018, illumination at the trio is within 0.042 of the published maps of
-     Mazarico et al. (2011). The one site above the published range is reported with its
-     causes.
-   - Shackleton's floor comes out at exactly 0 % sunlit.
+1. **Globe.** The NASA SVS color map lit by the SPICE Sun at the timeline epoch; the HUD
+   shows "SPICE Sun (CN+S)" and the sub-solar point. Press play or scrub the timeline and the
+   terminator moves. Click a cited site: it shows its source (PGDA product 78, Barker et al.
+   2021) and the note "tile centre, not a landing point".
+2. **Pole Terrain.** A 250 km square of LOLA heights at true vertical scale, lit by the same
+   Sun. Rendered shadows are labelled illustrative; the numbers come from the API.
+3. **Timeline lanes.** Sun and Earth elevation over 30 days, terrain sunlight, and Earth line
+   of sight (geometric only, not a radio link).
+4. **Illumination & Earth.** The sky chart for a site: skyline, Sun and Earth tracks with their
+   disk widths, and the sunlit and Earth-visible windows.
+5. **Terrain.** Pick a site and press Analyse: height, slope and roughness with their
+   baselines. Enter a maximum slope to see hazard flags, labelled as your assumption.
+6. **Compare.** The demo trio over 2027. The summary answers "which site is best?" honestly:
+   no single site wins every measure; Peak near Shackleton leads on slope, sunlight and Earth
+   visibility but is the roughest; Malapert massif is the smoothest. Pick a mission profile
+   (power, comms, landing) to see a weighted ordering with its weights shown. Under landing,
+   Malapert comes first. Click any number for its method, sources (with SHA-256) and limits.
+7. **Where the numbers come from:** see "Checked against independent references" above.
+   Shackleton's floor comes out at exactly 0 % sunlit.
 
 ## Hosted demo (Render)
 
