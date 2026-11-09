@@ -112,7 +112,11 @@ __all__ += ["TimelineServiceDep"]
 
 
 # ── Site comparison (S-TERRAIN, T-17) ────────────────────────────────────────
-from lunaris_api.services.compare import CompareService, timeline_provider  # noqa: E402
+from lunaris_api.services.compare import (  # noqa: E402
+    CompareService,
+    row_cache_for,
+    timeline_provider,
+)
 
 
 def get_compare_service(
@@ -126,6 +130,7 @@ def get_compare_service(
         HorizonMaskService(registry, layout, sites),
         SiteTerrainService(registry, layout),
         timeline_provider(timelines),
+        row_cache=row_cache_for(request.app.state),
     )
 
 
