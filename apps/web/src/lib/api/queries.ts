@@ -16,6 +16,7 @@ import { useHydrated } from "@/lib/use-hydrated";
 
 import { decodeTerrainScene, type DecodedTerrain } from "@/lib/terrain/scene-data";
 
+import type { MissionProfile, SiteComparison } from "./client";
 import { ApiError, type TerrainSceneMetadata } from "./client";
 import { api } from "./instance";
 import { useWaking } from "./waking";
@@ -26,6 +27,8 @@ export const queryKeys = {
   datasets: ["datasets"] as const,
   sites: ["sites"] as const,
   comparison: (siteIds: readonly string[]) => ["analysis", "site-comparison", ...siteIds] as const,
+  comparisonSummary: (siteIds: readonly string[], profile: string | null) =>
+    ["analysis", "site-comparison-summary", profile ?? "none", ...siteIds] as const,
   timeline: (siteId: string, startMs: number, endMs: number, stepS: number) =>
     ["sites", siteId, "timeline", startMs, endMs, stepS] as const,
   sun: (startMs: number, endMs: number, stepS: number) =>
@@ -327,6 +330,36 @@ export function useSunDirection(startMs: number | null, endMs: number | null) {
             signal,
           )
           .then((r) => r.data),
+    }),
+  );
+}
+
+function sameSites(key: readonly unknown[], sorted: readonly string[]): boolean {
+  const ids = key.slice(3);
+  return ids.length === sorted.length && ids.every((id, i) => id === sorted[i]);
+}
+
+/**
+ * T-18 summary across the given sites (leaders, standings, verdict) and, only when a
+ * profile is chosen, its weighted ordering. Asked once every site's own row is ready, so the
+ * API answers it from its row cache (#42); a profile change reuses the same rows.
+ */
+export function useComparisonSummary(
+  siteIds: readonly string[],
+  profile: MissionProfile | null,
+  enabled: boolean,
+) {
+  const sorted = [...siteIds].sort();
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.comparisonSummary(sorted, profile),
+      enabled: enabled && sorted.length >= 2,
+      // Changing the profile keeps the summary on screen while the score is computed.
+      placeholderData: (previous: SiteComparison | undefined, previousQuery) =>
+        previousQuery && sameSites(previousQuery.queryKey, sorted) ? previous : undefined,
+      staleTime: Infinity,
+      retry: 1,
+      queryFn: ({ signal }) => api.siteComparisonSummary(sorted, profile, signal).then((r) => r.data),
     }),
   );
 }

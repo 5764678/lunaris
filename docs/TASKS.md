@@ -240,6 +240,6 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-33 | SPICE-driven lighting of the terrain scene | Directional light from `direction_moon_me` at the selected epoch; rendered shadows labelled illustrative; the selected site shows its computed value from T-24 when available (D5) | T-31, T-22 | done |
 | T-34 | Comparison table UI (`/compare`) + site card from the comparison row | Every cell opens its evidence; null cells show the reason; baselines shown; 390 px (#29) | T-17 | done |
 | T-35 | Illumination and Earth line-of-sight lanes from T-24 | Astronomical and terrain traces separate; null terrain as "terrain horizon not available"; LOS state with the radio-link disclaimer (#27) | T-24 | done |
-| T-37 | Globe lit by the SPICE Sun (T-26) | Light from the Moon-centred Sun direction at the timeline epoch; moving terminator; subsolar marker; label "SPICE Sun (CN+S)" replaces the display-light label | T-26 | in review |
-| T-38 | Comparison summary UI (T-18) | Column leaders highlighted; verdict + leads/trails shown; optional mission profile with its weights on screen as assumptions; no default score | T-18 | todo |
+| T-37 | Globe lit by the SPICE Sun (T-26) | Light from the Moon-centred Sun direction at the timeline epoch; moving terminator; subsolar marker; label "SPICE Sun (CN+S)" replaces the display-light label | T-26 | done |
+| T-38 | Comparison summary UI (T-18) | Column leaders highlighted; verdict + leads/trails shown; optional mission profile with its weights on screen as assumptions; no default score | T-18 | in review |
 | T-39 | Navigation: every item leads to a real page | Overview, Illumination & Earth, Terrain, Compare, Data Sources; no dead items; readiness panel honest | — | in review |

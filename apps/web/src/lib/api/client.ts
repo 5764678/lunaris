@@ -25,6 +25,9 @@ import type {
 export type SiteComparison = components["schemas"]["SiteComparison"];
 export type CompareCell = components["schemas"]["CompareCell"];
 export type CompareRow = components["schemas"]["CompareRow"];
+export type ComparisonSummary = components["schemas"]["ComparisonSummary"];
+/** Optional mission profile for a weighted ordering (T-18). No profile, no score. */
+export type MissionProfile = "power" | "comms" | "landing";
 
 /** Moon-centred SPICE Sun direction series (T-26, generated contract). */
 export type SunDirectionSeries = components["schemas"]["SunDirectionSeries"];
@@ -272,6 +275,54 @@ const isSunDirectionSeries: Guard<SunDirectionSeries> = (v): v is SunDirectionSe
       typeof s.subsolar_longitude_deg === "number",
   );
 
+const isStringArray = (v: unknown): v is string[] =>
+  Array.isArray(v) && v.every((x) => typeof x === "string");
+
+/** T-18 summary: leaders, standings and verdict; a score only as a full ProfileScore or null. */
+export const isComparisonSummary = (v: unknown): v is ComparisonSummary =>
+  isObject(v) &&
+  typeof v.verdict === "string" &&
+  typeof v.method === "string" &&
+  Array.isArray(v.leaders) &&
+  v.leaders.every(
+    (l) =>
+      isObject(l) &&
+      typeof l.key === "string" &&
+      (l.better === "higher" || l.better === "lower") &&
+      isStringArray(l.site_ids) &&
+      typeof l.compared_sites === "number",
+  ) &&
+  Array.isArray(v.sites) &&
+  v.sites.every(
+    (s) =>
+      isObject(s) &&
+      typeof s.site_id === "string" &&
+      typeof s.name === "string" &&
+      isStringArray(s.leads) &&
+      isStringArray(s.trails) &&
+      isStringArray(s.dominated_by) &&
+      typeof s.dominance === "string",
+  ) &&
+  (v.score === null ||
+    (isObject(v.score) &&
+      typeof v.score.profile === "string" &&
+      isObject(v.score.weights) &&
+      Object.values(v.score.weights).every((w) => typeof w === "number" && Number.isFinite(w)) &&
+      typeof v.score.normalisation === "string" &&
+      isObject(v.score.evidence) &&
+      typeof v.score.evidence.kind === "string" &&
+      Array.isArray(v.score.scores) &&
+      v.score.scores.every(
+        (e) =>
+          isObject(e) &&
+          typeof e.site_id === "string" &&
+          typeof e.name === "string" &&
+          (e.score === null || typeof e.score === "number"),
+      )));
+
+const isSiteComparisonWithSummary: Guard<SiteComparison> = (v): v is SiteComparison =>
+  isSiteComparison(v) && isComparisonSummary((v as Record<string, unknown>).summary);
+
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, "");
@@ -389,6 +440,20 @@ export function createApiClient(options: ApiClientOptions) {
         "GET",
         `/api/v1/analysis/site-comparison?${new URLSearchParams({ site_ids: siteIds.join(",") }).toString()}`,
         { signal, guard: isSiteComparison, timeoutMs: SITE_COMPARISON_TIMEOUT_MS },
+      ),
+    /** The same comparison across several sites, with its summary required (T-18). */
+    siteComparisonSummary: (
+      siteIds: readonly string[],
+      profile: MissionProfile | null,
+      signal?: AbortSignal,
+    ) =>
+      request<SiteComparison>(
+        "GET",
+        `/api/v1/analysis/site-comparison?${new URLSearchParams({
+          site_ids: siteIds.join(","),
+          ...(profile ? { profile } : {}),
+        }).toString()}`,
+        { signal, guard: isSiteComparisonWithSummary, timeoutMs: SITE_COMPARISON_TIMEOUT_MS },
       ),
     analysisTimeline: (
       siteId: string,
