@@ -194,8 +194,11 @@ test("illumination page: demo trio tabs, sky chart with lower bounds, censored w
 
     const tabs = page.getByTestId("illumination-site-tabs").getByRole("tab");
     await expect(page.locator('[role=tab][data-demo="true"]')).toHaveCount(3);
-    await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
-    await expect(tabs.first()).toHaveAttribute("data-demo", "true");
+    // Default: the dashboard's cited site (DEFAULT_SITE_NAME), whatever the registry order.
+    const selected = page.locator('[role=tab][aria-selected="true"]');
+    await expect(selected).toHaveCount(1);
+    await expect(selected).toHaveText("Peak near Shackleton");
+    await expect(selected).toHaveAttribute("data-demo", "true");
 
     const chart = page.getByTestId("sky-chart");
     await expect(chart).toHaveAttribute("data-plot-state", "ready");
@@ -221,9 +224,12 @@ test("illumination page: demo trio tabs, sky chart with lower bounds, censored w
     await expect(page.getByTestId("radio-link-disclaimer")).toContainText("does not imply a radio link");
 
     // Another tab loads that site.
-    await tabs.nth(1).click();
-    await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByTestId("site-illumination")).toHaveAttribute("data-site-id", ids[1]!);
+    const other = tabs.filter({ hasText: "Malapert massif" });
+    await other.click();
+    await expect(other).toHaveAttribute("aria-selected", "true");
+    const otherId = (await other.getAttribute("id"))!.replace("illumination-tab-", "");
+    expect(ids).toContain(otherId);
+    await expect(page.getByTestId("site-illumination")).toHaveAttribute("data-site-id", otherId);
   } finally {
     await cleanup(request, ids);
   }
