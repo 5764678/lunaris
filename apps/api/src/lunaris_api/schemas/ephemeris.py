@@ -72,6 +72,40 @@ class SiteEphemeris(Schema):
     limitations: list[str]
 
 
+class SunDirectionSample(Schema):
+    """Apparent Sun direction from the Moon's centre at one epoch (T-26)."""
+
+    epoch_utc: AwareDatetime
+    direction_moon_me: list[float] = Field(
+        min_length=3,
+        max_length=3,
+        description="Apparent unit vector [x, y, z] from the Moon's centre to the Sun, MOON_ME.",
+    )
+    subsolar_latitude_deg: float = Field(
+        description="Planetocentric latitude where the Sun is at the zenith (1737.4 km sphere)."
+    )
+    subsolar_longitude_deg: float = Field(description="East longitude, [0, 360).")
+    angular_radius_deg: float = Field(description="asin(R_sun / range).")
+    range_m: float = Field(description="Moon centre – Sun distance (apparent).")
+
+
+class SunDirectionSeries(Schema):
+    """Moon-centred Sun direction series for lighting the globe (T-26)."""
+
+    start_utc: AwareDatetime
+    end_utc: AwareDatetime
+    step_s: float
+    sample_count: int
+    max_samples: int = Field(description="Cap on samples per request.")
+    frame: Literal["MOON_ME"]
+    origin: Literal["MOON"] = Field(description="Directions are from the Moon's centre.")
+    aberration_correction: Literal["CN+S"]
+    sun_radius_m: float = Field(description="Solar radius from the loaded PCK.")
+    samples: list[SunDirectionSample]
+    evidence: EvidenceSchema
+    limitations: list[str]
+
+
 __all__ = [
     "MAX_EPHEMERIS_SAMPLES",
     "MAX_STEP_S",
@@ -80,4 +114,6 @@ __all__ = [
     "EphemerisObserver",
     "EphemerisSample",
     "SiteEphemeris",
+    "SunDirectionSample",
+    "SunDirectionSeries",
 ]

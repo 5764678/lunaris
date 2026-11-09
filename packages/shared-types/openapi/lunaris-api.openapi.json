@@ -2780,6 +2780,138 @@
         "title": "SpatialMetadataSchema",
         "type": "object"
       },
+      "SunDirectionSample": {
+        "description": "Apparent Sun direction from the Moon's centre at one epoch (T-26).",
+        "properties": {
+          "angular_radius_deg": {
+            "description": "asin(R_sun / range).",
+            "title": "Angular Radius Deg",
+            "type": "number"
+          },
+          "direction_moon_me": {
+            "description": "Apparent unit vector [x, y, z] from the Moon's centre to the Sun, MOON_ME.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Direction Moon Me",
+            "type": "array"
+          },
+          "epoch_utc": {
+            "format": "date-time",
+            "title": "Epoch Utc",
+            "type": "string"
+          },
+          "range_m": {
+            "description": "Moon centre – Sun distance (apparent).",
+            "title": "Range M",
+            "type": "number"
+          },
+          "subsolar_latitude_deg": {
+            "description": "Planetocentric latitude where the Sun is at the zenith (1737.4 km sphere).",
+            "title": "Subsolar Latitude Deg",
+            "type": "number"
+          },
+          "subsolar_longitude_deg": {
+            "description": "East longitude, [0, 360).",
+            "title": "Subsolar Longitude Deg",
+            "type": "number"
+          }
+        },
+        "required": [
+          "epoch_utc",
+          "direction_moon_me",
+          "subsolar_latitude_deg",
+          "subsolar_longitude_deg",
+          "angular_radius_deg",
+          "range_m"
+        ],
+        "title": "SunDirectionSample",
+        "type": "object"
+      },
+      "SunDirectionSeries": {
+        "description": "Moon-centred Sun direction series for lighting the globe (T-26).",
+        "properties": {
+          "aberration_correction": {
+            "const": "CN+S",
+            "title": "Aberration Correction",
+            "type": "string"
+          },
+          "end_utc": {
+            "format": "date-time",
+            "title": "End Utc",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "frame": {
+            "const": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "max_samples": {
+            "description": "Cap on samples per request.",
+            "title": "Max Samples",
+            "type": "integer"
+          },
+          "origin": {
+            "const": "MOON",
+            "description": "Directions are from the Moon's centre.",
+            "title": "Origin",
+            "type": "string"
+          },
+          "sample_count": {
+            "title": "Sample Count",
+            "type": "integer"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/SunDirectionSample"
+            },
+            "title": "Samples",
+            "type": "array"
+          },
+          "start_utc": {
+            "format": "date-time",
+            "title": "Start Utc",
+            "type": "string"
+          },
+          "step_s": {
+            "title": "Step S",
+            "type": "number"
+          },
+          "sun_radius_m": {
+            "description": "Solar radius from the loaded PCK.",
+            "title": "Sun Radius M",
+            "type": "number"
+          }
+        },
+        "required": [
+          "start_utc",
+          "end_utc",
+          "step_s",
+          "sample_count",
+          "max_samples",
+          "frame",
+          "origin",
+          "aberration_correction",
+          "sun_radius_m",
+          "samples",
+          "evidence",
+          "limitations"
+        ],
+        "title": "SunDirectionSeries",
+        "type": "object"
+      },
       "TerrainSceneListResponse": {
         "properties": {
           "count": {
@@ -3615,6 +3747,97 @@
         "summary": "One registered dataset",
         "tags": [
           "datasets"
+        ]
+      }
+    },
+    "/api/v1/ephemeris/sun": {
+      "get": {
+        "description": "Apparent unit direction from the Moon's centre to the Sun in MOON_ME (CN+S), the\nsub-solar point and the solar angular radius at every step. Same window rules,\n10 000-sample cap and error codes as the site ephemeris.",
+        "operationId": "get_sun_direction_api_v1_ephemeris_sun_get",
+        "parameters": [
+          {
+            "description": "Window start, ISO 8601 UTC.",
+            "in": "query",
+            "name": "start_utc",
+            "required": true,
+            "schema": {
+              "description": "Window start, ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "Start Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window end (inclusive when on a step); start = end gives one epoch.",
+            "in": "query",
+            "name": "end_utc",
+            "required": true,
+            "schema": {
+              "description": "Window end (inclusive when on a step); start = end gives one epoch.",
+              "format": "date-time",
+              "title": "End Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sample spacing in seconds.",
+            "in": "query",
+            "name": "step_s",
+            "required": true,
+            "schema": {
+              "description": "Sample spacing in seconds.",
+              "maximum": 2592000.0,
+              "minimum": 1.0,
+              "title": "Step S",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SunDirectionSeries"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "SPICE kernels not acquired or failing verification on this server."
+          }
+        },
+        "summary": "Moon-centred apparent Sun direction (for lighting the globe)",
+        "tags": [
+          "ephemeris"
         ]
       }
     },

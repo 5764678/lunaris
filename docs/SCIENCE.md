@@ -313,6 +313,23 @@ the verbatim `$$SOE…$$EOE` block. Measured differences (LUNARIS − Horizons):
 On the fixture day the Earth is below the astronomical horizon at this site
 (elevation −1.16° to −2.61°), which the tests also pin.
 
+**Moon-centred Sun direction (T-26).** `geometry.bodies.moon_centred_direction`:
+CSPICE `spkpos('SUN', et, 'MOON_ME', 'CN+S', 'MOON')`, normalised. The sub-solar point is
+the planetocentric latitude and longitude of that direction. It is the light arriving at
+the Moon's centre at t, which is what lights the globe. Validation:
+
+- *Against the topocentric direction (T-21).* At 89.5° S the two differ only by
+  parallax, bounded by asin(R_moon / range) ≈ 2.4″. Tested at every hourly sample.
+- *Against JPL Horizons* (`QUANTITIES='15'`, apparent sub-solar point on the Moon,
+  MOON_ME, 1737.4 km sphere; fixture `horizons-subsolar-moon-2026-11-04.json`, with the
+  verbatim block and URL). Horizons evaluates the Moon as seen from the geocentre, i.e.
+  at t − (Earth–Moon light time ≈ 1.3 s). Evaluated the same way, LUNARIS agrees to
+  < 0.005″ (tolerance 0.05″). At t itself, which the endpoint returns, longitudes differ
+  by 0.64″ (lunar rotation ≈ 0.55″/s × 1.3 s; tolerance 1″).
+- *Not* CSPICE `subslr` with the Sun as observer. That takes the Moon's state one Sun–Moon
+  light time (≈ 500 s) earlier, so it differs by about 0.07° of lunar rotation: a
+  different definition, not a disagreement.
+
 **Angular sizes.** Solar angular radius ≈ 0.267° at 1 au; Earth angular radius roughly
 0.9°–1.0° over the lunar orbit. Both are computed per epoch, never fixed.
 

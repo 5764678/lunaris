@@ -24,6 +24,7 @@ api_v1.include_router(terrain.router)
 api_v1.include_router(terrain.site_router)
 api_v1.include_router(horizon.router)
 api_v1.include_router(ephemeris.router)
+api_v1.include_router(ephemeris.sun_router)
 api_v1.include_router(illumination.router)
 api_v1.include_router(compare.router)
 
