@@ -1,85 +1,116 @@
 import { Database, Earth, LayoutDashboard, Mountain, Orbit, Scale, Sun, type LucideIcon } from "lucide-react";
 
 /**
- * LUNARIS MISSION modules and their delivery milestones. Mirrors docs/ROADMAP.md.
- * Planned modules are shown in the navigation as disabled, with their milestone, so the
- * UI never implies a capability that does not exist yet.
+ * Navigation: every item is a real page. Pages whose content another session is still
+ * building show an explicit "in progress" page, never a fake view.
  */
-export interface MissionModule {
+export interface NavItem {
   id: string;
   title: string;
   description: string;
-  milestone: string;
+  href: string;
   icon: LucideIcon;
-  /** Present only for modules with a working view. */
-  href?: string;
-  /** "available" once the module's computation is served and shown somewhere in the UI. */
-  status?: "planned" | "available";
-  /** Where an available module's output appears. */
-  availableIn?: string;
 }
 
-export const MISSION_MODULES: readonly MissionModule[] = [
+export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: "overview",
-    title: "Mission Overview",
-    description: "Lunar globe, candidate sites, timeline and system status.",
-    milestone: "M01",
-    icon: LayoutDashboard,
+    title: "Overview",
+    description: "Lunar globe and south-pole terrain, candidate sites, timeline and system status.",
     href: "/",
-  },
-  {
-    id: "terrain",
-    title: "Terrain Intelligence",
-    description: "LOLA elevation, slope, roughness and hazard indicators.",
-    milestone: "M02",
-    icon: Mountain,
-    status: "available",
-    availableIn: "South-pole terrain scene (Overview) and height/slope/roughness in Site comparison.",
-  },
-  {
-    id: "geometry",
-    title: "Celestial Geometry",
-    description: "Sun and Earth azimuth/elevation from SPICE ephemerides.",
-    milestone: "M03",
-    icon: Orbit,
-    status: "available",
-    availableIn: "Sun/Earth elevation lanes in the timeline (select a site).",
+    icon: LayoutDashboard,
   },
   {
     id: "illumination",
-    title: "Illumination",
-    description: "Geometric and terrain-aware solar illumination timelines.",
-    milestone: "M04",
+    title: "Illumination & Earth",
+    description: "Sun and Earth geometry, illumination and direct-to-Earth line of sight per site.",
+    href: "/illumination",
     icon: Sun,
-    status: "available",
-    availableIn: "Illumination lane, terrain-scene site value and Site comparison.",
   },
   {
-    id: "visibility",
-    title: "Earth Visibility",
-    description: "Geometric and terrain-obstructed direct-to-Earth line of sight.",
-    milestone: "M04",
-    icon: Earth,
-    status: "available",
-    availableIn: "Earth line-of-sight lane and Site comparison (geometric; not a radio link).",
+    id: "terrain",
+    title: "Terrain",
+    description: "LOLA elevation, slope, roughness and horizon per site.",
+    href: "/terrain",
+    icon: Mountain,
   },
   {
-    id: "analysis",
-    title: "Mission Intelligence",
-    description: "Site comparison with per-value evidence (constraints, scoring and reports later).",
-    milestone: "M05",
-    icon: Scale,
+    id: "compare",
+    title: "Compare",
+    description: "Side-by-side site comparison; every value opens its evidence.",
     href: "/compare",
-    status: "available",
-    availableIn: "Site comparison table with per-value evidence. No scoring or ranking yet.",
+    icon: Scale,
   },
   {
     id: "data",
     title: "Data Sources",
     description: "Dataset registry, provenance and acquisition status.",
-    milestone: "M01",
-    icon: Database,
     href: "/data",
+    icon: Database,
+  },
+];
+
+/**
+ * Analysis modules for the readiness panel, named as the roadmap's modules (the nav groups
+ * them into pages: Celestial Geometry under Illumination & Earth, Mission Intelligence under
+ * Compare). "available" only when the computation is
+ * served by the API and shown somewhere in the UI (`availableIn` says where).
+ */
+export interface AnalysisModule {
+  id: string;
+  title: string;
+  milestone: string;
+  icon: LucideIcon;
+  status: "planned" | "available";
+  availableIn?: string;
+  /** Dataset `required_by` keys whose local status the panel shows. */
+  inputs: string[];
+}
+
+export const ANALYSIS_MODULES: readonly AnalysisModule[] = [
+  {
+    id: "terrain",
+    title: "Terrain Intelligence",
+    milestone: "M02",
+    icon: Mountain,
+    status: "available",
+    availableIn: "South-pole terrain scene (Overview); height, slope, roughness and horizon in Compare.",
+    inputs: ["terrain"],
+  },
+  {
+    id: "geometry",
+    title: "Celestial Geometry",
+    milestone: "M03",
+    icon: Orbit,
+    status: "available",
+    availableIn: "Sun/Earth elevation lanes and SPICE-lit terrain (Overview).",
+    inputs: ["geometry"],
+  },
+  {
+    id: "illumination",
+    title: "Illumination",
+    milestone: "M04",
+    icon: Sun,
+    status: "available",
+    availableIn: "Illumination lane and terrain-scene site value (Overview); Compare.",
+    inputs: ["illumination"],
+  },
+  {
+    id: "visibility",
+    title: "Earth Visibility",
+    milestone: "M04",
+    icon: Earth,
+    status: "available",
+    availableIn: "Earth line-of-sight lane (Overview); Compare. Geometric, not a radio link.",
+    inputs: ["visibility"],
+  },
+  {
+    id: "analysis",
+    title: "Mission Intelligence",
+    milestone: "M05",
+    icon: Scale,
+    status: "available",
+    availableIn: "Compare: site comparison with per-value evidence. No scoring or ranking yet.",
+    inputs: ["terrain", "geometry", "illumination", "visibility"],
   },
 ];
