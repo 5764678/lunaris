@@ -4,15 +4,19 @@
  */
 
 const DEFAULT_API_URL = "http://localhost:8000";
+/** Public address of the hosted demo; used for absolute link-preview (Open Graph) URLs. */
+const DEFAULT_SITE_URL = "https://lunaris-demo.onrender.com";
 
-function normalizeBaseUrl(raw: string | undefined): string {
-  const value = (raw ?? "").trim() || DEFAULT_API_URL;
+function normalizeBaseUrl(raw: string | undefined, fallback: string = DEFAULT_API_URL): string {
+  const value = (raw ?? "").trim() || fallback;
   return value.replace(/\/+$/, "");
 }
 
 export const config = {
   /** Base URL of the LUNARIS API, without trailing slash. */
   apiBaseUrl: normalizeBaseUrl(process.env.NEXT_PUBLIC_LUNARIS_API_URL),
+  /** Public address of this web app (no trailing slash), used for link-preview image URLs. */
+  siteUrl: normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL, DEFAULT_SITE_URL),
   /** Expected major version of the HTTP contract. */
   expectedApiVersion: "v1",
   /** Health polling interval. */
