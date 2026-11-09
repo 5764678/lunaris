@@ -37,6 +37,7 @@ export const moonVertexShader = /* glsl */ `
 
 export const moonFragmentShader = /* glsl */ `
   uniform vec3 uLightDir;
+  uniform float uNightFloor;
   uniform int uMode;
   uniform sampler2D uColorMap;
   uniform float uExposure;
@@ -214,7 +215,7 @@ export const moonFragmentShader = /* glsl */ `
 
     float terminator = smoothstep(-0.03, 0.08, dot(nGeom, l));
     float radiance = lunarLambert(n, l, v) * terminator;
-    vec3 color = albedo * (radiance * uExposure + 0.018);
+    vec3 color = albedo * (radiance * uExposure + uNightFloor);
 
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
