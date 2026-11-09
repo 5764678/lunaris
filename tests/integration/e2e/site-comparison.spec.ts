@@ -206,20 +206,17 @@ test.describe("phone width", () => {
   });
 });
 
-test("live API: the comparison renders, or its failure is shown", async ({ page, request }) => {
+test("live API: every site ends as a finished row or shows its own error", async ({ page, request }) => {
   test.setTimeout(180_000);
   const ids = await registerTrio(request);
   try {
     await page.goto("/compare");
-    await expect(page.getByTestId("compare-table").or(page.getByRole("alert"))).toBeVisible({
-      timeout: 150_000,
-    });
-    if (await page.getByTestId("compare-table").isVisible()) {
-      await expect(page.getByTestId("compare-row")).toHaveCount(3);
-      // Null cells always show a reason.
-      for (const cell of await page.locator('[data-null="true"]').all())
-        await expect(cell).toContainText("N/C ·");
-    }
+    // One request per site: each site ends as a row with numbers, or as a row with its error and Retry.
+    const finished = page.getByTestId("compare-row").or(page.getByTestId("compare-row-error"));
+    await expect(finished).toHaveCount(3, { timeout: 150_000 });
+    // Null cells always show a reason.
+    for (const cell of await page.locator('[data-null="true"]').all())
+      await expect(cell).toContainText("N/C ·");
   } finally {
     await cleanup(request, ids);
   }
