@@ -215,7 +215,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-16 | Horizon mask service + `GET /api/v1/sites/{id}/horizon` | Masks from `compute_horizon_mask` only; file cache under `data/processed/` keyed by DEM SHA-256, site point and parameters, a hit never recomputes; C1 fields + DEM id/SHA-256 + evidence; 2 m default stated as an assumption; 422 outside coverage; truncation count in limitations | T-15 | done |
 | T-17 | Site comparison `GET /api/v1/analysis/site-comparison` | One row per site: height, slope (site, p95) and roughness with `baseline_m`, terrain-horizon summary, Sun and Earth terrain-horizon summaries; every cell carries its own evidence; uncomputable cells are null with a reason, never 0; demo trio over one year in CI with real LDEM and kernels (PGDA mocked in CI, live test opt-in) | T-14, T-16, T-24 | done |
 | T-18 | Comparison summary (additive to T-17), D9 | Per-column `better` with rationale; `leaders` (ties allowed, nulls never win); per-site leads/trails and dominance; a verdict sentence from dominance only; optional `profile=power\|comms\|landing` with weights + normalisation echoed as assumptions, no score without a profile; tests incl. the trio over 2027 | T-17 | in review |
-| T-19 | Terrain page `apps/web/src/app/terrain/**` | Site terrain analysis with footprint and optional thresholds as user assumptions; baselines shown; window provenance in the evidence popover; 390 px; e2e with mocked PGDA | T-14 | todo |
+| T-19 | Terrain page `apps/web/src/app/terrain/**` | Site terrain analysis with footprint and optional thresholds as user assumptions; baselines shown; window provenance in the evidence popover; 390 px; e2e with mocked PGDA | T-14 | in review |
 
 ### S-GEOMETRY
 
