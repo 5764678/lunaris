@@ -28,14 +28,10 @@ test("every nav item is a link to a page that renders", async ({ page }) => {
   await expect(nav.getByText("Mission Intelligence")).toHaveCount(0);
 });
 
-test("/illumination says it is in progress and links to where its outputs already appear", async ({
-  page,
-}) => {
+test("/illumination is the real illumination page (T-27), not a placeholder", async ({ page }) => {
   await page.goto("/illumination");
-  const body = page.getByTestId("page-in-progress");
-  await expect(body).toContainText("In progress");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Illumination & Earth");
-  await expect(body.getByRole("link").first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Illumination & Earth visibility");
+  await expect(page.getByTestId("page-in-progress")).toHaveCount(0);
 });
 
 test("/terrain is the real terrain page (T-19), not a placeholder", async ({ page }) => {

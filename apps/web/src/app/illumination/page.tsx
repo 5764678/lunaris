@@ -1,28 +1,26 @@
 import type { Metadata } from "next";
 
-import { PageInProgress } from "@/components/shell/page-in-progress";
+import { IlluminationView } from "./_components/illumination-view";
 
-export const metadata: Metadata = { title: "Illumination & Earth" };
+export const metadata: Metadata = { title: "Illumination & Earth visibility" };
 
-/** Placeholder until the Illumination & Earth page (T-27) lands. */
 export default function IlluminationPage() {
   return (
-    <PageInProgress
-      title="Illumination & Earth"
-      task="T-27"
-      coming="Per-site Sun and Earth geometry over a window: elevation against the astronomical and terrain horizons, visible-disk fractions, sunlit and direct-to-Earth windows."
-      availableNow={[
-        {
-          label:
-            "Overview → timeline: Sun/Earth elevation, illumination and line-of-sight lanes (select a site)",
-          href: "/",
-        },
-        {
-          label: "Overview → Pole terrain: the terrain lit by the SPICE Sun, with the site's computed value",
-          href: "/",
-        },
-        { label: "Compare → illumination and Earth-visibility columns with evidence", href: "/compare" },
-      ]}
-    />
+    <div className="h-full overflow-y-auto scrollbar-thin">
+      <div className="space-y-4 px-4 py-5 sm:px-6">
+        <header className="space-y-1.5">
+          <p className="label-caps">Illumination &amp; Earth · sunlight and line of sight per site</p>
+          <h1 className="text-lg font-medium text-foreground">Illumination &amp; Earth visibility</h1>
+          <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">
+            The skyline around each site from the LOLA terrain model, with the paths of the Sun and the Earth
+            across it over the chosen window, and when each one is in view. Every value is computed by the
+            API; click it to see what it means, where it came from and its limits. Where the terrain horizon
+            is not available the reason is shown, never 0. Earth line of sight is geometry only and does not
+            imply a radio link.
+          </p>
+        </header>
+        <IlluminationView />
+      </div>
+    </div>
   );
 }

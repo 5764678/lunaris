@@ -228,7 +228,7 @@ Status: `todo`, `in progress`, `in review` (PR open), `done` (merged by the TD).
 | T-24 | Illumination and Earth visibility timelines (C4) + `POST /api/v1/analysis/timeline` | Astronomical vs terrain horizon reported separately; summaries (mean visible disk fraction, illuminated fraction, longest darkness/illumination, visibility windows); truncation surfaced; radio-link disclaimer on Earth results | T-21, T-23, T-15 | done |
 | T-25 | Validation against published polar illumination studies (Mazarico et al. 2011; Gläser et al. 2014) | Reproduce reported values at named locations where possible; differences reported with their causes (DEM, period, method) | T-24 | done |
 | T-26 | `GET /api/v1/ephemeris/sun`: Moon-centred apparent Sun direction (MOON_ME, CN+S), subsolar point, angular radius | Matches spkpos from Moon centre; `model` evidence with kernels by SHA-256; sample cap and typed errors as T-22 | T-21 | in review |
-| T-27 | Illumination & Earth visibility page `apps/web/src/app/illumination/**` | Horizon profile (T-16) with Sun/Earth tracks and disk width; truncated azimuths as lower bounds; visible windows from T-24 with censoring; per-number evidence; radio-link disclaimer; 390 px; e2e | T-16, T-24 | todo |
+| T-27 | Illumination & Earth visibility page `apps/web/src/app/illumination/**` | Horizon profile (T-16) with Sun/Earth tracks and disk width; truncated azimuths as lower bounds; visible windows from T-24 with censoring; per-number evidence; radio-link disclaimer; 390 px; e2e | T-16, T-24 | in review |
 
 ### S-WEB
 
