@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Response, status
 
-from lunaris_api.dependencies import SiteServiceDep
+from lunaris_api.dependencies import SettingsDep, SiteServiceDep
 from lunaris_api.schemas.common import ERROR_RESPONSES, SERVER_ERROR, ErrorResponse, ResponseDocs
 from lunaris_api.schemas.sites import CandidateSite, CandidateSiteCreate, CandidateSiteList
 
@@ -56,6 +56,8 @@ def get_site(site_id: SiteIdPath, service: SiteServiceDep) -> CandidateSite:
     summary="Delete a candidate site",
     responses={**NOT_FOUND, **ERROR_RESPONSES},
 )
-def delete_site(site_id: SiteIdPath, service: SiteServiceDep) -> Response:
-    service.delete_site(site_id)
+def delete_site(site_id: SiteIdPath, service: SiteServiceDep, settings: SettingsDep) -> Response:
+    # 403 for cited sites when LUNARIS_PROTECT_PUBLISHED_SITES is on. Deliberately a comment, not
+    # a docstring or a `responses` entry: those would change the committed OpenAPI contract.
+    service.delete_site(site_id, protect_published=settings.protect_published_sites)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
