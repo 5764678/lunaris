@@ -185,7 +185,8 @@ test("a site that fails shows its own error and Retry; the other rows are unaffe
     await expect(page.getByTestId("compare-row")).toHaveCount(3);
     await expect(errorRow).toHaveCount(0);
     expect(attempts.filter((id) => id === failingId)).toHaveLength(3);
-    expect(attempts).toHaveLength(5);
+    // Per-site requests only: once every row is ready the summary (T-38) asks for all sites at once.
+    expect(attempts.filter((id) => !id.includes(","))).toHaveLength(5);
   } finally {
     await cleanup(request, ids);
   }

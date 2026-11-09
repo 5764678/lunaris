@@ -6,13 +6,15 @@ import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ErrorRow, PendingRow, ReadyRow } from "@/components/comparison/comparison-rows";
+import { ComparisonSummaryPanel, type SummaryState } from "@/components/comparison/comparison-summary";
 import { CatalogDemoTrio } from "@/components/mission/catalog-demo-trio";
 import { Button } from "@/components/ui/button";
 import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
-import type { SiteComparison } from "@/lib/api/client";
-import { useSiteCatalog, useSiteComparisons, useSitesQuery } from "@/lib/api/queries";
+import type { MissionProfile, SiteComparison } from "@/lib/api/client";
+import { useComparisonSummary, useSiteCatalog, useSiteComparisons, useSitesQuery } from "@/lib/api/queries";
 import { formatPeriodUtc, metricCopy, metricTitle } from "@/lib/comparison/labels";
 import { columnsFor, countProgress, progressMessage, rowStatus } from "@/lib/comparison/progress";
+import { directionNote, leadersByColumn } from "@/lib/comparison/summary";
 import { cn } from "@/lib/utils";
 
 const MAX_SITES = 10;
@@ -110,6 +112,30 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
   const first = entries.find(({ query }) => query.data)?.query.data;
   const columns = columnsFor(first);
 
+  // The summary needs every site in one request; it is asked once every row is ready, so the
+  // server answers it from the per-site results it has just computed.
+  const [profile, setProfile] = useState<MissionProfile | null>(null);
+  const allReady = progress.total > 0 && progress.ready === progress.total;
+  const summaryQuery = useComparisonSummary(
+    entries.map(({ site }) => site.id),
+    profile,
+    allReady,
+  );
+  const summary = allReady ? summaryQuery.data?.summary : undefined;
+  const leaders = leadersByColumn(summary);
+  const summaryState: SummaryState =
+    entries.length < 2
+      ? { kind: "too-few" }
+      : !allReady
+        ? progress.failed > 0
+          ? { kind: "incomplete" }
+          : { kind: "waiting" }
+        : summary
+          ? { kind: "ready", summary, scoring: summaryQuery.isFetching }
+          : summaryQuery.isError
+            ? { kind: "error", error: summaryQuery.error, retry: () => void summaryQuery.refetch() }
+            : { kind: "loading" };
+
   return (
     <section aria-label="Comparison table" aria-busy={pending > 0} className="space-y-2">
       {pending > 0 && (
@@ -128,6 +154,12 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
           · {first.sample_count.toLocaleString("en-US")} readings
         </p>
       )}
+      <ComparisonSummaryPanel
+        state={summaryState}
+        columns={columns}
+        profile={profile}
+        onProfile={setProfile}
+      />
       <HorizontalScroll label="Comparison table (scrolls sideways)" testId="compare-scroll">
         <table className="w-max min-w-full border-collapse text-left" data-testid="compare-table">
           <thead>
@@ -139,13 +171,19 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
                 <th
                   key={c.key}
                   scope="col"
-                  title={metricTitle(c.key, c.label, c.description)}
+                  title={`${metricTitle(c.key, c.label, c.description)}${c.better_rationale ? ` Ranking: ${c.better_rationale}` : ""}`}
+                  data-better={c.better ?? "none"}
                   className="px-2 py-1.5 align-bottom font-mono text-3xs font-medium text-muted-foreground"
                 >
                   <span className="block max-w-28 whitespace-normal">
                     {metricCopy(c.key, c.label, c.description).label}
                   </span>
                   <span className="text-dim">({UNIT_LABEL[c.unit] ?? c.unit})</span>
+                  {first && (
+                    <span className="block font-normal text-dim" data-testid={`col-direction-${c.key}`}>
+                      {directionNote(c)}
+                    </span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -154,7 +192,7 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
             {entries.map(({ site, query }, i) => {
               const row = rows[i];
               if (statuses[i] === "ready" && row)
-                return <ReadyRow key={site.id} row={row} columns={columns} />;
+                return <ReadyRow key={site.id} row={row} columns={columns} leaders={leaders} />;
               if (statuses[i] === "error") {
                 const error = query.error ?? new Error("The server answered without a row for this site.");
                 return (

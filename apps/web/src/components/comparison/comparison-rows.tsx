@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import type { CompareCell, CompareRow } from "@/lib/api/client";
 import { metricCopy } from "@/lib/comparison/labels";
 import { describeRowError, type CompareColumn } from "@/lib/comparison/progress";
+import type { Leader } from "@/lib/comparison/summary";
+import { cn } from "@/lib/utils";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 
 /** First cell of every row: the site, which stays in view while the metrics scroll sideways. */
@@ -38,7 +40,16 @@ function SiteHeaderCell({
 }
 
 /** A site whose numbers have arrived. */
-export function ReadyRow({ row, columns }: { row: CompareRow; columns: readonly CompareColumn[] }) {
+export function ReadyRow({
+  row,
+  columns,
+  leaders,
+}: {
+  row: CompareRow;
+  columns: readonly CompareColumn[];
+  /** Column leaders from the summary (T-18); empty until it has answered. */
+  leaders?: ReadonlyMap<string, Leader>;
+}) {
   return (
     <tr className="border-b border-hairline last:border-b-0" data-testid="compare-row">
       <SiteHeaderCell
@@ -54,8 +65,14 @@ export function ReadyRow({ row, columns }: { row: CompareRow; columns: readonly 
       {columns.map((c) => {
         const cell = (row as unknown as Record<string, CompareCell | undefined>)[c.key];
         const copy = metricCopy(c.key, c.label, c.description);
+        const leader = leaders?.get(c.key);
+        const leads = leader?.siteIds.has(row.site_id) ?? false;
         return (
-          <td key={c.key} className="max-w-44 px-1 py-1 align-top">
+          <td
+            key={c.key}
+            className={cn("max-w-44 px-1 py-1 align-top", leads && "bg-primary/10")}
+            data-leader={leads ? "true" : undefined}
+          >
             {cell ? (
               <CellEvidence
                 cell={cell}
@@ -65,6 +82,11 @@ export function ReadyRow({ row, columns }: { row: CompareRow; columns: readonly 
               />
             ) : (
               <span className="font-mono text-3xs text-dim italic">N/C · not in response</span>
+            )}
+            {leads && (
+              <span className="block px-1 font-mono text-3xs text-primary" data-testid="leader-mark">
+                best{leader?.tied ? " (tied)" : ""}
+              </span>
             )}
           </td>
         );
