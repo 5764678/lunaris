@@ -217,17 +217,30 @@ def _verdict(rows: Sequence[CompareRow], standings: dict[str, SiteStanding], ran
     if ranked == 0:
         return "No directed metric has values for two or more sites, so no site can be ranked."
     front = [r.site_id for r in rows if not standings[r.site_id].dominated_by]
+    if not front:
+        # Possible when cells are null: dominance over shared columns is not transitive.
+        return (
+            "No site is Pareto-optimal: every site is dominated by another on the metrics "
+            "they share, and some cells are null, so dominance is not transitive. Compare "
+            "each site's leads and trails instead."
+        )
     if len(front) == 1:
         sid = front[0]
         s = standings[sid]
-        others = [names[o] for o in names if o != sid]
-        if not s.trails and len(s.leads) == s.directed_compared:
+        beaten = [r.site_id for r in rows if sid in standings[r.site_id].dominated_by]
+        others = [o for o in names if o != sid]
+        # Claim "A dominates the rest" only if A itself dominates every other site.
+        if set(beaten) == set(others):
+            if not s.trails and len(s.leads) == s.directed_compared:
+                return (
+                    f"{names[sid]} is best or tied on every directed metric compared "
+                    f"({s.directed_compared}) and dominates {_list([names[o] for o in others])}."
+                )
+            tradeoff = f"; trade-off: worst on {_phrase(s.trails)}" if s.trails else ""
             return (
-                f"{names[sid]} is best or tied on every directed metric compared "
-                f"({s.directed_compared}) and dominates {_list(others)}."
+                f"{names[sid]} dominates {_list([names[o] for o in others])}: it leads on "
+                f"{_phrase(s.leads)}{tradeoff}."
             )
-        tradeoff = f"; trade-off: worst on {_phrase(s.trails)}" if s.trails else ""
-        return f"{names[sid]} dominates {_list(others)}: it leads on {_phrase(s.leads)}{tradeoff}."
     front.sort(key=lambda sid: -len(standings[sid].leads))
     parts = []
     for sid in front:
@@ -239,12 +252,12 @@ def _verdict(rows: Sequence[CompareRow], standings: dict[str, SiteStanding], ran
             text = f"{names[sid]} leads on no metric but is not dominated"
             text += f"; worst on {_phrase(st.trails)}" if st.trails else ""
         parts.append(text + ".")
-    dominated = [names[r.site_id] for r in rows if standings[r.site_id].dominated_by]
-    tail = (
-        [f"{_list(dominated)} {'is' if len(dominated) == 1 else 'are'} dominated."]
-        if dominated
-        else []
-    )
+    tail = [
+        f"{names[r.site_id]} is dominated by "
+        f"{_list([names[d] for d in standings[r.site_id].dominated_by])}."
+        for r in rows
+        if standings[r.site_id].dominated_by
+    ]
     return " ".join(["No single site is best on every directed metric.", *parts, *tail])
 
 

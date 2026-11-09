@@ -119,6 +119,36 @@ def test_null_cells_never_win() -> None:
     assert empty.verdict.startswith("No directed metric has values for two or more sites")
 
 
+def test_non_transitive_dominance_with_null_cells() -> None:
+    """A dominates Y, Y dominates X (they share no roughness), X beats A on roughness."""
+    a = {**GOOD, "roughness_rms_m": 0.5}
+    y = {k: v for k, v in GOOD.items() if k != "roughness_rms_m"}
+    y = {**y, "sun_illuminated_fraction": 0.85}  # A strictly better than Y here
+    x = {**BAD, "roughness_rms_m": 0.1}  # X beats A on roughness only
+    summary = summarize([row("a", **a), row("y", **y), row("x", **x)], DIRECTED_COLUMNS)
+    st = {s.site_id: s for s in summary.sites}
+    assert st["y"].dominated_by == ["a"]
+    assert "y" in st["x"].dominated_by
+    assert "a" not in st["x"].dominated_by
+    assert st["a"].dominated_by == []
+    # Only A is undominated, but A does not dominate X: no "A dominates" claim.
+    assert "dominates" not in summary.verdict
+    assert summary.verdict.startswith("No single site is best on every directed metric.")
+    assert "X is dominated by Y." in summary.verdict
+    assert "Y is dominated by A." in summary.verdict
+
+
+def test_empty_front_is_stated_honestly() -> None:
+    """A 3-cycle (possible only with null cells): every site is dominated."""
+    # a vs b share only slope_at_site; b vs c share only slope_p95; c vs a share only roughness.
+    a = {"slope_at_site_deg": 1.0, "roughness_rms_m": 0.9}
+    b = {"slope_at_site_deg": 2.0, "slope_p95_deg": 1.0}
+    c = {"slope_p95_deg": 2.0, "roughness_rms_m": 0.1}
+    summary = summarize([row("a", **a), row("b", **b), row("c", **c)], DIRECTED_COLUMNS)
+    assert all(s.dominated_by for s in summary.sites)
+    assert summary.verdict.startswith("No site is Pareto-optimal")
+
+
 @pytest.mark.parametrize("profile", ["power", "comms", "landing"])
 def test_profile_ordering_and_assumption_evidence(profile: str) -> None:
     mid = {k: (GOOD[k] + BAD[k]) / 2 for k in GOOD}
