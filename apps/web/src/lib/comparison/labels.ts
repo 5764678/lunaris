@@ -97,3 +97,16 @@ export function formatDateUtc(iso: string): string {
 export function formatPeriodUtc(startIso: string, endIso: string): string {
   return `${formatDateUtc(startIso)} to ${formatDateUtc(endIso)} (UTC)`;
 }
+
+/**
+ * `2027` when the dates are exactly one calendar year in UTC (the Compare default, 1 Jan 2027 to
+ * 1 Jan 2028), otherwise null. Lets a row say "2027 average" only when that is exactly what it is.
+ */
+export function calendarYearOf(startIso: string, endIso: string): number | null {
+  const start = new Date(Date.parse(startIso));
+  const end = new Date(Date.parse(endIso));
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return null;
+  const year = start.getUTCFullYear();
+  const startsOnNewYear = start.getTime() === Date.UTC(year, 0, 1);
+  return startsOnNewYear && end.getTime() === Date.UTC(year + 1, 0, 1) ? year : null;
+}

@@ -58,7 +58,7 @@ export function CellEvidence({
           )}
         >
           {value === null ? (
-            <span className="font-mono text-3xs text-dim italic">
+            <span className="font-mono text-3xs [overflow-wrap:anywhere] text-dim italic">
               N/C · <span className="not-italic">{cell.reason ?? "not computed"}</span>
             </span>
           ) : (
