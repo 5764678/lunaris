@@ -40,9 +40,22 @@ test("a quick answer never shows the waking notice", async ({ page }) => {
 test("a slow first answer shows the waking notice, which clears when the server answers", async ({
   page,
 }) => {
-  // Well past the 2 s threshold (a busy page start, such as software-rendered WebGL, can delay the
-  // page's own timers by a few seconds), and inside the client's 8 s limit.
-  await page.route(HEALTH, (route) => holdThen(route, 6_000, () => route.continue()));
+  // `/health` is held until the notice is on screen, then answered. A fixed hold (it was 6 s) raced
+  // the page's own 2 s timer, which a busy page start (software-rendered WebGL on a slow CI
+  // runner) can delay by several seconds; holding until the notice shows tests the behaviour,
+  // not the race. The 60 s cap only stops a broken page from hanging the test.
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(HEALTH, async (route) => {
+    await Promise.race([released, new Promise((resolve) => setTimeout(resolve, 60_000))]);
+    try {
+      await route.continue();
+    } catch {
+      // The client gave up on this request (its 8 s limit) or the page closed meanwhile.
+    }
+  });
   await page.goto("/");
 
   const chip = page.getByTestId("api-status");
@@ -51,7 +64,9 @@ test("a slow first answer shows the waking notice, which clears when the server 
   await expect(chip).toHaveAttribute("data-state", "waking");
   await expect(chip).toContainText("Waking up");
 
-  await expect(chip).toHaveAttribute("data-state", "online", { timeout: 15_000 });
+  release();
+  // A held request the client already gave up on is answered by the next poll (every 10 s).
+  await expect(chip).toHaveAttribute("data-state", "online", { timeout: 25_000 });
   await expect(banner).toHaveCount(0);
 });
 
