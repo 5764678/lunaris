@@ -60,7 +60,11 @@ function SummaryBody({ state, columns }: { state: SummaryState; columns: readonl
     case "too-few":
       return <p className="text-2xs text-dim">Select at least two sites to see which leads on what.</p>;
     case "waiting":
-      return <p className="text-2xs text-dim">The summary appears once every site has been worked out.</p>;
+      return (
+        <p className="text-2xs text-dim">
+          Summary: computing… It appears once every site has been worked out.
+        </p>
+      );
     case "incomplete":
       return (
         <p className="text-2xs text-dim">
@@ -71,7 +75,7 @@ function SummaryBody({ state, columns }: { state: SummaryState; columns: readonl
       return (
         <p className="inline-flex items-center gap-1.5 text-2xs text-dim" role="status">
           <LoaderCircle aria-hidden="true" className="size-3 animate-spin motion-reduce:animate-none" />
-          Summarising the sites…
+          Summary: computing…
         </p>
       );
     case "error": {
