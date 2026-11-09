@@ -9,7 +9,7 @@ traceable evidence: *Is this landing site physically suitable? How does its illu
 change over time? When is the Earth geometrically visible? Does terrain obstruct the Sun
 or the Earth? How do candidate sites compare, and what are the trade-offs?*
 
-> **Status: v0.9.0, a working research prototype.** Terrain, celestial geometry,
+> **Status (9 November 2026): a working research prototype.** Terrain, celestial geometry,
 > illumination, Earth line of sight and site comparison are implemented, and every
 > computed number opens its data source, method and limitations. The results are checked
 > against independent references (below). LUNARIS is a preliminary planning and research
