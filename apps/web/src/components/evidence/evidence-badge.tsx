@@ -15,31 +15,31 @@ export const EVIDENCE_TAGS: Record<
   observation: {
     short: "OBS",
     title: "Observation",
-    description: "Measured data as distributed by the instrument team.",
+    description: "Measured by an instrument, as published by the team that ran it.",
     className: "border-ev-observation/40 bg-ev-observation/10 text-ev-observation",
   },
   derived_product: {
     short: "DERIVED",
     title: "Derived product",
-    description: "Archived product derived from observations by its producing team.",
+    description: "Built from measurements by the team that produced the dataset.",
     className: "border-ev-derived/40 bg-ev-derived/10 text-ev-derived",
   },
   model: {
     short: "MODEL",
     title: "Model output",
-    description: "Output of an authoritative physical or ephemeris model.",
+    description: "Produced by a trusted physical model or planet-position table (ephemeris).",
     className: "border-ev-model/40 bg-ev-model/10 text-ev-model",
   },
   calculation: {
     short: "CALC",
     title: "Calculation",
-    description: "Computed by LUNARIS from other evidence; the method is recorded.",
+    description: "Worked out by LUNARIS from other evidence; the method is recorded.",
     className: "border-ev-calculation/40 bg-ev-calculation/10 text-ev-calculation",
   },
   assumption: {
     short: "ASSUMED",
     title: "Assumption",
-    description: "Adopted by configuration or convention, without observational support.",
+    description: "A value chosen by setting or convention, not backed by a measurement.",
     className: "border-ev-assumption/40 bg-ev-assumption/10 text-ev-assumption",
   },
   placeholder: {
@@ -51,7 +51,8 @@ export const EVIDENCE_TAGS: Record<
   not_computed: {
     short: "N/C",
     title: "Not computed",
-    description: "The module that produces this value is not implemented yet.",
+    description:
+      "No value to show: it is still loading or could not be computed. The reason is shown next to it.",
     className: "hatch border-ev-not-computed/40 text-ev-not-computed",
   },
 };
