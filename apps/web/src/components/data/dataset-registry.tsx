@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { describeError } from "@/lib/api/client";
 import { useDatasetsQuery, useRuntimeQuery } from "@/lib/api/queries";
+import { datasetAvailability } from "@/lib/datasets/availability";
 
-import { CopyCommand, DatasetStatusPill } from "./dataset-status";
+import { CopyCommand, DatasetAvailabilityPill } from "./dataset-status";
+import { useShippedTextures } from "./use-shipped-textures";
 
 function formatBytes(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined) return "—";
@@ -34,8 +36,15 @@ function MetaRow({ label, value }: { label: string; value: string | null | undef
   );
 }
 
-function DatasetCard({ dataset }: { dataset: DatasetSummary }) {
+function DatasetCard({
+  dataset,
+  shippedTextureIds,
+}: {
+  dataset: DatasetSummary;
+  shippedTextureIds: ReadonlySet<string>;
+}) {
   const spatial = dataset.spatial;
+  const webTexture = datasetAvailability(dataset, shippedTextureIds).kind === "web-texture";
   return (
     <article
       className="rounded-lg border border-border bg-panel"
@@ -63,10 +72,15 @@ function DatasetCard({ dataset }: { dataset: DatasetSummary }) {
           <p className="mt-0.5 font-mono text-3xs text-dim">{dataset.id}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <DatasetStatusPill status={dataset.local.status} className="text-2xs" />
+          <DatasetAvailabilityPill
+            dataset={dataset}
+            shippedTextureIds={shippedTextureIds}
+            className="text-2xs"
+          />
           <span className="numeric font-mono text-3xs text-dim">
-            {dataset.local.files_present}/{dataset.local.files_expected} files ·{" "}
-            {formatBytes(dataset.local.bytes_on_disk)}
+            {webTexture
+              ? "original file not stored on the server"
+              : `${dataset.local.files_present}/${dataset.local.files_expected} files · ${formatBytes(dataset.local.bytes_on_disk)}`}
           </span>
           {dataset.local.manifest_changed && <Badge variant="warn">Manifest changed since acquisition</Badge>}
         </div>
@@ -179,6 +193,7 @@ function DatasetCard({ dataset }: { dataset: DatasetSummary }) {
 
 export function DatasetRegistry() {
   const datasets = useDatasetsQuery();
+  const textures = useShippedTextures();
   if (datasets.isPending) {
     return (
       <div className="space-y-4">
@@ -203,7 +218,7 @@ export function DatasetRegistry() {
   return (
     <div className="space-y-4">
       {datasets.data.datasets.map((dataset) => (
-        <DatasetCard key={dataset.id} dataset={dataset} />
+        <DatasetCard key={dataset.id} dataset={dataset} shippedTextureIds={textures.ids} />
       ))}
     </div>
   );

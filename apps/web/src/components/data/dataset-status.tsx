@@ -5,6 +5,7 @@ import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { datasetAvailability, type DatasetLike } from "@/lib/datasets/availability";
 import { cn } from "@/lib/utils";
 
 export const DATASET_STATUS: Record<
@@ -43,8 +44,23 @@ export const DATASET_STATUS: Record<
   },
 };
 
-export function DatasetStatusPill({ status, className }: { status: DatasetStatus; className?: string }) {
-  const view = DATASET_STATUS[status];
+/** A visualization dataset the web app ships as a picture (the server may not hold the original). */
+const WEB_TEXTURE_VIEW = {
+  label: "In web app",
+  dot: "bg-ok",
+  text: "text-ok",
+  hint: "The web app ships a picture built from this dataset. The original download is not stored on the server.",
+};
+
+function Pill({
+  view,
+  status,
+  className,
+}: {
+  view: { label: string; dot: string; text: string; hint: string };
+  status: string;
+  className?: string;
+}) {
   return (
     <span
       title={view.hint}
@@ -59,6 +75,29 @@ export function DatasetStatusPill({ status, className }: { status: DatasetStatus
       {view.label}
     </span>
   );
+}
+
+export function DatasetStatusPill({ status, className }: { status: DatasetStatus; className?: string }) {
+  return <Pill view={DATASET_STATUS[status]} status={status} className={className} />;
+}
+
+/**
+ * The status a visitor should see for a dataset: the server's status, except that a
+ * visualization dataset whose texture the web app ships reads "In web app" instead of "Missing".
+ */
+export function DatasetAvailabilityPill({
+  dataset,
+  shippedTextureIds,
+  className,
+}: {
+  dataset: DatasetLike;
+  shippedTextureIds: ReadonlySet<string>;
+  className?: string;
+}) {
+  if (datasetAvailability(dataset, shippedTextureIds).kind === "web-texture") {
+    return <Pill view={WEB_TEXTURE_VIEW} status="web_texture" className={className} />;
+  }
+  return <DatasetStatusPill status={dataset.local.status} className={className} />;
 }
 
 export function CopyCommand({ command, className }: { command: string; className?: string }) {
