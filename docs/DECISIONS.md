@@ -161,3 +161,41 @@ Status values: `Proposed`, `Accepted`, `Superseded by D<n>`.
   - Implementation sessions run at high reasoning effort, not max, to fit the usage
     budget.
 - **Ownership:** assigned per task in `docs/TASKS.md`.
+
+## D8 — Hosted demo: two Docker services on Render's free plan, data baked into the image
+
+- **Status:** Accepted (2026-11-05)
+- **Decision:** The public demo runs as two Render web services built from this repository:
+  `apps/api/Dockerfile` and `apps/web/Dockerfile`. A free instance has no persistent disk,
+  so the API image acquires the checksum-verified NAIF kernels and LDEM_75S_240M at build
+  time (`LUNARIS_BAKE_DATASETS`, with `lunaris-data verify`). It then warms the cited demo
+  trio's horizon masks and PGDA windows (`LUNARIS_PREWARM_DEMO`). The web image builds the
+  SVS globe texture in its own stage. `NEXT_PUBLIC_LUNARIS_API_URL` and
+  `LUNARIS_CORS_ORIGINS` tie the two services together.
+- **Costs:**
+  - Instances sleep after about 15 minutes idle, and the first request then waits about a
+    minute.
+  - On the free CPU, the trio comparison over one year takes about 20 s.
+  - Sites registered at runtime are lost when the instance restarts. The image ships with
+    the trio registered.
+  - The image is about 72 MB of data larger than one without the baked datasets.
+- **Revisit if:** the comparison becomes the demo's bottleneck (move the API to a paid
+  instance), or user-registered sites must persist (attach a disk or a database).
+
+## D9 — Comparison summary: dominance and declared directions, no hidden weights
+
+- **Status:** Accepted (2026-11-05)
+- **Context:** Users want the comparison to say which site is best. "Best" depends on
+  mission weights: power, communications and landing safety each give a different winner. A
+  default weighted score would present a value judgment as a measurement.
+- **Decision:**
+  - Each comparable column declares its direction, higher or lower is better, with a
+    rationale. Columns with no universal direction, such as horizon elevation, declare none.
+  - The API reports the column leaders and each site's leads, trails and Pareto dominance.
+    It also returns a verdict sentence generated only from that dominance, which says so
+    when there is no clear winner.
+  - A weighted ordering exists only when the user selects a named mission profile. Its
+    weights and normalisation are shown and returned as `assumption` evidence. Without a
+    profile there is no score.
+- **Rejected:** a default "suitability score". It is easy to read, and nobody can defend
+  its weights.
