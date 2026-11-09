@@ -30,7 +30,14 @@ export const EXPECTED_COLUMNS: readonly Pick<CompareColumn, "key" | "unit">[] = 
 /** The columns of the first answer, or the expected ones while nothing has answered yet. */
 export function columnsFor(first: SiteComparison | undefined): readonly CompareColumn[] {
   if (first) return first.columns;
-  return EXPECTED_COLUMNS.map((c) => ({ ...c, label: c.key, description: "" }));
+  // Placeholders claim no direction: `better` comes only from the API's answer (T-18, D9).
+  return EXPECTED_COLUMNS.map((c) => ({
+    ...c,
+    label: c.key,
+    description: "",
+    better: null,
+    better_rationale: "",
+  }));
 }
 
 export type RowStatus = "ready" | "pending" | "error";
