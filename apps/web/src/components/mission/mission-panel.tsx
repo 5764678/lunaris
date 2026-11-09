@@ -2,6 +2,7 @@
 
 import { EvidenceLegend } from "@/components/evidence/evidence-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useDefaultSite } from "@/lib/sites/use-default-site";
 
 import { AnalysisReadiness } from "./analysis-readiness";
 import { DataSourcesCard } from "./data-sources-card";
@@ -10,6 +11,7 @@ import { SelectedSite } from "./selected-site";
 import { SiteRegistry } from "./site-registry";
 
 export function MissionPanel() {
+  useDefaultSite();
   return (
     <aside
       aria-label="Mission information"
