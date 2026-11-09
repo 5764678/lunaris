@@ -525,6 +525,31 @@ export interface components {
             /** Width Px */
             width_px: number;
         };
+        /** ColumnLeaders */
+        ColumnLeaders: {
+            /**
+             * Better
+             * @enum {string}
+             */
+            better: "higher" | "lower";
+            /**
+             * Compared Sites
+             * @description Sites with a non-null value in this column.
+             */
+            compared_sites: number;
+            /** Key */
+            key: string;
+            /**
+             * Site Ids
+             * @description Best value among non-null cells; ties allowed.
+             */
+            site_ids: string[];
+            /**
+             * Value
+             * @description The leading value; null when fewer than 2 sites have one.
+             */
+            value: number | null;
+        };
         /** CompareCell */
         CompareCell: {
             /**
@@ -553,6 +578,17 @@ export interface components {
         };
         /** CompareColumn */
         CompareColumn: {
+            /**
+             * Better
+             * @description Which direction is better for a mission, or null when there is no universal direction (the column is then not ranked).
+             */
+            better: ("higher" | "lower") | null;
+            /**
+             * Better Rationale
+             * @description One line: why that direction.
+             * @default
+             */
+            better_rationale: string;
             /** Description */
             description: string;
             /** Key */
@@ -586,6 +622,22 @@ export interface components {
             sun_longest_hidden_s: components["schemas"]["CompareCell"];
             sun_mean_visible_disk_fraction: components["schemas"]["CompareCell"];
             surface_height_m: components["schemas"]["CompareCell"];
+        };
+        /** ComparisonSummary */
+        ComparisonSummary: {
+            /** Leaders */
+            leaders: components["schemas"]["ColumnLeaders"][];
+            /** Method */
+            method: string;
+            /** @description Only when a `profile` is requested; there is no default score. */
+            score: components["schemas"]["ProfileScore"] | null;
+            /** Sites */
+            sites: components["schemas"]["SiteStanding"][];
+            /**
+             * Verdict
+             * @description Generated from dominance only; never from weights.
+             */
+            verdict: string;
         };
         /** ComponentCheck */
         ComponentCheck: {
@@ -1209,6 +1261,26 @@ export interface components {
             /** Sunlit Windows */
             sunlit_windows: components["schemas"]["VisibilityWindow"][];
         };
+        /** ProfileScore */
+        ProfileScore: {
+            evidence: components["schemas"]["EvidenceSchema"];
+            /** Normalisation */
+            normalisation: string;
+            /**
+             * Profile
+             * @enum {string}
+             */
+            profile: "power" | "comms" | "landing";
+            /**
+             * Scores
+             * @description Sorted by score, best first; null scores last.
+             */
+            scores: components["schemas"]["ScoreEntry"][];
+            /** Weights */
+            weights: {
+                [key: string]: number;
+            };
+        };
         /** RegisteredCatalogSites */
         RegisteredCatalogSites: {
             /**
@@ -1294,6 +1366,20 @@ export interface components {
              */
             values_per_vertex: 4;
         };
+        /** ScoreEntry */
+        ScoreEntry: {
+            /** Name */
+            name: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * Score
+             * @description Weighted sum of normalised values in [0, 1].
+             */
+            score: number | null;
+            /** Site Id */
+            site_id: string;
+        };
         /** SelenographicCoordinateSchema */
         SelenographicCoordinateSchema: {
             /**
@@ -1371,6 +1457,7 @@ export interface components {
             start_utc: string;
             /** Step S */
             step_s: number;
+            summary: components["schemas"]["ComparisonSummary"];
         };
         /**
          * SiteEphemeris
@@ -1415,6 +1502,35 @@ export interface components {
             start_utc: string;
             /** Step S */
             step_s: number;
+        };
+        /** SiteStanding */
+        SiteStanding: {
+            /**
+             * Directed Compared
+             * @description Directed columns with this site's value and ≥ 2 values.
+             */
+            directed_compared: number;
+            /** Dominance */
+            dominance: string;
+            /**
+             * Dominated By
+             * @description Site ids that are at least as good on every directed column both have values for, and strictly better on at least one (Pareto dominance).
+             */
+            dominated_by: string[];
+            /**
+             * Leads
+             * @description Directed columns where this site is best or tied.
+             */
+            leads: string[];
+            /** Name */
+            name: string;
+            /** Site Id */
+            site_id: string;
+            /**
+             * Trails
+             * @description Directed columns where this site is worst (not tied best).
+             */
+            trails: string[];
         };
         /** SiteTerrainResponse */
         SiteTerrainResponse: {
@@ -1765,6 +1881,8 @@ export interface operations {
                 step_s?: number;
                 observer_height_m?: number;
                 footprint_radius_m?: number;
+                /** @description Optional mission profile: adds a weighted ordering with its fixed weights and normalisation returned as assumption evidence. Without it, no score. */
+                profile?: ("power" | "comms" | "landing") | null;
             };
             header?: never;
             path?: never;

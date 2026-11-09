@@ -404,6 +404,26 @@ available` while the timeline has no terrain horizon); it is never 0. Illuminati
 state their period in `limitations`, because published values use other periods.
 `columns` lists each key with its label, unit and description.
 
+**Summary (T-18, `docs/DECISIONS.md` D9).** Each column also declares `better`
+(`"higher"`, `"lower"` or `null`) with a one-line `better_rationale`. Height, horizon
+min/max and the truncation count are `null` and are not ranked. `summary` holds:
+- `leaders`: per directed column, the site ids with the best non-null value (ties
+  allowed; empty when fewer than two sites have a value).
+- `sites`: per site, `leads`, `trails`, `directed_compared`, `dominated_by` (Pareto over
+  shared non-null directed columns) and a `dominance` sentence.
+- `verdict`: generated from dominance only. When there is no clear winner it begins
+  "No single site is best on every directed metric."
+- `method`.
+- `score`: only with `profile=power|comms|landing`, a weighted ordering over fixed
+  documented weights and min-max normalisation within the compared sites, returned as
+  `assumption` evidence. Without `profile` it is `null`: there is no default score.
+
+The demo trio over 2027 gives: "No single site is best on every directed metric. Peak near
+Shackleton leads on slope, sunlight and darkness and Earth visibility; trade-off: worst on
+roughness. Malapert massif leads on roughness; trade-off: worst on sunlight and darkness
+and Earth visibility. Connecting ridge leads on no metric but is not dominated; worst on
+slope."
+
 ## Changing the contract
 
 1. Edit the Pydantic schemas in `apps/api/src/lunaris_api/schemas/`.
