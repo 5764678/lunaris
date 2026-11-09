@@ -151,6 +151,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ephemeris/sun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Moon-centred apparent Sun direction (for lighting the globe)
+         * @description Apparent unit direction from the Moon's centre to the Sun in MOON_ME (CN+S), the
+         *     sub-solar point and the solar angular radius at every step. Same window rules,
+         *     10 000-sample cap and error codes as the site ephemeris.
+         */
+        get: operations["get_sun_direction_api_v1_ephemeris_sun_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites": {
         parameters: {
             query?: never;
@@ -525,6 +547,31 @@ export interface components {
             /** Width Px */
             width_px: number;
         };
+        /** ColumnLeaders */
+        ColumnLeaders: {
+            /**
+             * Better
+             * @enum {string}
+             */
+            better: "higher" | "lower";
+            /**
+             * Compared Sites
+             * @description Sites with a non-null value in this column.
+             */
+            compared_sites: number;
+            /** Key */
+            key: string;
+            /**
+             * Site Ids
+             * @description Best value among non-null cells; ties allowed.
+             */
+            site_ids: string[];
+            /**
+             * Value
+             * @description The leading value; null when fewer than 2 sites have one.
+             */
+            value: number | null;
+        };
         /** CompareCell */
         CompareCell: {
             /**
@@ -553,6 +600,17 @@ export interface components {
         };
         /** CompareColumn */
         CompareColumn: {
+            /**
+             * Better
+             * @description Which direction is better for a mission, or null when there is no universal direction (the column is then not ranked).
+             */
+            better: ("higher" | "lower") | null;
+            /**
+             * Better Rationale
+             * @description One line: why that direction.
+             * @default
+             */
+            better_rationale: string;
             /** Description */
             description: string;
             /** Key */
@@ -586,6 +644,22 @@ export interface components {
             sun_longest_hidden_s: components["schemas"]["CompareCell"];
             sun_mean_visible_disk_fraction: components["schemas"]["CompareCell"];
             surface_height_m: components["schemas"]["CompareCell"];
+        };
+        /** ComparisonSummary */
+        ComparisonSummary: {
+            /** Leaders */
+            leaders: components["schemas"]["ColumnLeaders"][];
+            /** Method */
+            method: string;
+            /** @description Only when a `profile` is requested; there is no default score. */
+            score: components["schemas"]["ProfileScore"] | null;
+            /** Sites */
+            sites: components["schemas"]["SiteStanding"][];
+            /**
+             * Verdict
+             * @description Generated from dominance only; never from weights.
+             */
+            verdict: string;
         };
         /** ComponentCheck */
         ComponentCheck: {
@@ -1209,6 +1283,26 @@ export interface components {
             /** Sunlit Windows */
             sunlit_windows: components["schemas"]["VisibilityWindow"][];
         };
+        /** ProfileScore */
+        ProfileScore: {
+            evidence: components["schemas"]["EvidenceSchema"];
+            /** Normalisation */
+            normalisation: string;
+            /**
+             * Profile
+             * @enum {string}
+             */
+            profile: "power" | "comms" | "landing";
+            /**
+             * Scores
+             * @description Sorted by score, best first; null scores last.
+             */
+            scores: components["schemas"]["ScoreEntry"][];
+            /** Weights */
+            weights: {
+                [key: string]: number;
+            };
+        };
         /** RegisteredCatalogSites */
         RegisteredCatalogSites: {
             /**
@@ -1294,6 +1388,20 @@ export interface components {
              */
             values_per_vertex: 4;
         };
+        /** ScoreEntry */
+        ScoreEntry: {
+            /** Name */
+            name: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * Score
+             * @description Weighted sum of normalised values in [0, 1].
+             */
+            score: number | null;
+            /** Site Id */
+            site_id: string;
+        };
         /** SelenographicCoordinateSchema */
         SelenographicCoordinateSchema: {
             /**
@@ -1371,6 +1479,7 @@ export interface components {
             start_utc: string;
             /** Step S */
             step_s: number;
+            summary: components["schemas"]["ComparisonSummary"];
         };
         /**
          * SiteEphemeris
@@ -1415,6 +1524,35 @@ export interface components {
             start_utc: string;
             /** Step S */
             step_s: number;
+        };
+        /** SiteStanding */
+        SiteStanding: {
+            /**
+             * Directed Compared
+             * @description Directed columns with this site's value and ≥ 2 values.
+             */
+            directed_compared: number;
+            /** Dominance */
+            dominance: string;
+            /**
+             * Dominated By
+             * @description Site ids that are at least as good on every directed column both have values for, and strictly better on at least one (Pareto dominance).
+             */
+            dominated_by: string[];
+            /**
+             * Leads
+             * @description Directed columns where this site is best or tied.
+             */
+            leads: string[];
+            /** Name */
+            name: string;
+            /** Site Id */
+            site_id: string;
+            /**
+             * Trails
+             * @description Directed columns where this site is worst (not tied best).
+             */
+            trails: string[];
         };
         /** SiteTerrainResponse */
         SiteTerrainResponse: {
@@ -1542,6 +1680,93 @@ export interface components {
             projection: string | null;
             /** Vertical Reference */
             vertical_reference: string | null;
+        };
+        /**
+         * SunDirectionSample
+         * @description Apparent Sun direction from the Moon's centre at one epoch (T-26).
+         */
+        SunDirectionSample: {
+            /**
+             * Angular Radius Deg
+             * @description asin(R_sun / range).
+             */
+            angular_radius_deg: number;
+            /**
+             * Direction Moon Me
+             * @description Apparent unit vector [x, y, z] from the Moon's centre to the Sun, MOON_ME.
+             */
+            direction_moon_me: number[];
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Range M
+             * @description Moon centre – Sun distance (apparent).
+             */
+            range_m: number;
+            /**
+             * Subsolar Latitude Deg
+             * @description Planetocentric latitude where the Sun is at the zenith (1737.4 km sphere).
+             */
+            subsolar_latitude_deg: number;
+            /**
+             * Subsolar Longitude Deg
+             * @description East longitude, [0, 360).
+             */
+            subsolar_longitude_deg: number;
+        };
+        /**
+         * SunDirectionSeries
+         * @description Moon-centred Sun direction series for lighting the globe (T-26).
+         */
+        SunDirectionSeries: {
+            /**
+             * Aberration Correction
+             * @constant
+             */
+            aberration_correction: "CN+S";
+            /**
+             * End Utc
+             * Format: date-time
+             */
+            end_utc: string;
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Frame
+             * @constant
+             */
+            frame: "MOON_ME";
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Max Samples
+             * @description Cap on samples per request.
+             */
+            max_samples: number;
+            /**
+             * Origin
+             * @description Directions are from the Moon's centre.
+             * @constant
+             */
+            origin: "MOON";
+            /** Sample Count */
+            sample_count: number;
+            /** Samples */
+            samples: components["schemas"]["SunDirectionSample"][];
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+            /** Step S */
+            step_s: number;
+            /**
+             * Sun Radius M
+             * @description Solar radius from the loaded PCK.
+             */
+            sun_radius_m: number;
         };
         /** TerrainSceneListResponse */
         TerrainSceneListResponse: {
@@ -1765,6 +1990,8 @@ export interface operations {
                 step_s?: number;
                 observer_height_m?: number;
                 footprint_radius_m?: number;
+                /** @description Optional mission profile: adds a weighted ordering with its fixed weights and normalisation returned as assumption evidence. Without it, no score. */
+                profile?: ("power" | "comms" | "landing") | null;
             };
             header?: never;
             path?: never;
@@ -2064,6 +2291,60 @@ export interface operations {
             };
             /** @description Unexpected server error. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_sun_direction_api_v1_ephemeris_sun_get: {
+        parameters: {
+            query: {
+                /** @description Window start, ISO 8601 UTC. */
+                start_utc: string;
+                /** @description Window end (inclusive when on a step); start = end gives one epoch. */
+                end_utc: string;
+                /** @description Sample spacing in seconds. */
+                step_s: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SunDirectionSeries"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -31,6 +31,7 @@ from lunaris_science.coordinates import (
     LATITUDE_LIMIT_DEG,
     CoordinateError,
     SelenographicCoordinate,
+    cartesian_to_spherical,
     spherical_to_cartesian,
 )
 from lunaris_science.frames import CANONICAL_FRAME
@@ -303,13 +304,123 @@ def _evidence(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class MoonCentredSeries:
+    """Apparent direction of a body from the Moon's centre (T-26).
+
+    Used to light the whole globe: the direction is the same for every surface point to
+    within the Moon's radius over the body's distance (Sun: 1.2e-5 rad, ≈ 2.4″).
+    """
+
+    body: Body
+    epochs_et_s: FloatArray
+    direction_moon_me: FloatArray
+    """Apparent unit direction, shape (N, 3), in ``MOON_ME``."""
+    range_m: FloatArray
+    angular_radius_deg: FloatArray
+    subpoint_latitude_deg: FloatArray
+    """Planetocentric latitude where the body is at the zenith (the direction itself)."""
+    subpoint_longitude_deg: FloatArray
+    """East longitude in [0, 360)."""
+    body_radius_m: float
+    aberration_correction: str
+    evidence: Evidence
+
+    def __len__(self) -> int:
+        return int(self.epochs_et_s.shape[0])
+
+
+def moon_centred_direction(
+    context: SpiceContext,
+    body: Body,
+    epochs_et_s: ArrayLike,
+    *,
+    aberration_correction: str = APPARENT_CORRECTION,
+) -> MoonCentredSeries:
+    """Apparent direction, range, angular radius and sub-body point of ``body`` seen from
+    the Moon's centre, in ``MOON_ME``.
+
+    CSPICE ``spkpos(body, et, 'MOON_ME', 'CN+S', 'MOON')``; the sub-body point is the
+    planetocentric latitude/longitude of that direction, which on the 1737.4 km sphere is
+    both the "near point" and the "intercept" sub-body point.
+
+    Raises:
+        GeometryError: for epochs outside the kernel coverage, unsupported corrections or
+            a SPICE failure.
+    """
+    body = Body(body)
+    if aberration_correction not in SUPPORTED_CORRECTIONS:
+        raise GeometryError(f"unsupported aberration correction {aberration_correction!r}")
+    ets = np.atleast_1d(np.asarray(epochs_et_s, dtype=np.float64))
+    if ets.ndim != 1 or not np.all(np.isfinite(ets)):
+        raise GeometryError("epochs_et_s must be one-dimensional and finite")
+    coverage = context.coverage
+    if ets.size and (
+        float(np.min(ets)) < coverage.start_et_s or float(np.max(ets)) > coverage.end_et_s
+    ):
+        raise GeometryError("epochs fall outside the time coverage of the loaded kernels")
+    positions_km = np.empty((ets.size, 3), dtype=np.float64)
+    try:
+        with context.session():
+            radii_km = np.asarray(spiceypy.bodvrd(body.value, "RADII", 3)[1], dtype=np.float64)
+            for i, et in enumerate(ets):
+                position, _ = spiceypy.spkpos(
+                    body.value, float(et), CANONICAL_FRAME_NAME, aberration_correction, "MOON"
+                )
+                positions_km[i] = position
+    except SpiceyError as exc:
+        raise GeometryError(f"SPICE could not compute {body.value} position: {exc.short}") from exc
+    positions_m = positions_km * KM
+    range_m = np.linalg.norm(positions_m, axis=1)
+    direction = positions_m / range_m[:, None]
+    latitude, longitude, _ = cartesian_to_spherical(direction)
+    body_radius_m = float(radii_km[0] * KM)
+    angular_radius = np.degrees(np.arcsin(np.clip(body_radius_m / range_m, -1.0, 1.0)))
+    name = body.value.capitalize()
+    evidence = Evidence(
+        kind=EvidenceKind.MODEL,
+        statement=(
+            f"Apparent direction of the {name} from the Moon's centre, its range, angular "
+            f"radius and sub-{name.lower()} point, from the JPL DE440 ephemeris through NAIF "
+            f"SPICE (corrections {aberration_correction})."
+        ),
+        sources=context.kernel_set.sources,
+        method=(
+            f"CSPICE spkpos('{body.value}', et, 'MOON_ME', '{aberration_correction}', 'MOON'); "
+            "unit vector; sub-point = planetocentric latitude/east longitude of the direction "
+            "(the 1737.4 km sphere); angular radius = asin(R_body/|r|). MOON_ME resolves to "
+            f"{context.frame_resolution.resolves_to}."
+        ),
+        assumptions=(
+            "Moon-centred: from a surface point the direction differs by up to "
+            "R_moon/range (≈ 2.4 arcsec for the Sun, ≈ 0.26° for the Earth); use the site "
+            "ephemeris for topocentric values.",
+            f"{name} radius {body_radius_m / KM:.4f} km from the loaded PCK.",
+        ),
+    )
+    return MoonCentredSeries(
+        body=body,
+        epochs_et_s=ets,
+        direction_moon_me=direction,
+        range_m=range_m,
+        angular_radius_deg=angular_radius,
+        subpoint_latitude_deg=latitude,
+        subpoint_longitude_deg=longitude,
+        body_radius_m=body_radius_m,
+        aberration_correction=aberration_correction,
+        evidence=evidence,
+    )
+
+
 __all__ = [
     "APPARENT_CORRECTION",
     "Body",
     "BodyGeometrySeries",
     "GeometryError",
+    "MoonCentredSeries",
     "ObserverSite",
     "body_geometry",
     "enu_basis",
+    "moon_centred_direction",
     "topocentric_az_el",
 ]

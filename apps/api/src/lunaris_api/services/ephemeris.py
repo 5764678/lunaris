@@ -17,6 +17,8 @@ from lunaris_api.schemas.ephemeris import (
     EphemerisObserver,
     EphemerisSample,
     SiteEphemeris,
+    SunDirectionSample,
+    SunDirectionSeries,
 )
 from lunaris_api.schemas.sites import CandidateSite
 from lunaris_api.services.sites import SiteService
@@ -30,8 +32,10 @@ from lunaris_science.geometry import (
     Body,
     BodyGeometrySeries,
     GeometryError,
+    MoonCentredSeries,
     ObserverSite,
     body_geometry,
+    moon_centred_direction,
     sample_count,
     uniform_utc_grid,
     utc_to_et,
@@ -172,6 +176,28 @@ class EphemerisService:
                 f"An operator must run `uv run lunaris-data acquire {KERNEL_DATASET_ID}`."
             ) from exc
 
+    @staticmethod
+    def _validate_window(
+        start_utc: datetime, end_utc: datetime, step_s: float, location: str
+    ) -> None:
+        for name, value in (("start_utc", start_utc), ("end_utc", end_utc)):
+            if value.utcoffset() != timedelta(0):
+                raise EphemerisRequestError(
+                    f"{name} must be UTC (suffix Z or +00:00)", [location, name], "utc_required"
+                )
+        if end_utc < start_utc:
+            raise EphemerisRequestError(
+                "end_utc must not be earlier than start_utc", [location, "end_utc"], "window_order"
+            )
+        count = sample_count(start_utc, end_utc, step_s)
+        if count > MAX_EPHEMERIS_SAMPLES:
+            raise EphemerisRequestError(
+                f"the window and step give {count} samples; at most {MAX_EPHEMERIS_SAMPLES} "
+                "are allowed per request. Increase step_s or shorten the window.",
+                [location, "step_s"],
+                "sample_cap_exceeded",
+            )
+
     def compute_geometry(
         self,
         site_id: str,
@@ -191,23 +217,7 @@ class EphemerisService:
         site is on the sphere and the evidence says so. Raises the typed 404 / 422 / 503
         errors documented in docs/API.md.
         """
-        for name, value in (("start_utc", start_utc), ("end_utc", end_utc)):
-            if value.utcoffset() != timedelta(0):
-                raise EphemerisRequestError(
-                    f"{name} must be UTC (suffix Z or +00:00)", [location, name], "utc_required"
-                )
-        if end_utc < start_utc:
-            raise EphemerisRequestError(
-                "end_utc must not be earlier than start_utc", [location, "end_utc"], "window_order"
-            )
-        count = sample_count(start_utc, end_utc, step_s)
-        if count > MAX_EPHEMERIS_SAMPLES:
-            raise EphemerisRequestError(
-                f"the window and step give {count} samples; at most {MAX_EPHEMERIS_SAMPLES} "
-                "are allowed per request. Increase step_s or shorten the window.",
-                [location, "step_s"],
-                "sample_cap_exceeded",
-            )
+        self._validate_window(start_utc, end_utc, step_s, location)
 
         site = self._sites.get_site(site_id)  # 404 for unknown ids
         site_location: list[str | int] = (
@@ -247,6 +257,22 @@ class EphemerisService:
             window_end_et_s=window_end_et_s,
         )
 
+    def sun_direction(
+        self, start_utc: datetime, end_utc: datetime, step_s: float
+    ) -> SunDirectionSeries:
+        """Moon-centred apparent Sun direction, sub-solar point and angular radius (T-26)."""
+        self._validate_window(start_utc, end_utc, step_s, "query")
+        context = self._context()
+        epochs = uniform_utc_grid(start_utc, end_utc, step_s)
+        ets = utc_to_et(context, epochs)
+        try:
+            series = moon_centred_direction(context, Body.SUN, ets)
+        except GeometryError as exc:
+            raise EphemerisRequestError(
+                f"{exc}. Kernel coverage: see docs/API.md.", ["query"], "outside_kernel_coverage"
+            ) from exc
+        return sun_direction_schema(series, epochs, start_utc, end_utc, step_s)
+
     def site_ephemeris(
         self, site_id: str, start_utc: datetime, end_utc: datetime, step_s: float
     ) -> SiteEphemeris:
@@ -265,6 +291,59 @@ class EphemerisService:
             bodies=[_body_schema(s, geometry.epochs) for s in geometry.series.values()],
             limitations=list(LIMITATIONS),
         )
+
+
+def sun_direction_schema(
+    series: MoonCentredSeries,
+    epochs: tuple[datetime, ...],
+    start: datetime,
+    end: datetime,
+    step_s: float,
+) -> SunDirectionSeries:
+    samples = [
+        SunDirectionSample(
+            epoch_utc=epoch,
+            direction_moon_me=direction,
+            subsolar_latitude_deg=lat,
+            subsolar_longitude_deg=lon,
+            angular_radius_deg=radius,
+            range_m=rng,
+        )
+        for epoch, direction, lat, lon, radius, rng in zip(
+            epochs,
+            series.direction_moon_me.tolist(),
+            series.subpoint_latitude_deg.tolist(),
+            series.subpoint_longitude_deg.tolist(),
+            series.angular_radius_deg.tolist(),
+            series.range_m.tolist(),
+            strict=True,
+        )
+    ]
+    return SunDirectionSeries(
+        start_utc=start,
+        end_utc=end,
+        step_s=step_s,
+        sample_count=len(samples),
+        max_samples=MAX_EPHEMERIS_SAMPLES,
+        frame="MOON_ME",
+        origin="MOON",
+        aberration_correction=APPARENT_CORRECTION,
+        sun_radius_m=series.body_radius_m,
+        samples=samples,
+        evidence=evidence_schema(series.evidence),
+        limitations=list(SUN_DIRECTION_LIMITATIONS),
+    )
+
+
+SUN_DIRECTION_LIMITATIONS = (
+    "Moon-centred direction: from a surface point the Sun's direction differs by at most "
+    "R_moon / range (about 2.4 arcsec). Use the site ephemeris for topocentric azimuth and "
+    "elevation.",
+    "Lighting the whole globe from this direction is the illumination of a smooth sphere; "
+    "terrain shadows need the terrain horizon (POST /api/v1/analysis/timeline).",
+    "Apparent direction (light time and stellar aberration at the Moon's centre); "
+    "gravitational light deflection is not modelled.",
+)
 
 
 __all__ = [
