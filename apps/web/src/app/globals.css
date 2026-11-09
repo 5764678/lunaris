@@ -26,7 +26,7 @@
   /* Text */
   --foreground: #e6eaef;
   --muted-foreground: #8d97a6;
-  --dim: #5c6774;
+  --dim: #7e8999;
 
   /* Accent (cool blue) */
   --primary: #7cb5ff;
@@ -47,7 +47,7 @@
   --ev-calculation: #5ad2c4;
   --ev-assumption: #e9b14f;
   --ev-placeholder: #ec8d5b;
-  --ev-not-computed: #5c6774;
+  --ev-not-computed: #7e8999;
 
   /* shadcn/ui semantic tokens */
   --card: var(--panel);
