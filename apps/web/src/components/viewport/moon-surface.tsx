@@ -30,6 +30,11 @@ export const GlobeSunContext = createContext<Vec3 | null>(null);
 const NIGHT_FLOOR_SPICE = 0.045;
 const NIGHT_FLOOR_DISPLAY = 0.018;
 
+/** Uniform writes live outside the hooks: three.js uniforms are mutable by design. */
+function setNightFloor(material: ShaderMaterial, value: number) {
+  material.uniforms.uNightFloor!.value = value;
+}
+
 /** SPICE Sun when provided; otherwise the display light from the upper-left of the view
  *  (labelled in the HUD as not the computed Sun). */
 function useSurfaceLight(material: ShaderMaterial) {
@@ -39,6 +44,7 @@ function useSurfaceLight(material: ShaderMaterial) {
   useEffect(() => invalidate(), [sun, invalidate]);
   useFrame(({ camera }) => {
     const light = material.uniforms.uLightDir!.value as Vector3;
+    setNightFloor(material, sun ? NIGHT_FLOOR_SPICE : NIGHT_FLOOR_DISPLAY);
     if (sun) {
       light.set(sun[0], sun[1], sun[2]).normalize();
       return;
@@ -50,7 +56,8 @@ function useSurfaceLight(material: ShaderMaterial) {
   });
 }
 
-function makeMaterial(texture: Texture | null, spiceLit: boolean) {
+/** One material per texture: the Sun only changes uniforms, never the program. */
+function makeMaterial(texture: Texture | null) {
   return new ShaderMaterial({
     vertexShader: moonVertexShader,
     fragmentShader: moonFragmentShader,
@@ -59,7 +66,7 @@ function makeMaterial(texture: Texture | null, spiceLit: boolean) {
       uMode: { value: texture ? MODE_TEXTURE : MODE_PROCEDURAL },
       uColorMap: { value: texture },
       uExposure: { value: texture ? 1.1 : 1.0 },
-      uNightFloor: { value: spiceLit ? NIGHT_FLOOR_SPICE : NIGHT_FLOOR_DISPLAY },
+      uNightFloor: { value: NIGHT_FLOOR_DISPLAY },
     },
   });
 }
@@ -75,8 +82,7 @@ function SurfaceMesh({ material }: { material: ShaderMaterial }) {
 }
 
 export function ProceduralSurface() {
-  const spiceLit = useContext(GlobeSunContext) !== null;
-  const material = useMemo(() => makeMaterial(null, spiceLit), [spiceLit]);
+  const material = useMemo(() => makeMaterial(null), []);
   return <SurfaceMesh material={material} />;
 }
 
@@ -124,7 +130,6 @@ export function TexturedSurface({
   }, [url, gl, invalidate, onError, onLoaded]);
 
   useEffect(() => () => texture?.dispose(), [texture]);
-  const spiceLit = useContext(GlobeSunContext) !== null;
-  const material = useMemo(() => (texture ? makeMaterial(texture, spiceLit) : null), [texture, spiceLit]);
+  const material = useMemo(() => (texture ? makeMaterial(texture) : null), [texture]);
   return material ? <SurfaceMesh material={material} /> : null;
 }

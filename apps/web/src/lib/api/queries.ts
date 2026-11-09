@@ -304,11 +304,16 @@ export function useSiteComparisons(siteIds: readonly string[]) {
 }
 
 /** Moon-centred SPICE Sun direction over the analysis window (lights the globe; T-26). */
+/**
+ * The globe's Sun series. Waits for the server's first answer: a waking server is not asked for
+ * ephemerides, and the page start stays limited to the health check and the panels.
+ */
 export function useSunDirection(startMs: number | null, endMs: number | null) {
+  const answered = useHealthQuery().data !== undefined;
   return useHydrationSafe(
     useQuery({
       queryKey: queryKeys.sun(startMs ?? 0, endMs ?? 0, EPHEMERIS_STEP_S),
-      enabled: startMs !== null && endMs !== null,
+      enabled: answered && startMs !== null && endMs !== null,
       staleTime: Infinity,
       retry: 1,
       queryFn: ({ signal }) =>
