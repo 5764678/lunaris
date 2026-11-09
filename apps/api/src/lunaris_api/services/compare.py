@@ -25,6 +25,7 @@ from lunaris_api.schemas.ephemeris import MAX_EPHEMERIS_SAMPLES
 from lunaris_api.schemas.illumination import TimelineRequest
 from lunaris_api.schemas.sites import CandidateSite
 from lunaris_api.schemas.terrain import SiteTerrainResponse
+from lunaris_api.services.compare_summary import Profile, summarize, with_directions
 from lunaris_api.services.horizon import HorizonMaskService
 from lunaris_api.services.illumination import TimelineService
 from lunaris_api.services.sites import SiteService
@@ -110,6 +111,9 @@ COLUMNS = [
         description="Longest continuous period without Earth in view.",
     ),
 ]
+DIRECTED_COLUMNS = with_directions(COLUMNS)
+"""COLUMNS with their declared `better` direction and rationale (T-18, D9)."""
+
 ILLUMINATION_KEYS = (
     "sun_mean_visible_disk_fraction",
     "sun_illuminated_fraction",
@@ -162,6 +166,7 @@ class CompareService:
         *,
         observer_height_m: float,
         footprint_radius_m: float = DEFAULT_FOOTPRINT_RADIUS_M,
+        profile: Profile | None = None,
     ) -> SiteComparison:
         ids = list(dict.fromkeys(i.strip() for i in site_ids if i.strip()))
         if not 1 <= len(ids) <= MAX_COMPARE_SITES:
@@ -204,12 +209,13 @@ class CompareService:
             sample_count=count,
             observer_height_m=observer_height_m,
             footprint_radius_m=footprint_radius_m,
-            columns=COLUMNS,
+            columns=DIRECTED_COLUMNS,
             rows=rows,
             assumptions=[
                 f"Observer eye {observer_height_m:g} m above the surface (horizon and timelines).",
                 f"Footprint radius {footprint_radius_m:g} m for slope p95 and roughness.",
             ],
+            summary=summarize(rows, DIRECTED_COLUMNS, profile=profile),
         )
 
     # ── cells ────────────────────────────────────────────────────────────────

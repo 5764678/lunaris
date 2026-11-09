@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
 
@@ -37,6 +37,13 @@ def compare_sites(
     step_s: Annotated[float, Query(gt=0, description="Time step, s.")] = 3600.0,
     observer_height_m: Annotated[float, Query(ge=0, le=100)] = 2.0,
     footprint_radius_m: Annotated[float, Query(gt=0, le=2000)] = DEFAULT_FOOTPRINT_RADIUS_M,
+    profile: Annotated[
+        Literal["power", "comms", "landing"] | None,
+        Query(
+            description="Optional mission profile: adds a weighted ordering with its fixed "
+            "weights and normalisation returned as assumption evidence. Without it, no score."
+        ),
+    ] = None,
 ) -> SiteComparison:
     """One row per site; every cell carries its own evidence (kind, method, sources with
     manifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be
@@ -49,4 +56,5 @@ def compare_sites(
         step_s,
         observer_height_m=observer_height_m,
         footprint_radius_m=footprint_radius_m,
+        profile=profile,
     )

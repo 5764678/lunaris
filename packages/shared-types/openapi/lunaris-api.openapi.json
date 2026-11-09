@@ -381,6 +381,56 @@
         "title": "CatalogTileSchema",
         "type": "object"
       },
+      "ColumnLeaders": {
+        "properties": {
+          "better": {
+            "enum": [
+              "higher",
+              "lower"
+            ],
+            "title": "Better",
+            "type": "string"
+          },
+          "compared_sites": {
+            "description": "Sites with a non-null value in this column.",
+            "title": "Compared Sites",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "site_ids": {
+            "description": "Best value among non-null cells; ties allowed.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Site Ids",
+            "type": "array"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The leading value; null when fewer than 2 sites have one.",
+            "title": "Value"
+          }
+        },
+        "required": [
+          "key",
+          "better",
+          "site_ids",
+          "value",
+          "compared_sites"
+        ],
+        "title": "ColumnLeaders",
+        "type": "object"
+      },
       "CompareCell": {
         "properties": {
           "baseline_m": {
@@ -455,6 +505,28 @@
       },
       "CompareColumn": {
         "properties": {
+          "better": {
+            "anyOf": [
+              {
+                "enum": [
+                  "higher",
+                  "lower"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which direction is better for a mission, or null when there is no universal direction (the column is then not ranked).",
+            "title": "Better"
+          },
+          "better_rationale": {
+            "default": "",
+            "description": "One line: why that direction.",
+            "title": "Better Rationale",
+            "type": "string"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -476,7 +548,9 @@
           "key",
           "label",
           "unit",
-          "description"
+          "description",
+          "better",
+          "better_rationale"
         ],
         "title": "CompareColumn",
         "type": "object"
@@ -560,6 +634,53 @@
           "earth_longest_outage_s"
         ],
         "title": "CompareRow",
+        "type": "object"
+      },
+      "ComparisonSummary": {
+        "properties": {
+          "leaders": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnLeaders"
+            },
+            "title": "Leaders",
+            "type": "array"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProfileScore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when a `profile` is requested; there is no default score."
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/SiteStanding"
+            },
+            "title": "Sites",
+            "type": "array"
+          },
+          "verdict": {
+            "description": "Generated from dominance only; never from weights.",
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "leaders",
+          "sites",
+          "verdict",
+          "method",
+          "score"
+        ],
+        "title": "ComparisonSummary",
         "type": "object"
       },
       "ComponentCheck": {
@@ -2013,6 +2134,50 @@
         "title": "IlluminationSummary",
         "type": "object"
       },
+      "ProfileScore": {
+        "properties": {
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "normalisation": {
+            "title": "Normalisation",
+            "type": "string"
+          },
+          "profile": {
+            "enum": [
+              "power",
+              "comms",
+              "landing"
+            ],
+            "title": "Profile",
+            "type": "string"
+          },
+          "scores": {
+            "description": "Sorted by score, best first; null scores last.",
+            "items": {
+              "$ref": "#/components/schemas/ScoreEntry"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "profile",
+          "weights",
+          "normalisation",
+          "scores",
+          "evidence"
+        ],
+        "title": "ProfileScore",
+        "type": "object"
+      },
       "RegisteredCatalogSites": {
         "properties": {
           "already_registered": {
@@ -2172,6 +2337,49 @@
         "title": "SceneBinaryLayoutSchema",
         "type": "object"
       },
+      "ScoreEntry": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Weighted sum of normalised values in [0, 1].",
+            "title": "Score"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_id",
+          "name",
+          "score",
+          "reason"
+        ],
+        "title": "ScoreEntry",
+        "type": "object"
+      },
       "SelenographicCoordinateSchema": {
         "properties": {
           "frame": {
@@ -2325,6 +2533,9 @@
           "step_s": {
             "title": "Step S",
             "type": "number"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ComparisonSummary"
           }
         },
         "required": [
@@ -2336,7 +2547,8 @@
           "footprint_radius_m",
           "columns",
           "rows",
-          "assumptions"
+          "assumptions",
+          "summary"
         ],
         "title": "SiteComparison",
         "type": "object"
@@ -2418,6 +2630,62 @@
           "limitations"
         ],
         "title": "SiteEphemeris",
+        "type": "object"
+      },
+      "SiteStanding": {
+        "properties": {
+          "directed_compared": {
+            "description": "Directed columns with this site's value and ≥ 2 values.",
+            "title": "Directed Compared",
+            "type": "integer"
+          },
+          "dominance": {
+            "title": "Dominance",
+            "type": "string"
+          },
+          "dominated_by": {
+            "description": "Site ids that are at least as good on every directed column both have values for, and strictly better on at least one (Pareto dominance).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dominated By",
+            "type": "array"
+          },
+          "leads": {
+            "description": "Directed columns where this site is best or tied.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Leads",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "trails": {
+            "description": "Directed columns where this site is worst (not tied best).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Trails",
+            "type": "array"
+          }
+        },
+        "required": [
+          "site_id",
+          "name",
+          "leads",
+          "trails",
+          "directed_compared",
+          "dominated_by",
+          "dominance"
+        ],
+        "title": "SiteStanding",
         "type": "object"
       },
       "SiteTerrainResponse": {
@@ -3385,6 +3653,29 @@
               "maximum": 2000,
               "title": "Footprint Radius M",
               "type": "number"
+            }
+          },
+          {
+            "description": "Optional mission profile: adds a weighted ordering with its fixed weights and normalisation returned as assumption evidence. Without it, no score.",
+            "in": "query",
+            "name": "profile",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "power",
+                    "comms",
+                    "landing"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional mission profile: adds a weighted ordering with its fixed weights and normalisation returned as assumption evidence. Without it, no score.",
+              "title": "Profile"
             }
           }
         ],
