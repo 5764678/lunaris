@@ -3,16 +3,11 @@
 import { DATASET_STATUS } from "@/components/data/dataset-status";
 import { useDatasetsQuery } from "@/lib/api/queries";
 import { milestoneLabel } from "@/lib/milestones";
-import { MISSION_MODULES } from "@/lib/modules";
+import { ANALYSIS_MODULES } from "@/lib/modules";
 import { inputTags } from "@/lib/readiness/inputs";
 import { cn } from "@/lib/utils";
 
 import { PanelSection } from "./panel-section";
-
-const ANALYSIS_MODULE_IDS = ["terrain", "geometry", "illumination", "visibility", "analysis"];
-const DATA_DEPENDENCY_ALIASES: Record<string, string[]> = {
-  analysis: ["terrain", "geometry", "illumination", "visibility"],
-};
 
 /**
  * For each analysis module: implementation status and whether its input datasets are in
@@ -20,13 +15,13 @@ const DATA_DEPENDENCY_ALIASES: Record<string, string[]> = {
  */
 export function AnalysisReadiness() {
   const datasets = useDatasetsQuery();
-  const modules = MISSION_MODULES.filter((m) => ANALYSIS_MODULE_IDS.includes(m.id));
+  const modules = ANALYSIS_MODULES;
 
   return (
     <PanelSection id="analysis" title="Analysis readiness">
       <ul className="space-y-1.5">
         {modules.map((module) => {
-          const keys = DATA_DEPENDENCY_ALIASES[module.id] ?? [module.id];
+          const keys = module.inputs;
           const inputs =
             datasets.data?.datasets.filter((d) => d.required_by.some((r) => keys.includes(r))) ?? [];
           const Icon = module.icon;
