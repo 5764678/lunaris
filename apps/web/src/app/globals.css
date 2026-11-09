@@ -168,6 +168,36 @@
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
   }
+  /*
+   * A scrollbar that stays on screen. macOS hides overlay scrollbars until you scroll, which makes
+   * a clipped table look complete. Chromium and Safari draw this custom bar; Firefox gets a thin
+   * standard one. Chromium ignores the ::-webkit-scrollbar rules when scrollbar-width or
+   * scrollbar-color is set, so the standard properties are only used where those rules do not exist.
+   */
+  .scrollbar-visible::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+  }
+  .scrollbar-visible::-webkit-scrollbar-track {
+    background: var(--panel-sunken);
+  }
+  .scrollbar-visible::-webkit-scrollbar-button {
+    display: none;
+  }
+  .scrollbar-visible::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border: 2px solid var(--panel-sunken);
+    border-radius: 5px;
+  }
+  .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+    background: var(--dim);
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    .scrollbar-visible {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-strong) var(--panel-sunken);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
