@@ -1,0 +1,99 @@
+{
+  "schema_version": 2,
+  "id": "horizons-subsolar-moon-2026-11-04",
+  "purpose": "Validation reference for T-26: apparent sub-solar point on the Moon (MOON_ME, 1737.4 km sphere), 5 samples at 6 h.",
+  "evidence_kind": "model",
+  "source": {
+    "provider": "JPL Solar System Dynamics Group — Horizons system (API version 1.2)",
+    "api_url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+    "request_url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27301%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27500%40399%27&START_TIME=%272026-11-04+00%3a00%27&STOP_TIME=%272026-11-05+00%3a00%27&STEP_SIZE=%276+h%27&QUANTITIES=%2715%27&CSV_FORMAT=%27YES%27&ANG_FORMAT=%27DEG%27&EXTRA_PREC=%27YES%27",
+    "query": {
+      "format": "text",
+      "COMMAND": "'301'",
+      "OBJ_DATA": "'NO'",
+      "MAKE_EPHEM": "'YES'",
+      "EPHEM_TYPE": "'OBSERVER'",
+      "CENTER": "'500@399'",
+      "START_TIME": "'2026-11-04 00:00'",
+      "STOP_TIME": "'2026-11-05 00:00'",
+      "STEP_SIZE": "'6 h'",
+      "QUANTITIES": "'15'",
+      "CSV_FORMAT": "'YES'",
+      "ANG_FORMAT": "'DEG'",
+      "EXTRA_PREC": "'YES'"
+    },
+    "retrieved_on": "2026-11-05",
+    "retrieved_by": "LUNARIS S-GEOMETRY development session, direct HTTPS request to ssd.jpl.nasa.gov.",
+    "ephemeris_reported": "DE441",
+    "body_frame_reported": "MOON_ME"
+  },
+  "quantities": "QUANTITIES='15': apparent sub-solar longitude and latitude on the target (Moon), evaluated as seen by the observer (geocentre).",
+  "definition_verbatim": " 'SunSub-LON, SunSub-LAT,' =\n   Apparent sub-solar longitude and latitude of the Sun on the target. The\napparent planetodetic longitude and latitude of the center of the target disc\nas seen from the Sun, as seen by the observer at print-time. This is NOT\nexactly the same as the \"sub-solar\" (nearest) point for a non-spherical target\nshape (since the center of the disc seen from the Sun might not be the closest\npoint to the Sun), but is very close if not a highly irregular body shape.\nLight travel-time from Sun to target and from target to observer is taken into\naccount.  Latitude is the angle between the equatorial plane and the line\nperpendicular to the reference ellipsoid of the body. The reference ellipsoid\nis an oblate spheroid with a single flatness coefficient in which the y-axis\nbody radius is taken to be the same value as the x-axis radius.  Positive\nlongitude is to the EAST for this target. Cartographic system is given in the\nheader.  Units: DEGREES DEGREES",
+  "header_verbatim": [
+    "Ephemeris / API_USER Thu Nov  5 08:16:22 2026 Pasadena, USA      / Horizons    ",
+    "*******************************************************************************",
+    "Target body name: Moon (301)                      {source: DE441}",
+    "Center body name: Earth (399)                     {source: DE441}",
+    "Center-site name: GEOCENTRIC",
+    "*******************************************************************************",
+    "Start time      : A.D. 2026-Nov-04 00:00:00.0000 UT      ",
+    "Stop  time      : A.D. 2026-Nov-05 00:00:00.0000 UT      ",
+    "Step-size       : 360 minutes",
+    "*******************************************************************************",
+    "Target pole/equ : MOON_ME                         {East-longitude positive}",
+    "Target radii    : 1737.4, 1737.4, 1737.4 km       {Equator_a, b, pole_c}       ",
+    "Center geodetic : 0.0, 0.0, -6378.137             {E-lon(deg),Lat(deg),Alt(km)}",
+    "Center cylindric: 0.0, 0.0, 0.0                   {E-lon(deg),Dxy(km),Dz(km)}",
+    "Center pole/equ : ITRF93                          {East-longitude positive}",
+    "Center radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}       ",
+    "Target primary  : Earth",
+    "Vis. interferer : MOON (R_eq= 1737.400) km        {source: DE441}",
+    "Rel. light bend : Sun                             {source: DE441}",
+    "Rel. lght bnd GM: 1.3271E+11 km^3/s^2                                          ",
+    "Atmos refraction: NO (AIRLESS)",
+    "RA format       : DEG",
+    "Time format     : CAL ",
+    "Calendar mode   : Mixed Julian/Gregorian",
+    "EOP file        : eop.261104.p270131                                           ",
+    "EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-NOV-04. PREDICTS-> 2027-JAN-30",
+    "Units conversion: 1 au= 149597870.700 km, c= 299792.458 km/s, 1 day= 86400.0 s ",
+    "Table cut-offs 1: Elevation (-90.0deg=NO ),Airmass (>38.000=NO), Daylight (NO )",
+    "Table cut-offs 2: Solar elongation (  0.0,180.0=NO ),Local Hour Angle( 0.0=NO )",
+    "Table cut-offs 3: RA/DEC angular rate (     0.0=NO )                           ",
+    "Table format    : Comma Separated Values (spreadsheet)"
+  ],
+  "soe_block_verbatim": "$$SOE\n 2026-Nov-04 00:00, , , 248.597665,  -1.487871,\n 2026-Nov-04 06:00, , , 245.550639,  -1.490589,\n 2026-Nov-04 12:00, , , 242.503260,  -1.493319,\n 2026-Nov-04 18:00, , , 239.455540,  -1.496055,\n 2026-Nov-05 00:00, , , 236.407495,  -1.498792,\n$$EOE",
+  "samples": [
+    {
+      "time_utc": "2026-11-04T00:00:00Z",
+      "subsolar_longitude_deg": 248.597665,
+      "subsolar_latitude_deg": -1.487871
+    },
+    {
+      "time_utc": "2026-11-04T06:00:00Z",
+      "subsolar_longitude_deg": 245.550639,
+      "subsolar_latitude_deg": -1.490589
+    },
+    {
+      "time_utc": "2026-11-04T12:00:00Z",
+      "subsolar_longitude_deg": 242.50326,
+      "subsolar_latitude_deg": -1.493319
+    },
+    {
+      "time_utc": "2026-11-04T18:00:00Z",
+      "subsolar_longitude_deg": 239.45554,
+      "subsolar_latitude_deg": -1.496055
+    },
+    {
+      "time_utc": "2026-11-05T00:00:00Z",
+      "subsolar_longitude_deg": 236.407495,
+      "subsolar_latitude_deg": -1.498792
+    }
+  ],
+  "comparison": {
+    "definitional_difference": "Horizons evaluates the Moon as seen by the geocentric observer, i.e. at t − (Earth–Moon light time ≈ 1.3 s); LUNARIS's Moon-centred direction is at t. The Moon's rotation (≈ 0.55 arcsec/s) makes the longitudes differ by ≈ 0.64 arcsec.",
+    "tolerance_arcsec_same_definition": 0.05,
+    "tolerance_arcsec_at_t": 1.0,
+    "test": "tests/science/geometry/test_moon_centred.py"
+  }
+}

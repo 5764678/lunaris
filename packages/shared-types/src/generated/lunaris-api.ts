@@ -151,6 +151,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ephemeris/sun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Moon-centred apparent Sun direction (for lighting the globe)
+         * @description Apparent unit direction from the Moon's centre to the Sun in MOON_ME (CN+S), the
+         *     sub-solar point and the solar angular radius at every step. Same window rules,
+         *     10 000-sample cap and error codes as the site ephemeris.
+         */
+        get: operations["get_sun_direction_api_v1_ephemeris_sun_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites": {
         parameters: {
             query?: never;
@@ -1543,6 +1565,93 @@ export interface components {
             /** Vertical Reference */
             vertical_reference: string | null;
         };
+        /**
+         * SunDirectionSample
+         * @description Apparent Sun direction from the Moon's centre at one epoch (T-26).
+         */
+        SunDirectionSample: {
+            /**
+             * Angular Radius Deg
+             * @description asin(R_sun / range).
+             */
+            angular_radius_deg: number;
+            /**
+             * Direction Moon Me
+             * @description Apparent unit vector [x, y, z] from the Moon's centre to the Sun, MOON_ME.
+             */
+            direction_moon_me: number[];
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Range M
+             * @description Moon centre – Sun distance (apparent).
+             */
+            range_m: number;
+            /**
+             * Subsolar Latitude Deg
+             * @description Planetocentric latitude where the Sun is at the zenith (1737.4 km sphere).
+             */
+            subsolar_latitude_deg: number;
+            /**
+             * Subsolar Longitude Deg
+             * @description East longitude, [0, 360).
+             */
+            subsolar_longitude_deg: number;
+        };
+        /**
+         * SunDirectionSeries
+         * @description Moon-centred Sun direction series for lighting the globe (T-26).
+         */
+        SunDirectionSeries: {
+            /**
+             * Aberration Correction
+             * @constant
+             */
+            aberration_correction: "CN+S";
+            /**
+             * End Utc
+             * Format: date-time
+             */
+            end_utc: string;
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Frame
+             * @constant
+             */
+            frame: "MOON_ME";
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Max Samples
+             * @description Cap on samples per request.
+             */
+            max_samples: number;
+            /**
+             * Origin
+             * @description Directions are from the Moon's centre.
+             * @constant
+             */
+            origin: "MOON";
+            /** Sample Count */
+            sample_count: number;
+            /** Samples */
+            samples: components["schemas"]["SunDirectionSample"][];
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+            /** Step S */
+            step_s: number;
+            /**
+             * Sun Radius M
+             * @description Solar radius from the loaded PCK.
+             */
+            sun_radius_m: number;
+        };
         /** TerrainSceneListResponse */
         TerrainSceneListResponse: {
             /** Count */
@@ -2064,6 +2173,60 @@ export interface operations {
             };
             /** @description Unexpected server error. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_sun_direction_api_v1_ephemeris_sun_get: {
+        parameters: {
+            query: {
+                /** @description Window start, ISO 8601 UTC. */
+                start_utc: string;
+                /** @description Window end (inclusive when on a step); start = end gives one epoch. */
+                end_utc: string;
+                /** @description Sample spacing in seconds. */
+                step_s: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SunDirectionSeries"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

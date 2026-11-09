@@ -317,6 +317,33 @@ The cited south-pole candidate-site catalogue (T-03; data from T-02,
 
 `CandidateSite.origin` is now `"user_defined" | "published"` (wire-contract change).
 
+### `GET /api/v1/ephemeris/sun`
+
+Moon-centred apparent Sun direction, for lighting the globe (T-26, `docs/SCIENCE.md` §5.2).
+Same query rules, 10 000-sample cap and error codes as `/sites/{site_id}/ephemeris`;
+`start_utc = end_utc` gives one epoch.
+
+```json
+{
+  "start_utc": "2026-11-04T00:00:00Z", "end_utc": "2026-11-04T00:00:00Z", "step_s": 60.0,
+  "sample_count": 1, "max_samples": 10000, "frame": "MOON_ME", "origin": "MOON",
+  "aberration_correction": "CN+S", "sun_radius_m": 695700000.0,
+  "samples": [ { "epoch_utc": "2026-11-04T00:00:00Z", "direction_moon_me": [-0.3648, -0.9307, -0.0260],
+                 "subsolar_latitude_deg": -1.4879, "subsolar_longitude_deg": 248.5975,
+                 "angular_radius_deg": 0.2689, "range_m": 148218000000.0 } ],
+  "evidence": { "kind": "model", "method": "CSPICE spkpos('SUN', et, 'MOON_ME', 'CN+S', 'MOON'); …", "…": "…" },
+  "limitations": [ "Moon-centred direction: … at most R_moon / range (about 2.4 arcsec) …", "…" ]
+}
+```
+
+- `direction_moon_me`: apparent unit vector from the Moon's centre to the Sun. From a
+  surface point the direction differs by at most R_moon / range ≈ 2.4″. Use the site
+  ephemeris for topocentric azimuth and elevation.
+- `subsolar_*`: planetocentric latitude and east longitude of that direction (the point
+  where the Sun is at the zenith on the 1737.4 km sphere).
+- Lighting the globe from this direction shows a smooth sphere. Terrain shadows need the
+  terrain horizon.
+
 ### `POST /api/v1/analysis/timeline`
 
 Illumination and Earth-visibility timelines for a registered site (contract C4,
