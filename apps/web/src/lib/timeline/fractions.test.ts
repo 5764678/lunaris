@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TimelineAnalysis } from "@/lib/api/client";
 
-import { fractionAt, fractionSeriesFromTimeline } from "./fractions";
+import { formatFractionReadout, fractionAt, fractionSeriesFromTimeline } from "./fractions";
 
 // SYNTHETIC analysis — invented fractions, not lunar results.
 const T0 = Date.UTC(2026, 10, 5, 0);
@@ -57,5 +57,35 @@ describe("line-of-sight states", () => {
     const { los } = fractionSeriesFromTimeline(analysis(true));
     expect(fractionAt(los, T0)!.state).toBe("clear");
     expect(fractionAt(los, T0 + 2 * H)!.state).toBe("below_geometric_horizon");
+  });
+});
+
+describe("formatFractionReadout", () => {
+  it("shows the terrain share first and the no-hills share beside it", () => {
+    expect(formatFractionReadout({ anyUpperBound: false }, { astronomical: 1, terrain: 0.42 })).toBe(
+      "42 % · no hills 100 %",
+    );
+  });
+
+  it("marks the terrain share as an upper bound when mask rays ran out of map", () => {
+    expect(formatFractionReadout({ anyUpperBound: true }, { astronomical: 1, terrain: 0.42 })).toBe(
+      "≤ 42 % · no hills 100 %",
+    );
+  });
+
+  it("shows the no-hills share alone, labelled, where no terrain mask is served", () => {
+    expect(formatFractionReadout({ anyUpperBound: false }, { astronomical: 1, terrain: null })).toBe(
+      "no hills 100 % · terrain n/a",
+    );
+  });
+
+  it("is a dash where there is no computed sample, never 0 %", () => {
+    expect(formatFractionReadout({ anyUpperBound: false }, null)).toBe("—");
+  });
+
+  it("keeps a real 0 % terrain share as 0 %", () => {
+    expect(formatFractionReadout({ anyUpperBound: false }, { astronomical: 0.3, terrain: 0 })).toBe(
+      "0 % · no hills 30 %",
+    );
   });
 });

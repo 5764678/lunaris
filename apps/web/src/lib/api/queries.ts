@@ -1,8 +1,16 @@
 "use client";
 
 import type { CandidateSiteCreate, HealthResponse } from "@lunaris/shared-types";
-import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
+import { useEffect } from "react";
 
+import { shouldRetryComparison } from "@/lib/comparison/progress";
 import { config } from "@/lib/config";
 import { useHydrated } from "@/lib/use-hydrated";
 
@@ -10,6 +18,7 @@ import { decodeTerrainScene, type DecodedTerrain } from "@/lib/terrain/scene-dat
 
 import { ApiError, type TerrainSceneMetadata } from "./client";
 import { api } from "./instance";
+import { useWaking } from "./waking";
 
 export const queryKeys = {
   health: ["health"] as const,
@@ -32,17 +41,8 @@ export interface TerrainScene {
   dataLatencyMs: number;
 }
 
-/**
- * Report a query as pending until hydration has finished.
- *
- * TanStack Query reads its shared cache while hydrating (its server snapshot is the live
- * client result). Data fetched by an earlier-hydrated component (e.g. the top bar) would
- * otherwise make a later-hydrating component render data where the server rendered a
- * loading state — a hydration mismatch that discards the tree.
- */
-function useHydrationSafe<TData>(query: UseQueryResult<TData, Error>): UseQueryResult<TData, Error> {
-  const hydrated = useHydrated();
-  if (hydrated) return query;
+/** A copy of the query that claims it is still loading (see `useHydrationSafe`). */
+function asPending<TData>(query: UseQueryResult<TData, Error>): UseQueryResult<TData, Error> {
   return {
     ...query,
     data: undefined,
@@ -56,6 +56,19 @@ function useHydrationSafe<TData>(query: UseQueryResult<TData, Error>): UseQueryR
     isFetched: false,
     isFetching: false,
   } as UseQueryResult<TData, Error>;
+}
+
+/**
+ * Report a query as pending until hydration has finished.
+ *
+ * TanStack Query reads its shared cache while hydrating (its server snapshot is the live
+ * client result). Data fetched by an earlier-hydrated component (e.g. the top bar) would
+ * otherwise make a later-hydrating component render data where the server rendered a
+ * loading state — a hydration mismatch that discards the tree.
+ */
+function useHydrationSafe<TData>(query: UseQueryResult<TData, Error>): UseQueryResult<TData, Error> {
+  const hydrated = useHydrated();
+  return hydrated ? query : asPending(query);
 }
 
 export function useHealthQuery() {
@@ -73,6 +86,8 @@ export function useHealthQuery() {
 
 export type ConnectionState =
   | { kind: "connecting" }
+  /** The first answer is slow or failing the way a sleeping free-plan server does (see `useWaking`). */
+  | { kind: "waking"; error: ApiError | Error | null }
   | { kind: "online"; health: HealthResponse; latencyMs: number; checkedAt: number }
   | { kind: "degraded"; health: HealthResponse; latencyMs: number; checkedAt: number }
   | { kind: "incompatible"; health: HealthResponse; latencyMs: number; checkedAt: number }
@@ -81,6 +96,9 @@ export type ConnectionState =
 /** Interprets the health query as a single connection state for status indicators. */
 export function useConnection(): ConnectionState {
   const query = useHealthQuery();
+  const error = query.isError ? query.error : null;
+  const waking = useWaking(query.data !== undefined, error);
+  if (waking) return { kind: "waking", error };
   if (query.isError) {
     return { kind: "offline", error: query.error, checkedAt: query.errorUpdatedAt };
   }
@@ -89,6 +107,23 @@ export function useConnection(): ConnectionState {
   const base = { health, latencyMs, checkedAt: query.dataUpdatedAt };
   if (health.api_version !== config.expectedApiVersion) return { kind: "incompatible", ...base };
   return health.status === "ok" ? { kind: "online", ...base } : { kind: "degraded", ...base };
+}
+
+/**
+ * Once the server answers for the first time in a visit, retries at once every request that
+ * failed before it did, whether it has given up (error) or is still waiting out its next retry.
+ * The first calls to a sleeping server time out, so without this the page would sit on errors or
+ * on a long retry delay after the server woke up.
+ */
+export function useRetryFailedRequestsOnceAnswered() {
+  const queryClient = useQueryClient();
+  const answered = useHealthQuery().data !== undefined;
+  useEffect(() => {
+    if (!answered) return;
+    void queryClient.invalidateQueries({
+      predicate: (query) => query.state.status === "error" || query.state.fetchFailureCount > 0,
+    });
+  }, [answered, queryClient]);
 }
 
 export function useRuntimeQuery() {
@@ -245,4 +280,23 @@ export function useSiteComparison(siteIds: readonly string[]) {
       queryFn: ({ signal }) => api.siteComparison(sorted, signal).then((r) => r.data),
     }),
   );
+}
+
+/**
+ * The same comparison with one request per site, so each row can appear as soon as it is ready
+ * and one failing site does not blank the others. A one-site request has the same cache key as
+ * `useSiteComparison([id])` (the site panel's), so a site already opened there is instant here.
+ * Results come back in the order of `siteIds`.
+ */
+export function useSiteComparisons(siteIds: readonly string[]) {
+  const hydrated = useHydrated();
+  const results = useQueries({
+    queries: siteIds.map((id) => ({
+      queryKey: queryKeys.comparison([id]),
+      staleTime: Infinity,
+      retry: shouldRetryComparison,
+      queryFn: ({ signal }: { signal: AbortSignal }) => api.siteComparison([id], signal).then((r) => r.data),
+    })),
+  });
+  return hydrated ? results : results.map(asPending);
 }

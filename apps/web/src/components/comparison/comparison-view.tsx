@@ -1,16 +1,18 @@
 "use client";
 
+import type { CandidateSite } from "@lunaris/shared-types";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { CellEvidence } from "@/components/evidence/cell-evidence";
+import { ErrorRow, PendingRow, ReadyRow } from "@/components/comparison/comparison-rows";
 import { CatalogDemoTrio } from "@/components/mission/catalog-demo-trio";
-import { SiteOriginBadge } from "@/components/mission/site-origin";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { describeError, type CompareCell, type CompareRow } from "@/lib/api/client";
-import { useSiteCatalog, useSiteComparison, useSitesQuery } from "@/lib/api/queries";
-import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
+import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
+import type { SiteComparison } from "@/lib/api/client";
+import { useSiteCatalog, useSiteComparisons, useSitesQuery } from "@/lib/api/queries";
+import { formatPeriodUtc, metricCopy, metricTitle } from "@/lib/comparison/labels";
+import { columnsFor, countProgress, progressMessage, rowStatus } from "@/lib/comparison/progress";
 import { cn } from "@/lib/utils";
 
 const MAX_SITES = 10;
@@ -31,7 +33,13 @@ export function ComparisonView() {
 
   // Default: the cited demo trio, once registered. The user can toggle any registered site.
   const selected = (chosen ?? demoIds).filter((id) => registered.some((s) => s.id === id));
-  const comparison = useSiteComparison(selected);
+  // One request per site, so rows appear as they are ready. Rows follow the order of the site buttons.
+  const shown = registered.filter((s) => selected.includes(s.id));
+  const comparisons = useSiteComparisons(shown.map((s) => s.id));
+  const entries = shown.flatMap((site, i) => {
+    const query = comparisons[i];
+    return query ? [{ site, query }] : [];
+  });
 
   function toggle(id: string) {
     const base = chosen ?? demoIds;
@@ -80,113 +88,97 @@ export function ComparisonView() {
         )}
       </section>
 
-      {selected.length === 0 ? null : comparison.isError ? (
-        <div
-          role="alert"
-          className="rounded-md border border-critical/25 bg-critical/5 p-3 text-2xs text-critical/90"
-        >
-          Comparison unavailable: {describeError(comparison.error)}
-        </div>
-      ) : !comparison.data ? (
-        <div className="space-y-2" aria-label="Computing comparison">
-          <p className="font-mono text-3xs text-dim">
-            Computing the comparison (DEM windows, horizon masks, a year of hourly geometry)… first run takes
-            seconds per site.
-          </p>
-          <Skeleton className="h-28" />
-        </div>
-      ) : (
-        <ComparisonTable data={comparison.data} />
-      )}
+      {entries.length > 0 && <ComparisonTable entries={entries} />}
     </div>
   );
 }
 
-function ComparisonTable({ data }: { data: NonNullable<ReturnType<typeof useSiteComparison>["data"]> }) {
+interface Entry {
+  site: CandidateSite;
+  query: UseQueryResult<SiteComparison, Error>;
+}
+
+function ComparisonTable({ entries }: { entries: Entry[] }) {
+  // A one-site request answers with that site's row.
+  const rows = entries.map(({ site, query }) => query.data?.rows.find((r) => r.site_id === site.id));
+  const statuses = entries.map(({ query }, i) =>
+    rowStatus({ data: query.data, row: rows[i], isFetching: query.isFetching, isError: query.isError }),
+  );
+  const progress = countProgress(statuses);
+  const pending = progress.total - progress.ready - progress.failed;
+  // The window, columns and assumptions are the same in every answer, so the first one will do.
+  const first = entries.find(({ query }) => query.data)?.query.data;
+  const columns = columnsFor(first);
+
   return (
-    <section aria-label="Comparison table" className="space-y-2">
-      <p className="font-mono text-3xs text-dim" data-testid="compare-window">
-        Window {data.start_utc} → {data.end_utc} · step {data.step_s / 3600} h · observer height{" "}
-        {data.observer_height_m} m · footprint radius {data.footprint_radius_m} m · {data.sample_count}{" "}
-        samples
-      </p>
-      <div
-        className="overflow-x-auto rounded-md border border-hairline scrollbar-thin"
-        data-testid="compare-scroll"
-      >
+    <section aria-label="Comparison table" aria-busy={pending > 0} className="space-y-2">
+      {pending > 0 && (
+        <p role="status" className="font-mono text-3xs text-dim" data-testid="compare-progress">
+          {progressMessage(progress)}
+        </p>
+      )}
+      {first && (
+        <p
+          className="font-mono text-3xs text-dim"
+          data-testid="compare-window"
+          title={`Exact window: ${first.start_utc} → ${first.end_utc}`}
+        >
+          Dates {formatPeriodUtc(first.start_utc, first.end_utc)} · one reading every {first.step_s / 3600} h
+          · viewpoint {first.observer_height_m} m above ground · footprint radius {first.footprint_radius_m} m
+          · {first.sample_count.toLocaleString("en-US")} readings
+        </p>
+      )}
+      <HorizontalScroll label="Comparison table (scrolls sideways)" testId="compare-scroll">
         <table className="w-max min-w-full border-collapse text-left" data-testid="compare-table">
           <thead>
             <tr className="border-b border-hairline bg-panel-sunken/60">
               <th scope="col" className="sticky left-0 z-10 bg-panel px-2 py-1.5 align-bottom label-caps">
                 Site
               </th>
-              {data.columns.map((c) => (
+              {columns.map((c) => (
                 <th
                   key={c.key}
                   scope="col"
-                  title={c.description}
+                  title={metricTitle(c.key, c.label, c.description)}
                   className="px-2 py-1.5 align-bottom font-mono text-3xs font-medium text-muted-foreground"
                 >
-                  <span className="block max-w-28 whitespace-normal">{c.label}</span>
+                  <span className="block max-w-28 whitespace-normal">
+                    {metricCopy(c.key, c.label, c.description).label}
+                  </span>
                   <span className="text-dim">({UNIT_LABEL[c.unit] ?? c.unit})</span>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {data.rows.map((row) => (
-              <tr
-                key={row.site_id}
-                className="border-b border-hairline last:border-b-0"
-                data-testid="compare-row"
-              >
-                <th scope="row" className="sticky left-0 z-10 bg-panel px-2 py-1.5 align-top font-normal">
-                  <span className="flex items-center gap-1.5 text-2xs text-foreground">
-                    <span className="max-w-36 truncate">{row.name}</span>
-                  </span>
-                  <span className="numeric block font-mono text-3xs text-dim">
-                    {formatLatitude(row.latitude_deg, 2)} {formatLongitude(row.longitude_deg, 2)}
-                  </span>
-                  <OriginBadge row={row} />
-                </th>
-                {data.columns.map((c) => {
-                  const cell = (row as unknown as Record<string, CompareCell | undefined>)[c.key];
-                  return (
-                    <td key={c.key} className="max-w-44 px-1 py-1 align-top">
-                      {cell ? (
-                        <CellEvidence
-                          cell={cell}
-                          label={`${row.name} · ${c.label}`}
-                          testId={`cell-${c.key}`}
-                        />
-                      ) : (
-                        <span className="font-mono text-3xs text-dim italic">N/C · not in response</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {entries.map(({ site, query }, i) => {
+              const row = rows[i];
+              if (statuses[i] === "ready" && row)
+                return <ReadyRow key={site.id} row={row} columns={columns} />;
+              if (statuses[i] === "error") {
+                const error = query.error ?? new Error("The server answered without a row for this site.");
+                return (
+                  <ErrorRow
+                    key={site.id}
+                    site={site}
+                    columns={columns}
+                    error={error}
+                    onRetry={() => void query.refetch()}
+                  />
+                );
+              }
+              return <PendingRow key={site.id} site={site} columns={columns} />;
+            })}
           </tbody>
         </table>
-      </div>
-      {data.assumptions.length > 0 && (
+      </HorizontalScroll>
+      {first && first.assumptions.length > 0 && (
         <ul className="space-y-0.5 text-3xs text-dim">
-          {data.assumptions.map((a) => (
+          {first.assumptions.map((a) => (
             <li key={a}>Assumption: {a}</li>
           ))}
         </ul>
       )}
     </section>
-  );
-}
-
-function OriginBadge({ row }: { row: CompareRow }) {
-  return (
-    <span className="mt-0.5 inline-block">
-      <SiteOriginBadge
-        site={{ origin: row.origin, reference: null } as Parameters<typeof SiteOriginBadge>[0]["site"]}
-      />
-    </span>
   );
 }

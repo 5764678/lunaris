@@ -111,6 +111,24 @@ describe("createApiClient", () => {
     await expect(client.health()).rejects.toMatchObject({ kind: "network" });
   });
 
+  it("records how long a request ran before a network failure or timeout (the clock ticks 5 ms per read)", async () => {
+    const refused = clientWith((async () => {
+      throw new TypeError("Failed to fetch");
+    }) as unknown as typeof fetch);
+    await expect(refused.health()).rejects.toMatchObject({ kind: "network", elapsedMs: 5 });
+
+    const hanging = ((_url: string, init: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+      })) as unknown as typeof fetch;
+    await expect(clientWith(hanging, 20).health()).rejects.toMatchObject({ kind: "timeout", elapsedMs: 5 });
+  });
+
+  it("leaves elapsedMs empty for errors that came with a response", async () => {
+    const client = clientWith((async () => jsonResponse({ nope: true }, 500)) as unknown as typeof fetch);
+    await expect(client.health()).rejects.toMatchObject({ kind: "http", status: 500, elapsedMs: null });
+  });
+
   it("times out slow responses", async () => {
     const hanging = ((_url: string, init: RequestInit) =>
       new Promise((_resolve, reject) => {

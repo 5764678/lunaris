@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 const PRESENTATION: Record<ConnectionState["kind"], { label: string; dot: string; text: string }> = {
   connecting: { label: "Connecting", dot: "bg-dim animate-pulse", text: "text-muted-foreground" },
+  waking: { label: "Waking up", dot: "bg-warn animate-pulse", text: "text-warn" },
   online: { label: "Online", dot: "bg-ok shadow-[0_0_8px] shadow-ok/60", text: "text-ok" },
   degraded: { label: "Degraded", dot: "bg-warn", text: "text-warn" },
   incompatible: { label: "Version mismatch", dot: "bg-warn", text: "text-warn" },
@@ -60,6 +61,13 @@ function ConnectionDetails({ state }: { state: ConnectionState }) {
         c.detail ? `${c.status} — ${c.detail}` : c.status,
       ]),
     );
+  }
+  if (state.kind === "waking") {
+    rows.push([
+      "Status",
+      "Waking up. The free hosting puts the server to sleep when nobody has used it for a while; the first answer can take up to a minute.",
+    ]);
+    if (state.error) rows.push(["Last error", describeError(state.error)]);
   }
   if (state.kind === "offline") {
     rows.push(["Error", describeError(state.error)], ["Start API", "npm run dev:api"]);

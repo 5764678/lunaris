@@ -95,3 +95,39 @@ describe("mission store scene transition", () => {
     expect(useMissionStore.getState()).toMatchObject({ scene: "globe", view: { preset: "south-polar" } });
   });
 });
+
+describe("mission store default site", () => {
+  beforeEach(() => useMissionStore.setState(initial, true));
+
+  it("selects the default site once", () => {
+    const store = useMissionStore.getState();
+    store.applyDefaultSite("site-a");
+    expect(useMissionStore.getState().selectedSiteId).toBe("site-a");
+    expect(useMissionStore.getState().defaultSiteApplied).toBe(true);
+  });
+
+  it("does not give the default back to a visitor who deselected it", () => {
+    const store = useMissionStore.getState();
+    store.applyDefaultSite("site-a");
+    store.selectSite(null);
+    store.applyDefaultSite("site-a");
+    expect(useMissionStore.getState().selectedSiteId).toBeNull();
+  });
+
+  it("does not replace a site the visitor already selected", () => {
+    const store = useMissionStore.getState();
+    store.selectSite("site-b");
+    store.applyDefaultSite("site-a");
+    expect(useMissionStore.getState().selectedSiteId).toBe("site-b");
+    expect(useMissionStore.getState().defaultSiteApplied).toBe(true);
+  });
+
+  it("counts 'no suitable site' as applied without selecting anything", () => {
+    const store = useMissionStore.getState();
+    store.applyDefaultSite(null);
+    expect(useMissionStore.getState().selectedSiteId).toBeNull();
+    expect(useMissionStore.getState().defaultSiteApplied).toBe(true);
+    store.applyDefaultSite("site-a");
+    expect(useMissionStore.getState().selectedSiteId).toBeNull();
+  });
+});

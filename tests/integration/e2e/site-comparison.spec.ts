@@ -27,12 +27,13 @@ const evidence = (statement: string) => ({
   assumptions: ["synthetic assumption"],
 });
 
+// [key, the API's technical label, unit, the plain-language label the page shows]
 const COLUMNS = [
-  ["surface_height_m", "Height", "m"],
-  ["slope_at_site_deg", "Slope at site", "deg"],
-  ["roughness_rms_m", "Roughness", "m"],
-  ["sun_mean_visible_disk_fraction", "Sun: mean visible disk", "fraction"],
-  ["earth_visible_fraction", "Earth: visible", "fraction"],
+  ["surface_height_m", "Height", "m", "Height"],
+  ["slope_at_site_deg", "Slope at site", "deg", "Slope at site"],
+  ["roughness_rms_m", "Roughness", "m", "Bumpiness"],
+  ["sun_mean_visible_disk_fraction", "Sun: mean visible disk", "fraction", "Sunlit, average"],
+  ["earth_visible_fraction", "Earth: visible", "fraction", "Earth visible"],
 ] as const;
 
 function syntheticComparison(url: string) {
@@ -126,14 +127,16 @@ test("comparison table: demo trio by default, every cell opens its own evidence,
     await page.goto("/compare");
     const table = page.getByTestId("compare-table");
     await expect(page.getByTestId("compare-row")).toHaveCount(3);
-    for (const [, label] of COLUMNS) await expect(table.locator("thead")).toContainText(label);
+    for (const [, , , shown] of COLUMNS) await expect(table.locator("thead")).toContainText(shown);
     await expect(table.locator("thead")).toContainText("(°)");
+    await expect(page.getByTestId("compare-window")).toContainText("1 Jan 2027 to 1 Jan 2028 (UTC)");
 
     const slope = table.getByTestId("cell-slope_at_site_deg").first();
     await expect(slope).toContainText("5.45°");
     await expect(slope).toContainText("@ 40 m");
     await slope.click();
     const panel = page.getByTestId("cell-evidence");
+    await expect(panel.getByTestId("cell-evidence-meaning")).toContainText("How steep the ground is");
     await expect(panel).toContainText("SYNTHETIC E2E FIXTURE — slope");
     await expect(panel).toContainText(`SHA-256 ${SHA}`);
     await expect(panel).toContainText("synthetic limit");
@@ -159,7 +162,7 @@ test("comparison table: demo trio by default, every cell opens its own evidence,
   }
 });
 
-test("selected-site card fills height/slope/roughness/illumination/Earth LOS from the comparison row", async ({
+test("selected-site card fills height/slope/bumpiness/average sunlight/Earth visible from the comparison row", async ({
   page,
   request,
 }) => {
@@ -170,6 +173,7 @@ test("selected-site card fills height/slope/roughness/illumination/Earth LOS fro
     await page.getByTestId("site-list").locator("li").first().locator("button[aria-pressed]").click();
     await expect(page.getByTestId("selected-site-surface_height_m")).toContainText("1,942 m");
     await expect(page.getByTestId("selected-site-slope_at_site_deg")).toContainText("@ 40 m");
+    await expect(page.getByTestId("selected-site-period")).toContainText("1 Jan 2027 to 1 Jan 2028 (UTC)");
     await expect(page.getByTestId("selected-site-sun_mean_visible_disk_fraction")).toContainText(
       "terrain illumination not available",
     );
@@ -202,20 +206,17 @@ test.describe("phone width", () => {
   });
 });
 
-test("live API: the comparison renders, or its failure is shown", async ({ page, request }) => {
+test("live API: every site ends as a finished row or shows its own error", async ({ page, request }) => {
   test.setTimeout(180_000);
   const ids = await registerTrio(request);
   try {
     await page.goto("/compare");
-    await expect(page.getByTestId("compare-table").or(page.getByRole("alert"))).toBeVisible({
-      timeout: 150_000,
-    });
-    if (await page.getByTestId("compare-table").isVisible()) {
-      await expect(page.getByTestId("compare-row")).toHaveCount(3);
-      // Null cells always show a reason.
-      for (const cell of await page.locator('[data-null="true"]').all())
-        await expect(cell).toContainText("N/C ·");
-    }
+    // One request per site: each site ends as a row with numbers, or as a row with its error and Retry.
+    const finished = page.getByTestId("compare-row").or(page.getByTestId("compare-row-error"));
+    await expect(finished).toHaveCount(3, { timeout: 150_000 });
+    // Null cells always show a reason.
+    for (const cell of await page.locator('[data-null="true"]').all())
+      await expect(cell).toContainText("N/C ·");
   } finally {
     await cleanup(request, ids);
   }

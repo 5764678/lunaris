@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     data_dir: Path = Path("data")
     database_url: str | None = None
     docs_enabled: bool = True
+    # On a public demo, set LUNARIS_PROTECT_PUBLISHED_SITES=true so visitors cannot delete the cited
+    # (published) sites: the API answers 403, and they stay registered until the service restarts.
+    protect_published_sites: bool = False
 
     @field_validator("cors_origins", mode="before")
     @classmethod

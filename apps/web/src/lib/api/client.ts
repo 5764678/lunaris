@@ -34,6 +34,8 @@ export type TerrainSceneMetadata = components["schemas"]["TerrainSceneMetadata"]
 
 const MAX_SCENE_GRID = 1024;
 const SCENE_DATA_TIMEOUT_MS = 60_000;
+/** How long one site's comparison may run before the client gives up. The first run of a site is the slow one. */
+export const SITE_COMPARISON_TIMEOUT_MS = 90_000;
 /** Cited site catalogue (T-03, generated contract). */
 export type SiteCatalog = components["schemas"]["SiteCatalogResponse"];
 export type CatalogSite = components["schemas"]["CatalogSiteSchema"];
@@ -47,6 +49,11 @@ export class ApiError extends Error {
   readonly code: string | null;
   readonly details: ErrorDetail[];
   readonly requestId: string | null;
+  /**
+   * For `network` and `timeout` errors: how long the request ran before it failed. Tells a
+   * connection refused at once (nothing is listening) from one that failed after a long wait.
+   */
+  readonly elapsedMs: number | null;
 
   constructor(init: {
     kind: ApiErrorKind;
@@ -55,6 +62,7 @@ export class ApiError extends Error {
     code?: string | null;
     details?: ErrorDetail[];
     requestId?: string | null;
+    elapsedMs?: number | null;
   }) {
     super(init.message);
     this.name = "ApiError";
@@ -63,6 +71,7 @@ export class ApiError extends Error {
     this.code = init.code ?? null;
     this.details = init.details ?? [];
     this.requestId = init.requestId ?? null;
+    this.elapsedMs = init.elapsedMs ?? null;
   }
 }
 
@@ -284,6 +293,7 @@ export function createApiClient(options: ApiClientOptions) {
         message: timedOut
           ? `LUNARIS API did not respond within ${(requestTimeoutMs ?? timeoutMs) / 1000} s (${baseUrl}).`
           : `LUNARIS API unreachable at ${baseUrl}.`,
+        elapsedMs: now() - started,
       });
     } finally {
       clearTimeout(timer);
@@ -358,7 +368,7 @@ export function createApiClient(options: ApiClientOptions) {
       request<SiteComparison>(
         "GET",
         `/api/v1/analysis/site-comparison?${new URLSearchParams({ site_ids: siteIds.join(",") }).toString()}`,
-        { signal, guard: isSiteComparison, timeoutMs: 120_000 },
+        { signal, guard: isSiteComparison, timeoutMs: SITE_COMPARISON_TIMEOUT_MS },
       ),
     analysisTimeline: (
       siteId: string,
@@ -427,6 +437,7 @@ export function createApiClient(options: ApiClientOptions) {
           message: timedOut
             ? `Terrain data did not arrive within ${SCENE_DATA_TIMEOUT_MS / 1000} s.`
             : `LUNARIS API unreachable at ${baseUrl}.`,
+          elapsedMs: now() - started,
         });
       }
       const requestId = response.headers.get("x-request-id");

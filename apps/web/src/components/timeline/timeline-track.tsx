@@ -4,7 +4,12 @@ import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from "react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { DAY_MS, HOUR_MS, dayTicks, formatUtc } from "@/lib/time/time";
-import { LINE_OF_SIGHT_LABEL, fractionAt, type FractionSeries } from "@/lib/timeline/fractions";
+import {
+  LINE_OF_SIGHT_LABEL,
+  formatFractionReadout,
+  fractionAt,
+  type FractionSeries,
+} from "@/lib/timeline/fractions";
 import { elevationAt, type ElevationSeries } from "@/lib/timeline/series";
 import { useMissionStore } from "@/store/mission-store";
 
@@ -14,7 +19,7 @@ import { FractionLane } from "./fraction-lane";
 export const ANALYSIS_LANES = [
   { id: "sun", label: "Sun elevation", milestone: "M03", note: "SPICE solar geometry" },
   { id: "earth", label: "Earth elevation", milestone: "M03", note: "SPICE Earth geometry" },
-  { id: "illumination", label: "Illumination", milestone: "M04", note: "terrain horizon" },
+  { id: "illumination", label: "Sunlight", milestone: "M04", note: "terrain horizon" },
   { id: "los", label: "Earth line of sight", milestone: "M04", note: "terrain-obstructed DTE" },
 ] as const;
 
@@ -27,8 +32,6 @@ export type LaneData = Partial<Record<"sun" | "earth", ElevationSeries>> &
 function laneFraction(data: LaneData, id: LaneId): FractionSeries | undefined {
   return id === "illumination" || id === "los" ? data[id] : undefined;
 }
-
-const pct = (f: number) => `${Math.round(f * 100)} %`;
 
 const EMPTY_LANE_HEIGHT_PX = 18;
 
@@ -256,11 +259,7 @@ export function TimelineTrack({
                 className="numeric font-mono text-3xs text-foreground"
                 data-testid={`lane-readout-${lane.id}`}
               >
-                {value === null
-                  ? "—"
-                  : value.terrain === null
-                    ? `astro ${pct(value.astronomical)} · terrain n/a`
-                    : `${fraction.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · astro ${pct(value.astronomical)}`}
+                {formatFractionReadout(fraction, value)}
               </span>
             </div>
           );

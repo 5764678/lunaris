@@ -3,7 +3,8 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
-import { DatasetStatusPill } from "@/components/data/dataset-status";
+import { DatasetAvailabilityPill } from "@/components/data/dataset-status";
+import { useShippedTextures } from "@/components/data/use-shipped-textures";
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { describeError } from "@/lib/api/client";
@@ -13,6 +14,7 @@ import { PanelSection } from "./panel-section";
 
 export function DataSourcesCard() {
   const datasets = useDatasetsQuery();
+  const textures = useShippedTextures();
 
   return (
     <PanelSection
@@ -51,7 +53,7 @@ export function DataSourcesCard() {
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
-                <DatasetStatusPill status={dataset.local.status} />
+                <DatasetAvailabilityPill dataset={dataset} shippedTextureIds={textures.ids} />
                 <span className="font-mono text-3xs text-dim" title={dataset.url_verification.note}>
                   {dataset.url_verification.status === "verified"
                     ? `URLs verified ${dataset.url_verification.checked_on ?? ""}`
