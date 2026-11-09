@@ -6,12 +6,14 @@ import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
+import { formatUtc } from "@/lib/time/time";
 import { useMissionStore, type LayerVisibility, type ViewPreset } from "@/store/mission-store";
 
 import { VIEW_PRESETS } from "./camera-rig";
 import type { SurfaceSource, TextureLoadState } from "./surface-source";
 import { SceneSwitch } from "./scene-switch";
 import { TextureProvenance } from "./texture-provenance";
+import type { GlobeSun } from "./use-globe-sun";
 import { useViewTelemetry } from "./view-telemetry";
 
 function Corner({ className }: { className: string }) {
@@ -26,9 +28,11 @@ function Corner({ className }: { className: string }) {
 export function ViewportOverlay({
   surface,
   textureState,
+  sun,
 }: {
   surface: SurfaceSource;
   textureState: TextureLoadState;
+  sun: GlobeSun;
 }) {
   const view = useMissionStore((s) => s.view);
   const requestView = useMissionStore((s) => s.requestView);
@@ -88,16 +92,7 @@ export function ViewportOverlay({
       {/* Disclosures */}
       <div className="pointer-events-auto absolute right-3 bottom-3 left-3 flex flex-col gap-1.5 rounded-md border border-hairline bg-[#05070a]/80 p-2 backdrop-blur-sm sm:right-auto sm:bottom-5 sm:left-6 sm:max-w-[min(34rem,calc(100%-16rem))]">
         <SurfaceDisclosure surface={surface} textureState={textureState} />
-        <div className="flex items-center gap-2" data-testid="lighting-disclosure">
-          <EvidenceBadge
-            kind="placeholder"
-            label="Display light"
-            detail="Lighting follows the camera for legibility. It is not the computed solar direction; ephemeris-driven illumination arrives in Milestones 03–04."
-          />
-          <span className="font-mono text-3xs text-muted-foreground">
-            View-relative lighting — not the computed Sun direction
-          </span>
-        </div>
+        <GlobeLightingDisclosure sun={sun} />
       </div>
 
       {/* Telemetry */}
@@ -157,5 +152,47 @@ function SurfaceDisclosure({
         {surface.kind === "procedural" && <p className="mt-1 text-dim">{surface.reason}</p>}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+/** How the globe is lit: the SPICE Sun at the epoch (MODEL), or the labelled display light. */
+function GlobeLightingDisclosure({ sun }: { sun: GlobeSun }) {
+  if (sun.kind === "display") {
+    return (
+      <div className="flex flex-col gap-0.5" data-testid="lighting-disclosure" data-lighting="display">
+        <div className="flex items-center gap-2">
+          <EvidenceBadge
+            kind="placeholder"
+            label="Display light"
+            detail="Lighting follows the camera for legibility. It is not the computed solar direction."
+          />
+          <span className="font-mono text-3xs text-muted-foreground">
+            View-relative lighting — not the computed Sun direction
+          </span>
+        </div>
+        <span className="font-mono text-3xs text-dim">{sun.reason}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-0.5" data-testid="lighting-disclosure" data-lighting="spice">
+      <div className="flex min-w-0 items-center gap-2">
+        <EvidenceBadge
+          kind={sun.evidence.kind}
+          label="SPICE Sun (CN+S)"
+          detail={`${sun.evidence.statement} Light direction: Moon-centred apparent Sun direction in MOON_ME at the timeline epoch, interpolated between hourly samples.`}
+        />
+        <span className="truncate font-mono text-3xs text-muted-foreground">
+          Sub-solar point{" "}
+          <span className="numeric text-foreground" data-testid="subsolar-point">
+            {formatLatitude(sun.subsolarLatDeg, 2)} {formatLongitude(sun.subsolarLonDeg, 2)}
+          </span>{" "}
+          · {formatUtc(sun.epochMs, false)} UTC
+        </span>
+      </div>
+      <span className="font-mono text-3xs text-dim">
+        No earthshine modelled: the night side is shown dark, not black, for visibility.
+      </span>
+    </div>
   );
 }

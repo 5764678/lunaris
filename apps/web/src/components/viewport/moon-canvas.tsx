@@ -9,7 +9,9 @@ import { CameraRig, INITIAL_CAMERA_POSITION } from "./camera-rig";
 import { Graticule } from "./graticule";
 import { LabelProjector } from "./label-layer";
 import type { LabelRegistry } from "./label-registry";
-import { ProceduralSurface, TexturedSurface } from "./moon-surface";
+import { GlobeSunContext, ProceduralSurface, TexturedSurface } from "./moon-surface";
+import { SubsolarMarker } from "./subsolar-marker";
+import type { GlobeSun } from "./use-globe-sun";
 import { SiteMarkers } from "./site-markers";
 import type { SurfaceSource } from "./surface-source";
 
@@ -20,11 +22,13 @@ import type { SurfaceSource } from "./surface-source";
 export default function MoonCanvas({
   surface,
   onSurfaceError,
+  sun,
   onSurfaceLoaded,
   labelRegistry,
 }: {
   surface: SurfaceSource;
   onSurfaceError: (reason: string) => void;
+  sun: GlobeSun;
   onSurfaceLoaded: () => void;
   labelRegistry: LabelRegistry;
 }) {
@@ -40,11 +44,14 @@ export default function MoonCanvas({
       aria-label="Interactive 3D lunar globe"
       data-testid="moon-canvas"
     >
-      {surface.kind === "texture" ? (
-        <TexturedSurface url={surface.url} onError={onSurfaceError} onLoaded={onSurfaceLoaded} />
-      ) : (
-        <ProceduralSurface />
-      )}
+      <GlobeSunContext.Provider value={sun.kind === "spice" ? sun.sceneDirection : null}>
+        {surface.kind === "texture" ? (
+          <TexturedSurface url={surface.url} onError={onSurfaceError} onLoaded={onSurfaceLoaded} />
+        ) : (
+          <ProceduralSurface />
+        )}
+      </GlobeSunContext.Provider>
+      {sun.kind === "spice" && <SubsolarMarker latDeg={sun.subsolarLatDeg} lonDeg={sun.subsolarLonDeg} />}
       {layers.graticule && <Graticule />}
       {layers.sites && <SiteMarkers />}
       <LabelProjector registry={labelRegistry} />

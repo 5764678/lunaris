@@ -26,6 +26,9 @@ export type SiteComparison = components["schemas"]["SiteComparison"];
 export type CompareCell = components["schemas"]["CompareCell"];
 export type CompareRow = components["schemas"]["CompareRow"];
 
+/** Moon-centred SPICE Sun direction series (T-26, generated contract). */
+export type SunDirectionSeries = components["schemas"]["SunDirectionSeries"];
+
 /** C4 timeline analysis (T-24, generated contract). */
 export type TimelineAnalysis = components["schemas"]["TimelineAnalysis"];
 
@@ -252,6 +255,23 @@ const isSiteComparison: Guard<SiteComparison> = (v): v is SiteComparison =>
   Array.isArray(v.rows) &&
   v.rows.every((r) => isObject(r) && typeof r.site_id === "string" && typeof r.name === "string");
 
+const isSunDirectionSeries: Guard<SunDirectionSeries> = (v): v is SunDirectionSeries =>
+  isObject(v) &&
+  isObject(v.evidence) &&
+  typeof v.evidence.kind === "string" &&
+  typeof v.evidence.statement === "string" &&
+  Array.isArray(v.samples) &&
+  v.samples.every(
+    (s) =>
+      isObject(s) &&
+      typeof s.epoch_utc === "string" &&
+      Array.isArray(s.direction_moon_me) &&
+      s.direction_moon_me.length === 3 &&
+      s.direction_moon_me.every((x) => typeof x === "number" && Number.isFinite(x)) &&
+      typeof s.subsolar_latitude_deg === "number" &&
+      typeof s.subsolar_longitude_deg === "number",
+  );
+
 // ── Client ─────────────────────────────────────────────────────────────────
 export function createApiClient(options: ApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, "");
@@ -381,6 +401,17 @@ export function createApiClient(options: ApiClientOptions) {
         guard: isTimelineAnalysis,
         timeoutMs: 60_000,
       }),
+    sunDirection: (window: { startUtc: string; endUtc: string; stepS: number }, signal?: AbortSignal) => {
+      const query = new URLSearchParams({
+        start_utc: window.startUtc,
+        end_utc: window.endUtc,
+        step_s: String(window.stepS),
+      });
+      return request<SunDirectionSeries>("GET", `/api/v1/ephemeris/sun?${query.toString()}`, {
+        signal,
+        guard: isSunDirectionSeries,
+      });
+    },
     siteEphemeris: (
       siteId: string,
       window: { startUtc: string; endUtc: string; stepS: number },

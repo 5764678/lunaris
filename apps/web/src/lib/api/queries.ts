@@ -28,6 +28,8 @@ export const queryKeys = {
   comparison: (siteIds: readonly string[]) => ["analysis", "site-comparison", ...siteIds] as const,
   timeline: (siteId: string, startMs: number, endMs: number, stepS: number) =>
     ["sites", siteId, "timeline", startMs, endMs, stepS] as const,
+  sun: (startMs: number, endMs: number, stepS: number) =>
+    ["ephemeris", "sun", startMs, endMs, stepS] as const,
   ephemeris: (siteId: string, startMs: number, endMs: number, stepS: number) =>
     ["sites", siteId, "ephemeris", startMs, endMs, stepS] as const,
   terrainScene: (sceneId: string, gridSize: number) => ["terrain", "scene", sceneId, gridSize] as const,
@@ -299,4 +301,27 @@ export function useSiteComparisons(siteIds: readonly string[]) {
     })),
   });
   return hydrated ? results : results.map(asPending);
+}
+
+/** Moon-centred SPICE Sun direction over the analysis window (lights the globe; T-26). */
+export function useSunDirection(startMs: number | null, endMs: number | null) {
+  return useHydrationSafe(
+    useQuery({
+      queryKey: queryKeys.sun(startMs ?? 0, endMs ?? 0, EPHEMERIS_STEP_S),
+      enabled: startMs !== null && endMs !== null,
+      staleTime: Infinity,
+      retry: 1,
+      queryFn: ({ signal }) =>
+        api
+          .sunDirection(
+            {
+              startUtc: new Date(startMs!).toISOString(),
+              endUtc: new Date(endMs!).toISOString(),
+              stepS: EPHEMERIS_STEP_S,
+            },
+            signal,
+          )
+          .then((r) => r.data),
+    }),
+  );
 }

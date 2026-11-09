@@ -12,6 +12,7 @@ import { LabelRegistry } from "./label-registry";
 import { useSurfaceLabels } from "./surface-labels";
 import { useSurfaceSource, type SurfaceSource, type TextureLoadState } from "./surface-source";
 import { TERRAIN_SCENE_ID, TerrainView, useTerrainGridSize } from "./terrain/terrain-view";
+import { useGlobeSun } from "./use-globe-sun";
 import { ViewportOverlay } from "./viewport-overlay";
 
 /** Globe camera descent to the pole before the terrain scene takes over (matches the camera tween). */
@@ -114,6 +115,7 @@ function GlobeView({ labelRegistry }: { labelRegistry: LabelRegistry }) {
   const onSurfaceError = useCallback((reason: string) => setTextureError(reason), []);
   const onSurfaceLoaded = useCallback(() => setTextureState("loaded"), []);
   const labels = useSurfaceLabels();
+  const sun = useGlobeSun();
   const surface: SurfaceSource =
     textureError && resolved.kind === "texture" ? { kind: "procedural", reason: textureError } : resolved;
   return (
@@ -124,12 +126,13 @@ function GlobeView({ labelRegistry }: { labelRegistry: LabelRegistry }) {
         <MoonCanvas
           surface={surface}
           onSurfaceError={onSurfaceError}
+          sun={sun}
           onSurfaceLoaded={onSurfaceLoaded}
           labelRegistry={labelRegistry}
         />
       )}
       <LabelLayer registry={labelRegistry} labels={labels} />
-      <ViewportOverlay surface={surface} textureState={textureState} />
+      <ViewportOverlay surface={surface} textureState={textureState} sun={sun} />
     </>
   );
 }
