@@ -143,6 +143,14 @@ function syntheticTimeline(body: { site_id: string; start_utc: string; end_utc: 
   };
 }
 
+/** The open evidence popover; a closing one stays in the DOM while it animates out. */
+const openEvidence = (page: Page) => page.locator('[data-testid="cell-evidence"][data-state="open"]');
+
+async function closeEvidence(page: Page) {
+  await page.keyboard.press("Escape");
+  await expect(openEvidence(page)).toHaveCount(0);
+}
+
 async function registerTrio(request: APIRequestContext) {
   const response = await request.post(`${API}/api/v1/catalog/demo-trio/register`);
   expect(response.ok()).toBe(true);
@@ -209,17 +217,18 @@ test("illumination page: demo trio tabs, sky chart with lower bounds, censored w
     const longest = page.getByTestId("sun-summary-longest_illumination_s-terrain");
     await expect(page.locator('[data-lower-bound="true"]').filter({ has: longest })).toHaveCount(1);
     await longest.click();
-    const popover = page.getByTestId("cell-evidence");
+    const popover = openEvidence(page);
     await expect(popover).toContainText(SYNTHETIC);
     await expect(popover).toContainText("lower bound");
-    await page.keyboard.press("Escape");
+    await closeEvidence(page);
 
     await expect(page.locator('[data-testid="sun-windows-row"][data-censored="true"]')).toHaveCount(1);
     await expect(page.locator('[data-testid="sun-windows-row"][data-censored="false"]')).toHaveCount(1);
 
     await page.getByTestId("horizon-max").click();
-    await expect(page.getByTestId("cell-evidence")).toContainText("lower bound");
-    await page.keyboard.press("Escape");
+    await expect(openEvidence(page)).toContainText("Highest terrain skyline");
+    await expect(openEvidence(page)).toContainText("lower bound");
+    await closeEvidence(page);
 
     await expect(page.getByTestId("radio-link-disclaimer")).toContainText("does not imply a radio link");
 
@@ -263,7 +272,7 @@ test.describe("phone width", () => {
       ]);
       expect(scrollWidth).toBe(innerWidth);
       await page.getByTestId("earth-summary-visible_fraction-terrain").click();
-      await expect(page.getByTestId("cell-evidence")).toBeVisible();
+      await expect(openEvidence(page)).toBeVisible();
     } finally {
       await cleanup(request, ids);
     }
