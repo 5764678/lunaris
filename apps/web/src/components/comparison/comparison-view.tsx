@@ -112,8 +112,8 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
   const first = entries.find(({ query }) => query.data)?.query.data;
   const columns = columnsFor(first);
 
-  // The summary needs every site in one request; it is asked once every row is ready, so the
-  // server answers it from the per-site results it has just computed.
+  // The summary needs every site in one request; it is asked once every row is ready, after the
+  // rows. The API recomputes the rows for it today; fast once the API's row cache lands.
   const [profile, setProfile] = useState<MissionProfile | null>(null);
   const allReady = progress.total > 0 && progress.ready === progress.total;
   const summaryQuery = useComparisonSummary(

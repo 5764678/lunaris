@@ -311,8 +311,8 @@ function sameSites(key: readonly unknown[], sorted: readonly string[]): boolean 
 
 /**
  * T-18 summary across the given sites (leaders, standings, verdict) and, only when a
- * profile is chosen, its weighted ordering. Asked once every site's own row is ready, so
- * the server answers from its cache.
+ * profile is chosen, its weighted ordering. Asked once every site's own row is ready. The API
+ * recomputes the rows for it today; it gets fast once the API's row cache lands.
  */
 export function useComparisonSummary(
   siteIds: readonly string[],
