@@ -8,13 +8,25 @@ Sources per column:
   ``terrain illumination not available``.
 
 A cell that cannot be computed is ``null`` with a reason, never 0.
+
+Row cache: the cells of a row depend only on the site's id and coordinates and on
+(start, end, step_s, observer_height_m, footprint_radius_m), so they are memoized in a
+bounded, thread-safe LRU shared by every request of an app (:func:`row_cache_for`).
+``summary`` and ``score`` are recomputed from the rows on every request, and the mission
+profile is never part of the key. A row is not cached when any of its cells came from a
+server-side failure (status >= 500, e.g. PGDA unreachable or a dataset not acquired):
+those can recover, and caching them would freeze an outage. Deterministic nulls
+(outside coverage, no terrain horizon in the timeline) are cached.
 """
 
 from __future__ import annotations
 
 import math
+import threading
+from collections import OrderedDict
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import Any
 
 import numpy as np
 
@@ -136,6 +148,70 @@ class CompareRequestError(ApiError):
         )
 
 
+DEFAULT_ROW_CACHE_SIZE = 64
+
+RowKey = tuple[str, float, float, datetime, datetime, float, float, float]
+"""(site id, latitude, longitude, start, end, step_s, observer_height_m, footprint_radius_m)."""
+
+Cells = dict[str, CompareCell]
+
+
+class RowCache:
+    """Bounded, thread-safe LRU of row cells (schemas are frozen, so sharing is safe)."""
+
+    def __init__(self, max_rows: int = DEFAULT_ROW_CACHE_SIZE) -> None:
+        if max_rows < 1:
+            raise ValueError("max_rows must be at least 1")
+        self._max_rows = max_rows
+        self._rows: OrderedDict[RowKey, Cells] = OrderedDict()
+        self._lock = threading.Lock()
+        self.hits = 0
+        self.misses = 0
+
+    def get(self, key: RowKey) -> Cells | None:
+        with self._lock:
+            cells = self._rows.get(key)
+            if cells is None:
+                self.misses += 1
+                return None
+            self._rows.move_to_end(key)
+            self.hits += 1
+            return cells
+
+    def put(self, key: RowKey, cells: Cells) -> None:
+        with self._lock:
+            self._rows[key] = cells
+            self._rows.move_to_end(key)
+            while len(self._rows) > self._max_rows:
+                self._rows.popitem(last=False)
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._rows)
+
+    def clear(self) -> None:
+        with self._lock:
+            self._rows.clear()
+
+
+_STATE_LOCK = threading.Lock()
+
+
+def row_cache_for(state: Any) -> RowCache:
+    """The app-wide row cache, created on first use and kept on ``app.state``."""
+    with _STATE_LOCK:
+        cache = getattr(state, "compare_row_cache", None)
+        if cache is None:
+            cache = RowCache()
+            state.compare_row_cache = cache
+        return cache
+
+
+def _transient(exc: ApiError) -> bool:
+    """Server-side failures (>= 500) may recover; client-side ones (422) are deterministic."""
+    return exc.status_code >= 500  # noqa: PLR2004
+
+
 def _null(unit: str, reason: str) -> CompareCell:
     return CompareCell(value=None, unit=unit, reason=reason)
 
@@ -151,11 +227,13 @@ class CompareService:
         horizon: HorizonMaskService,
         terrain: SiteTerrainService,
         illumination: IlluminationProvider | None = None,
+        row_cache: RowCache | None = None,
     ) -> None:
         self._sites = sites
         self._horizon = horizon
         self._terrain = terrain
         self._illumination = illumination
+        self._row_cache = row_cache
 
     def compare(
         self,
@@ -230,10 +308,25 @@ class CompareService:
         observer_height_m: float,
         footprint_radius_m: float,
     ) -> CompareRow:
-        cells: dict[str, CompareCell] = {}
-        cells.update(self._horizon_cells(site, observer_height_m))
-        cells.update(self._terrain_cells(site, footprint_radius_m))
-        cells.update(self._illumination_cells(site, start, end, step_s, observer_height_m))
+        key: RowKey = (
+            site.id,
+            float(site.coordinate.latitude_deg),
+            float(site.coordinate.longitude_deg),
+            start,
+            end,
+            float(step_s),
+            float(observer_height_m),
+            float(footprint_radius_m),
+        )
+        cells = self._row_cache.get(key) if self._row_cache is not None else None
+        if cells is None:
+            horizon, h_ok = self._horizon_cells(site, observer_height_m)
+            terrain, t_ok = self._terrain_cells(site, footprint_radius_m)
+            light, i_ok = self._illumination_cells(site, start, end, step_s, observer_height_m)
+            cells = {**horizon, **terrain, **light}
+            if self._row_cache is not None and h_ok and t_ok and i_ok:
+                self._row_cache.put(key, cells)
+        # Identity fields come from the current site, never from the cache.
         return CompareRow(
             site_id=site.id,
             name=site.name,
@@ -243,9 +336,8 @@ class CompareService:
             **cells,
         )
 
-    def _horizon_cells(
-        self, site: CandidateSite, observer_height_m: float
-    ) -> dict[str, CompareCell]:
+    def _horizon_cells(self, site: CandidateSite, observer_height_m: float) -> tuple[Cells, bool]:
+        """Cells, and whether they may be cached (no transient failure)."""
         keys = {
             "surface_height_m": "m",
             "horizon_min_deg": "deg",
@@ -257,7 +349,7 @@ class CompareService:
         except ApiError as exc:
             return {
                 k: _null(u, f"horizon mask not available: {exc.message}") for k, u in keys.items()
-            }
+            }, not _transient(exc)
         manifest = self._horizon.manifest
         data = next(f for f in manifest.files if f.role.value == "data")
         source = SourceReferenceSchema(
@@ -301,11 +393,9 @@ class CompareService:
             "horizon_truncated_azimuths": horizon_cell(
                 float(truncated), "count", "truncated azimuth count"
             ),
-        }
+        }, True
 
-    def _terrain_cells(
-        self, site: CandidateSite, footprint_radius_m: float
-    ) -> dict[str, CompareCell]:
+    def _terrain_cells(self, site: CandidateSite, footprint_radius_m: float) -> tuple[Cells, bool]:
         keys = {"slope_at_site_deg": "deg", "slope_p95_deg": "deg", "roughness_rms_m": "m"}
         try:
             t = self._terrain.analyze(site, footprint_radius_m=footprint_radius_m, thresholds=None)
@@ -313,7 +403,7 @@ class CompareService:
             return {
                 k: _null(u, f"terrain analysis not available: {exc.message}")
                 for k, u in keys.items()
-            }
+            }, not _transient(exc)
         fp = t.footprint
         return {
             "slope_at_site_deg": _terrain_cell(
@@ -329,7 +419,7 @@ class CompareService:
             "roughness_rms_m": _terrain_cell(
                 t, fp.roughness_rms_m, "m", fp.roughness_baseline_m, "plane-fit RMS roughness"
             ),
-        }
+        }, True
 
     def _illumination_cells(
         self,
@@ -338,17 +428,17 @@ class CompareService:
         end: datetime,
         step_s: float,
         observer_height_m: float,
-    ) -> dict[str, CompareCell]:
+    ) -> tuple[Cells, bool]:
         units = {c.key: c.unit for c in COLUMNS}
         if self._illumination is None:
-            return {k: _null(units[k], ILLUMINATION_UNAVAILABLE) for k in ILLUMINATION_KEYS}
+            return {k: _null(units[k], ILLUMINATION_UNAVAILABLE) for k in ILLUMINATION_KEYS}, True
         try:
-            return self._illumination(site.id, start, end, step_s, observer_height_m)
+            return self._illumination(site.id, start, end, step_s, observer_height_m), True
         except ApiError as exc:
             return {
                 k: _null(units[k], f"{ILLUMINATION_UNAVAILABLE}: {exc.message}")
                 for k in ILLUMINATION_KEYS
-            }
+            }, not _transient(exc)
 
 
 def _mask_evidence(mask: HorizonMask, source: SourceReferenceSchema, what: str) -> EvidenceSchema:
@@ -465,5 +555,7 @@ __all__ = [
     "MAX_COMPARE_SITES",
     "CompareService",
     "IlluminationProvider",
+    "RowCache",
+    "row_cache_for",
     "timeline_provider",
 ]
