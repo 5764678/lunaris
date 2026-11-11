@@ -3,7 +3,7 @@
 import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from "react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
-import { DAY_MS, HOUR_MS, dayTicks, formatUtc } from "@/lib/time/time";
+import { DAY_MS, HOUR_MS, dayTicks, formatUtcReadable } from "@/lib/time/time";
 import {
   LINE_OF_SIGHT_LABEL,
   formatFractionReadout,
@@ -17,10 +17,10 @@ import { ELEVATION_LANE_HEIGHT_PX, ElevationLane } from "./elevation-lane";
 import { FractionLane } from "./fraction-lane";
 
 export const ANALYSIS_LANES = [
-  { id: "sun", label: "Sun elevation", milestone: "M03", note: "SPICE solar geometry" },
-  { id: "earth", label: "Earth elevation", milestone: "M03", note: "SPICE Earth geometry" },
-  { id: "illumination", label: "Sunlight", milestone: "M04", note: "terrain horizon" },
-  { id: "los", label: "Earth line of sight", milestone: "M04", note: "terrain-obstructed DTE" },
+  { id: "sun", label: "Sun height", note: "Sun position not loaded" },
+  { id: "earth", label: "Earth height", note: "Earth position not loaded" },
+  { id: "illumination", label: "Sunlight", note: "sunlight not loaded" },
+  { id: "los", label: "Earth in view", note: "Earth view not loaded" },
 ] as const;
 
 export type LaneId = (typeof ANALYSIS_LANES)[number]["id"];
@@ -124,7 +124,7 @@ export function TimelineTrack({
         aria-valuemin={startMs ?? 0}
         aria-valuemax={endMs ?? 0}
         aria-valuenow={epochMs ?? 0}
-        aria-valuetext={epochMs === null ? "not initialized" : `${formatUtc(epochMs)} UTC`}
+        aria-valuetext={epochMs === null ? "not initialized" : `${formatUtcReadable(epochMs, true)} UTC`}
         data-testid="timeline-track"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -193,7 +193,7 @@ export function TimelineTrack({
                   ? geometryNote
                   : (lane.id === "illumination" || lane.id === "los") && fractionNote
                     ? fractionNote
-                    : `Not computed · ${lane.milestone} · ${lane.note}`}
+                    : `Not computed · ${lane.note}`}
               </span>
             </div>
           );

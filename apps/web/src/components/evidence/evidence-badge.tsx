@@ -112,3 +112,29 @@ export function EvidenceLegend({ className }: { className?: string }) {
     </div>
   );
 }
+
+const GUIDE_ORDER: EvidenceTag[] = [
+  "observation",
+  "derived_product",
+  "model",
+  "calculation",
+  "assumption",
+  "not_computed",
+];
+
+/** Every tag with its plain-language meaning, one per line, for the About page. */
+export function EvidenceTagGuide({ className }: { className?: string }) {
+  return (
+    <ul className={cn("space-y-1.5", className)} data-testid="evidence-guide">
+      {GUIDE_ORDER.map((kind) => (
+        <li key={kind} className="flex items-start gap-2 text-sm text-muted-foreground">
+          <EvidenceBadge kind={kind} className="mt-0.5" />
+          <span>
+            <span className="text-foreground">{EVIDENCE_TAGS[kind].title}.</span>{" "}
+            {EVIDENCE_TAGS[kind].description}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}

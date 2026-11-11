@@ -34,7 +34,7 @@ def test_register_one_catalog_site_as_published(client: TestClient) -> None:
     site = response.json()
     assert site["origin"] == "published"
     assert site["name"] == "Malapert massif"
-    assert "Barker et al. (2021)" in site["reference"]
+    assert "Barker, M. K., et al. (2021)" in site["reference"]
     assert "tile Site23" in site["reference"]
     assert "NOT a selected landing point" in site["notes"]
     entry = load_site_catalog().site("pgda78-site23")

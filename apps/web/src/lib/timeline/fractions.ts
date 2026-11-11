@@ -25,9 +25,9 @@ export interface FractionSeries {
 export type LineOfSight = "clear" | "terrain_obstructed" | "below_geometric_horizon";
 
 export const LINE_OF_SIGHT_LABEL: Record<LineOfSight, string> = {
-  clear: "clear",
-  terrain_obstructed: "terrain-obstructed",
-  below_geometric_horizon: "below horizon",
+  clear: "In view",
+  terrain_obstructed: "Blocked by terrain",
+  below_geometric_horizon: "Below the skyline",
 };
 
 export function fractionSeriesFromTimeline(analysis: TimelineAnalysis): {
@@ -94,6 +94,6 @@ export function formatFractionReadout(
   value: { astronomical: number; terrain: number | null } | null,
 ): string {
   if (value === null) return "—";
-  if (value.terrain === null) return `no hills ${pct(value.astronomical)} · terrain n/a`;
-  return `${series.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · no hills ${pct(value.astronomical)}`;
+  if (value.terrain === null) return `${pct(value.astronomical)} with no hills · terrain map not available`;
+  return `${series.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} (${pct(value.astronomical)} with no hills)`;
 }

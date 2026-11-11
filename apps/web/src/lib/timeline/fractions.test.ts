@@ -63,19 +63,19 @@ describe("line-of-sight states", () => {
 describe("formatFractionReadout", () => {
   it("shows the terrain share first and the no-hills share beside it", () => {
     expect(formatFractionReadout({ anyUpperBound: false }, { astronomical: 1, terrain: 0.42 })).toBe(
-      "42 % · no hills 100 %",
+      "42 % (100 % with no hills)",
     );
   });
 
   it("marks the terrain share as an upper bound when mask rays ran out of map", () => {
     expect(formatFractionReadout({ anyUpperBound: true }, { astronomical: 1, terrain: 0.42 })).toBe(
-      "≤ 42 % · no hills 100 %",
+      "≤ 42 % (100 % with no hills)",
     );
   });
 
   it("shows the no-hills share alone, labelled, where no terrain mask is served", () => {
     expect(formatFractionReadout({ anyUpperBound: false }, { astronomical: 1, terrain: null })).toBe(
-      "no hills 100 % · terrain n/a",
+      "100 % with no hills · terrain map not available",
     );
   });
 
@@ -85,7 +85,7 @@ describe("formatFractionReadout", () => {
 
   it("keeps a real 0 % terrain share as 0 %", () => {
     expect(formatFractionReadout({ anyUpperBound: false }, { astronomical: 0.3, terrain: 0 })).toBe(
-      "0 % · no hills 30 %",
+      "0 % (30 % with no hills)",
     );
   });
 });

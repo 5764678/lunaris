@@ -8,6 +8,7 @@ const NAV = [
   ["terrain", "/terrain"],
   ["compare", "/compare"],
   ["data", "/data"],
+  ["about", "/about"],
 ] as const;
 
 test("every nav item is a link to a page that renders", async ({ page }) => {

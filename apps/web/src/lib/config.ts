@@ -17,6 +17,8 @@ export const config = {
   apiBaseUrl: normalizeBaseUrl(process.env.NEXT_PUBLIC_LUNARIS_API_URL),
   /** Public address of this web app (no trailing slash), used for link-preview image URLs. */
   siteUrl: normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL, DEFAULT_SITE_URL),
+  /** Team name shown on the About page; left out when not set. */
+  teamName: (process.env.NEXT_PUBLIC_TEAM_NAME ?? "").trim() || null,
   /** Expected major version of the HTTP contract. */
   expectedApiVersion: "v1",
   /** Health polling interval. */

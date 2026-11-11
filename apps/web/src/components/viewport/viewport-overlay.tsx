@@ -6,7 +6,7 @@ import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
-import { formatUtc } from "@/lib/time/time";
+import { formatUtcReadable } from "@/lib/time/time";
 import { useMissionStore, type LayerVisibility, type ViewPreset } from "@/store/mission-store";
 
 import { VIEW_PRESETS } from "./camera-rig";
@@ -187,7 +187,7 @@ function GlobeLightingDisclosure({ sun }: { sun: GlobeSun }) {
           <span className="numeric text-foreground" data-testid="subsolar-point">
             {formatLatitude(sun.subsolarLatDeg, 2)} {formatLongitude(sun.subsolarLonDeg, 2)}
           </span>{" "}
-          · {formatUtc(sun.epochMs, false)} UTC
+          · {formatUtcReadable(sun.epochMs)} UTC
         </span>
       </div>
       <span className="font-mono text-3xs text-dim">

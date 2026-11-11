@@ -12,8 +12,8 @@ export default function TerrainPage() {
           <p className="label-caps">Terrain intelligence · site analysis</p>
           <h1 className="text-lg font-medium text-foreground">Site terrain</h1>
           <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">
-            Height, slope and roughness at a site from a window of the LOLA 20 m south-pole DEM. Every slope
-            and roughness value states the baseline it was measured over. Hazard flags appear only for
+            Height, slope and bumpiness at a site from a window of the LOLA 20 m south-pole DEM. Every slope
+            and bumpiness value states the baseline it was measured over. Hazard flags appear only for
             thresholds you enter; they are your assumptions, not LUNARIS defaults. Every value opens its
             evidence, including where the DEM window came from.
           </p>

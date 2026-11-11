@@ -35,15 +35,23 @@ export function DataRow({
   label,
   children,
   className,
+  emphasis = false,
 }: {
   label: string;
   children: ReactNode;
   className?: string;
+  /** A key number the visitor came for: set larger than the rows around it. */
+  emphasis?: boolean;
 }) {
   return (
     <div className={cn("grid grid-cols-[7.5rem_1fr] items-center gap-2 py-[3px]", className)}>
       <dt className="text-2xs text-dim">{label}</dt>
-      <dd className="numeric flex min-w-0 items-center justify-end gap-1.5 text-right font-mono text-2xs text-foreground">
+      <dd
+        className={cn(
+          "numeric flex min-w-0 items-center justify-end gap-1.5 text-right font-mono text-foreground",
+          emphasis ? "text-base" : "text-2xs",
+        )}
+      >
         {children}
       </dd>
     </div>

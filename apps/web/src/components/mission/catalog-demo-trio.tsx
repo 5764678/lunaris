@@ -65,8 +65,8 @@ export function CatalogDemoTrio() {
               {s.artemis_iii_2022_region && <span className="text-dim"> · Artemis III region (2022)</span>}
             </span>
             <span className="numeric shrink-0 font-mono text-dim">
-              {formatLatitude(s.reference_point.latitude_deg, 2)}{" "}
-              {formatLongitude(s.reference_point.longitude_deg, 2)}
+              {formatLatitude(s.reference_point.latitude_deg)}{" "}
+              {formatLongitude(s.reference_point.longitude_deg)}
             </span>
           </li>
         ))}

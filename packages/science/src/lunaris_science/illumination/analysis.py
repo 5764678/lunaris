@@ -57,8 +57,7 @@ class BodyTimeline:
 
 COMMON_LIMITATIONS = (
     "Visible fraction is a fraction of the disk's area: limb darkening is neglected.",
-    "Out of scope: earthshine, light scattered from nearby terrain, regional illumination "
-    "maps (D4).",
+    "Out of scope: earthshine, light scattered from nearby terrain, regional illumination maps.",
 )
 
 
@@ -140,7 +139,7 @@ def body_timeline(
     sources = list(geometry.evidence.sources)
     method = (
         "Visible disk fraction by chord integration in the tangent plane at the disk "
-        f"centre ({nodes} chords), horizon sampled per chord (docs/SCIENCE.md §5.3); "
+        f"centre ({nodes} chords), horizon sampled per chord; "
         "windows are maximal runs of samples, each standing for one step."
     )
     assumptions = list(geometry.evidence.assumptions)
