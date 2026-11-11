@@ -227,7 +227,7 @@ const groups = (page: Page) => ({
  */
 async function expectTextInsideCell(element: Locator, what: string) {
   const bounds = await element.evaluate((node) => {
-    const cell = node.closest("dd, td")!.getBoundingClientRect();
+    const cell = node.closest("dd, td, section")!.getBoundingClientRect();
     const range = document.createRange();
     range.selectNodeContents(node);
     const lines = [...range.getClientRects()].filter((rect) => rect.width > 0);

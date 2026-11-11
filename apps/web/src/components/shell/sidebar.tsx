@@ -13,10 +13,10 @@ export function Sidebar() {
   return (
     <nav
       aria-label="Modules"
-      className="flex w-[4.75rem] shrink-0 flex-col border-r border-border bg-surface xl:w-56"
+      className="flex w-[4.25rem] shrink-0 flex-col border-r border-border bg-surface xl:w-56"
     >
       <div className="label-caps hidden px-4 pt-4 pb-2 xl:block">LUNARIS</div>
-      <ul className="flex flex-col gap-0.5 p-2 pt-3 xl:pt-0">
+      <ul className="flex flex-col gap-0.5 p-1 pt-3 xl:p-2 xl:pt-0">
         {NAV_ITEMS.map((item) => (
           <li key={item.id}>
             <NavLink item={item} active={item.href === pathname} />

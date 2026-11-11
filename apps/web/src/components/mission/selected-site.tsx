@@ -12,11 +12,13 @@ import { calendarYearOf, formatPeriodUtc, mapNoteFor, metricCopy } from "@/lib/c
 import { azElAt, toDirectionSeries } from "@/lib/terrain/sun";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { earthWindows, sunlitWindows } from "@/app/illumination/_lib/model";
+import { Linkified } from "@/components/evidence/references";
 import { Timestamp } from "@/components/time/timestamp";
 import { formatSpan, nextVisibilityEvent, type NextEvent } from "@/lib/timeline/events";
 import {
   LINE_OF_SIGHT_LABEL,
   formatFractionReadout,
+  fractionReadoutParts,
   fractionAt,
   fractionSeriesFromTimeline,
 } from "@/lib/timeline/fractions";
@@ -64,16 +66,6 @@ export function SelectedSite() {
         <DataRow label="Latitude">{formatLatitude(site.coordinate.latitude_deg)}</DataRow>
         <DataRow label="Longitude">{formatLongitude(site.coordinate.longitude_deg)}</DataRow>
         <DataRow label="Frame">{site.coordinate.frame}</DataRow>
-        {site.origin === "published" && (
-          <DataRow label="Source">
-            <span
-              className="min-w-0 text-2xs [overflow-wrap:anywhere] whitespace-normal text-muted-foreground"
-              data-testid="selected-site-source"
-            >
-              {site.reference ?? "Published catalogue"} · {TILE_CENTRE_NOTE}
-            </span>
-          </DataRow>
-        )}
         <DataRow label="Body-fixed (km)">
           <EvidenceBadge
             kind="calculation"
@@ -85,6 +77,16 @@ export function SelectedSite() {
         </DataRow>
       </dl>
       <NextEvents siteId={site.id} />
+      {site.origin === "published" && (
+        <p
+          className="mt-2 text-3xs leading-relaxed text-dim [overflow-wrap:anywhere]"
+          data-testid="selected-site-source"
+        >
+          <span className="text-muted-foreground">Source:</span>{" "}
+          <Linkified text={site.reference ?? "Published catalogue"} />
+          <span className="mt-0.5 block text-warn">{TILE_CENTRE_NOTE}</span>
+        </p>
+      )}
       <SiteGroup id="now" title="At the selected time" detail={<SelectedTime />}>
         <GeometryRows siteId={site.id} />
         <SelectedTimeFractions siteId={site.id} />
@@ -147,7 +149,7 @@ function NextEvents({ siteId }: { siteId: string }) {
   }, [query.data, epochMs]);
   const pending = query.isPending || epochMs === null;
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2" data-testid="next-events">
+    <div className="mt-3 grid grid-cols-1 gap-2" data-testid="next-events">
       <EventCard
         title="Sun"
         event={events?.sun ?? null}
@@ -342,7 +344,10 @@ function SelectedTimeFractions({ siteId }: { siteId: string }) {
               )}
             />
             <span className="numeric min-w-0" data-testid="selected-site-now-sunlit">
-              {formatFractionReadout(series.illumination, sun)}
+              {fractionReadoutParts(series.illumination, sun).main}{" "}
+              <span className="block text-3xs text-dim">
+                {fractionReadoutParts(series.illumination, sun).note}
+              </span>
             </span>
           </>
         ) : (

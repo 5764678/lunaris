@@ -57,7 +57,7 @@ test("SPICE Sun lights the globe; the sub-solar point moves with the timeline", 
   await page.goto("/");
   const disclosure = page.getByTestId("lighting-disclosure");
   await expect(disclosure).toHaveAttribute("data-lighting", "spice");
-  await expect(disclosure).toContainText("SPICE Sun (CN+S)");
+  await expect(disclosure).toContainText("Sun position · NASA SPICE");
   await expect(disclosure).toContainText("No earthshine modelled: the night side is shown dark, not black");
   await expect(disclosure).not.toContainText("View-relative");
   await expect(page.getByTestId("subsolar-point")).toHaveText("0.00°N 0.00°E");

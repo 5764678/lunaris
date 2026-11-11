@@ -74,7 +74,7 @@ export function CellEvidence({
       <PopoverContent
         side="bottom"
         align={align}
-        className="max-h-[min(34rem,calc(100dvh-2rem))] overflow-y-auto"
+        className="max-h-[min(34rem,var(--radix-popover-content-available-height))] overflow-y-auto"
         data-testid="cell-evidence"
         aria-label={`Evidence for ${label}`}
         tabIndex={-1}

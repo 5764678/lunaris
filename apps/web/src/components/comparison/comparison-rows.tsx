@@ -82,7 +82,7 @@ export function ReadyRow({
                 testId={`cell-${c.key}`}
               />
             ) : (
-              <span className="font-mono text-3xs text-dim italic">N/C · not in response</span>
+              <span className="text-3xs text-dim italic">N/C · not in response</span>
             )}
             {leads && (
               <span className="block px-1 font-mono text-3xs text-primary" data-testid="leader-mark">

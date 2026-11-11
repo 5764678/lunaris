@@ -36,7 +36,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: "illumination",
     title: "Illumination & Earth",
-    shortTitle: "Sun & Earth",
+    shortTitle: "Sun/Earth",
     description: "Sun and Earth geometry, illumination and direct-to-Earth line of sight per site.",
     href: "/illumination",
     icon: Sun,

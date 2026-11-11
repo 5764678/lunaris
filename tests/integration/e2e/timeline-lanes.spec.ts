@@ -227,7 +227,7 @@ for (const terrain of [null, 0.42]) {
           await expect(readout).toHaveText("≤ 42 % (100 % with no hills)");
         }
       }
-      await expect(page.getByTestId("lane-los-state")).toHaveText("In view · geometric only, not a radio link");
+      await expect(page.getByTestId("lane-los-state")).toHaveText("In view");
     } finally {
       await request.delete(`${API}/api/v1/sites/${id}`);
     }

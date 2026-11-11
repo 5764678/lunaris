@@ -113,7 +113,7 @@ export function TimelineTrack({
   }
 
   return (
-    <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-x-3">
+    <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-x-3">
       {/* Axis */}
       <div className="label-caps flex h-6 items-end pb-1">Window · 30 d UTC</div>
       <div
@@ -252,7 +252,6 @@ export function TimelineTrack({
               {lane.id === "los" && (
                 <span className="font-mono text-3xs text-foreground" data-testid="lane-los-state">
                   {value?.state ? LINE_OF_SIGHT_LABEL[value.state] : "—"}
-                  <span className="text-dim"> · geometric only, not a radio link</span>
                 </span>
               )}
               <span

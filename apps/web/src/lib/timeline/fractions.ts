@@ -93,7 +93,21 @@ export function formatFractionReadout(
   series: Pick<FractionSeries, "anyUpperBound">,
   value: { astronomical: number; terrain: number | null } | null,
 ): string {
-  if (value === null) return "—";
-  if (value.terrain === null) return `${pct(value.astronomical)} with no hills · terrain map not available`;
-  return `${series.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} (${pct(value.astronomical)} with no hills)`;
+  const parts = fractionReadoutParts(series, value);
+  return parts.note ? `${parts.main} ${parts.note}` : parts.main;
+}
+
+/** The same text in two pieces, so the number can be set large and the qualifier small. */
+export function fractionReadoutParts(
+  series: Pick<FractionSeries, "anyUpperBound">,
+  value: { astronomical: number; terrain: number | null } | null,
+): { main: string; note: string } {
+  if (value === null) return { main: "—", note: "" };
+  if (value.terrain === null) {
+    return { main: pct(value.astronomical), note: "with no hills · terrain map not available" };
+  }
+  return {
+    main: `${series.anyUpperBound ? "≤ " : ""}${pct(value.terrain)}`,
+    note: `(${pct(value.astronomical)} with no hills)`,
+  };
 }
