@@ -200,10 +200,11 @@ Status values: `Proposed`, `Accepted`, `Superseded by D<n>`.
 - **Rejected:** a default "suitability score". It is easy to read, and nobody can defend
   its weights.
 
-## D10–D13 — Classroom mode (Chulalongkorn Innovative Award entry)
+## D10–D14 — Classroom mode (Chulalongkorn Innovative Award entry)
 
 - **Status:** accepted (2026-11-11).
 - **Decision:** recorded in full in `docs/classroom/PLAN.md` section 2. In short: lessons
   read a committed, static lesson pack and never the live API (D10); Thai text for the
-  lesson route only (D11); Moon phases are geocentric and labelled as such (D12); the
-  entry claims only what the software does (D13).
+  whole interface with an English switch, evidence detail text excepted (D11); Moon phases
+  are geocentric and labelled as such (D12); the entry claims only what the software does
+  (D13); a light, roomier theme with the 3D views kept dark (D14).
