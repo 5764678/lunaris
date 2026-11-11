@@ -418,6 +418,20 @@ function syntheticTimeline(req: TimelineRequest, terrain: number | null) {
     resolution_s: req.step_s,
     sunlit_windows: [],
   });
+  // Earth summary in its own contract shape (C4): `windows`, not `sunlit_windows`.
+  const earthSummary = (mean: number) => ({
+    horizon: "x",
+    mean_visible_disk_fraction: mean,
+    visible_fraction: mean,
+    fully_visible_fraction: mean,
+    longest_outage_s: 0,
+    longest_outage_censored: false,
+    longest_visibility_s: 0,
+    longest_visibility_censored: true,
+    any_truncated: false,
+    resolution_s: req.step_s,
+    windows: [],
+  });
   return {
     site_id: req.site_id,
     site_name: "synthetic",
@@ -464,7 +478,7 @@ function syntheticTimeline(req: TimelineRequest, terrain: number | null) {
         assumptions: [],
       },
       limitations: ["Geometric visibility does not imply a radio link."],
-      astronomical: summary(1, false),
+      astronomical: earthSummary(1),
       terrain: null,
       samples: Array.from({ length: n }, (_, i) => ({
         epoch_utc: new Date(start + i * step).toISOString(),
