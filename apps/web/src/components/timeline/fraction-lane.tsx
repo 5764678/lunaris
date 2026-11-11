@@ -99,15 +99,15 @@ export function FractionLane({
       <div ref={ref} className="absolute inset-0" aria-hidden="true" />
       {state === "ready" && (
         <>
-          <span className="pointer-events-none absolute top-0.5 right-1 font-mono text-[9px] leading-none text-dim">
+          <span className="pointer-events-none absolute top-0.5 right-1 font-mono text-3xs leading-none text-dim">
             100 %
           </span>
-          <span className="pointer-events-none absolute right-1 bottom-0.5 font-mono text-[9px] leading-none text-dim">
+          <span className="pointer-events-none absolute right-1 bottom-0.5 font-mono text-3xs leading-none text-dim">
             0 %
           </span>
           {!series.terrainAvailable && (
             <span
-              className="pointer-events-none absolute bottom-0.5 left-1 rounded-sm bg-panel-sunken/90 px-1 font-mono text-[9px] uppercase tracking-[0.1em] text-dim"
+              className="pointer-events-none absolute bottom-0.5 left-1 rounded-sm bg-panel-sunken/90 px-1 font-mono text-3xs uppercase tracking-[0.1em] text-dim"
               data-testid={`lane-note-${series.lane}`}
             >
               Terrain horizon not available · astronomical only (dotted)

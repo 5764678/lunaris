@@ -86,7 +86,7 @@ export function SkyChart({ profile, tracks }: { profile: HorizonProfile | null; 
             paper_bgcolor: "rgba(0,0,0,0)",
             plot_bgcolor: "rgba(0,0,0,0)",
             showlegend: false,
-            font: { family: "ui-monospace, monospace", size: 10, color: "#8a94a6" },
+            font: { family: "ui-monospace, monospace", size: 12, color: "#8a94a6" },
             xaxis: {
               range: [0, 360],
               tickvals: [0, 45, 90, 135, 180, 225, 270, 315, 360],
