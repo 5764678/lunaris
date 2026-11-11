@@ -285,7 +285,9 @@ test.describe("selected-site card groups", () => {
     await expect(now.getByTestId("selected-site-sun-azel")).toBeVisible();
     await expect(now.getByTestId("selected-site-earth-azel")).toBeVisible();
     await expect(now.getByTestId("selected-site-now-sunlit")).toHaveText(/^≤ \d+ % \(100 % with no hills\)$/);
-    await expect(now.getByTestId("selected-site-now-earth")).toHaveText("In view line of sight only, not a radio link");
+    await expect(now.getByTestId("selected-site-now-earth")).toHaveText(
+      "In view line of sight only, not a radio link",
+    );
 
     // The ground: no time at all, so no averages and no moment values in it.
     await expect(ground).toContainText("Does not change with time.");
@@ -342,8 +344,12 @@ test.describe("selected-site card groups", () => {
 
   test("without a terrain horizon the card says so, exactly as the lane does", async ({ page }) => {
     await openCard(page, { terrain: null });
-    await expect(page.getByTestId("selected-site-now-sunlit")).toHaveText("100 % with no hills · terrain map not available");
-    await expect(page.getByTestId("lane-readout-illumination")).toHaveText("100 % with no hills · terrain map not available");
+    await expect(page.getByTestId("selected-site-now-sunlit")).toHaveText(
+      "100 % with no hills · terrain map not available",
+    );
+    await expect(page.getByTestId("lane-readout-illumination")).toHaveText(
+      "100 % with no hills · terrain map not available",
+    );
   });
 
   test("dates that are not one calendar year are named as dates, never as a year", async ({ page }) => {
@@ -409,7 +415,9 @@ test.describe("phone width", () => {
     const ids = await registerTrio(request);
     try {
       await openCard(page);
-      await expect(page.getByTestId("selected-site-now-sunlit")).toHaveText(/^≤ \d+ % \(100 % with no hills\)$/);
+      await expect(page.getByTestId("selected-site-now-sunlit")).toHaveText(
+        /^≤ \d+ % \(100 % with no hills\)$/,
+      );
       for (const testId of ["selected-site-now-sunlit", "selected-site-now-earth"]) {
         const clipped = await page
           .getByTestId(testId)
