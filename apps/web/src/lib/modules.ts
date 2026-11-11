@@ -1,4 +1,14 @@
-import { Database, Earth, LayoutDashboard, Mountain, Orbit, Scale, Sun, type LucideIcon } from "lucide-react";
+import {
+  Database,
+  Earth,
+  Info,
+  LayoutDashboard,
+  Mountain,
+  Orbit,
+  Scale,
+  Sun,
+  type LucideIcon,
+} from "lucide-react";
 
 /**
  * Navigation: every item is a real page. Pages whose content another session is still
@@ -7,6 +17,8 @@ import { Database, Earth, LayoutDashboard, Mountain, Orbit, Scale, Sun, type Luc
 export interface NavItem {
   id: string;
   title: string;
+  /** Label under the icon where the full title does not fit (narrow screens, small laptops). */
+  shortTitle: string;
   description: string;
   href: string;
   icon: LucideIcon;
@@ -16,6 +28,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: "overview",
     title: "Overview",
+    shortTitle: "Overview",
     description: "Lunar globe and south-pole terrain, candidate sites, timeline and system status.",
     href: "/",
     icon: LayoutDashboard,
@@ -23,6 +36,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: "illumination",
     title: "Illumination & Earth",
+    shortTitle: "Sun/Earth",
     description: "Sun and Earth geometry, illumination and direct-to-Earth line of sight per site.",
     href: "/illumination",
     icon: Sun,
@@ -30,13 +44,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: "terrain",
     title: "Terrain",
-    description: "LOLA elevation, slope, roughness and horizon per site.",
+    shortTitle: "Terrain",
+    description: "LOLA elevation, slope, bumpiness and horizon per site.",
     href: "/terrain",
     icon: Mountain,
   },
   {
     id: "compare",
     title: "Compare",
+    shortTitle: "Compare",
     description: "Side-by-side site comparison; every value opens its evidence.",
     href: "/compare",
     icon: Scale,
@@ -44,9 +60,18 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: "data",
     title: "Data Sources",
+    shortTitle: "Data",
     description: "Dataset registry, provenance and acquisition status.",
     href: "/data",
     icon: Database,
+  },
+  {
+    id: "about",
+    title: "About",
+    shortTitle: "About",
+    description: "What LUNARIS is, who it is for, how it was built, and a glossary.",
+    href: "/about",
+    icon: Info,
   },
 ];
 
@@ -74,7 +99,7 @@ export const ANALYSIS_MODULES: readonly AnalysisModule[] = [
     milestone: "M02",
     icon: Mountain,
     status: "available",
-    availableIn: "South-pole terrain scene (Overview); height, slope, roughness and horizon in Compare.",
+    availableIn: "South-pole terrain scene (Overview); height, slope, bumpiness and horizon in Compare.",
     inputs: ["terrain"],
   },
   {

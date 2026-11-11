@@ -81,8 +81,10 @@ class SiteCatalog(_Frozen):
     def citation(self) -> str:
         """Short citation for a registered catalogue site (PGDA product 78 DEMs)."""
         return (
-            "PGDA product 78 (pgda.gsfc.nasa.gov/products/78); Barker et al. (2021), "
-            "Planet. Space Sci. 203, 105119, doi:10.1016/j.pss.2020.105119"
+            "NASA PGDA product 78, https://pgda.gsfc.nasa.gov/products/78. "
+            "Barker, M. K., et al. (2021). Improved LOLA elevation maps for south pole landing "
+            "sites: Error estimates and their impact on illumination conditions. Planetary and "
+            "Space Science, 203, 105119. doi:10.1016/j.pss.2020.105119"
         )
 
 

@@ -22,9 +22,9 @@ export const TERRAIN_SCENE_ID = "south-pole";
 const TerrainCanvas = dynamic(() => import("./terrain-canvas"), { ssr: false });
 
 const SITE_CLASS =
-  "rounded-[3px] border border-white/15 bg-black/60 px-1.5 py-px font-mono text-[10px] text-[#e6eaef] backdrop-blur-sm";
+  "rounded-[3px] border border-white/15 bg-black/60 px-1.5 py-px font-mono text-[12px] text-[#e6eaef] backdrop-blur-sm";
 const SITE_SELECTED_CLASS =
-  "rounded-[3px] border border-primary/60 bg-[#071425]/90 px-1.5 py-px font-mono text-[10px] text-primary";
+  "rounded-[3px] border border-primary/60 bg-[#071425]/90 px-1.5 py-px font-mono text-[12px] text-primary";
 
 /**
  * Vertex grid requested from C3: 1024² (≈245 m spacing, close to the DEM's 240 m) on

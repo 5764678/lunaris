@@ -9,6 +9,11 @@ Implementation sessions update only the **Status** column of their own tasks. Ch
 a contract (section 2) go through the TD: propose them in the PR description and do not
 merge a contract change on your own.
 
+**Current work (from 11 November 2026):** the classroom build for the Chulalongkorn
+Innovative Award entry. Its tasks, contracts and session ownership are in
+`docs/classroom/PLAN.md`. The sections below describe the finished M02–M04 phase; the
+working rules in section 1 still apply.
+
 ---
 
 ## 1. Working rules for every session

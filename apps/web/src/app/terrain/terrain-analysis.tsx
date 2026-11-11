@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSitesQuery } from "@/lib/api/queries";
+import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
 import { useMissionStore } from "@/store/mission-store";
 
 import {
@@ -37,7 +38,7 @@ function HazardPanel({ result }: { result: SiteTerrain }) {
   if (!hazard) {
     return (
       <p className="text-xs text-muted-foreground" data-testid="hazard-none">
-        No hazard evaluation: enter a maximum slope or roughness above. LUNARIS ships no default “safe” slope.
+        No hazard evaluation: enter a maximum slope or bumpiness above. LUNARIS ships no default “safe” slope.
       </p>
     );
   }
@@ -55,7 +56,7 @@ function HazardPanel({ result }: { result: SiteTerrain }) {
         {hazard.max_slope_deg !== null && (
           <>
             <li data-testid="hazard-slope">
-              p95 slope vs max {hazard.max_slope_deg}°:{" "}
+              steep spots (slope, worst 5 %) vs max {hazard.max_slope_deg}°:{" "}
               <span className="text-foreground">{flag(hazard.slope_p95_exceeds)}</span>
             </li>
             <li data-testid="hazard-slope-fraction">
@@ -70,7 +71,7 @@ function HazardPanel({ result }: { result: SiteTerrain }) {
         )}
         {hazard.max_roughness_m !== null && (
           <li data-testid="hazard-roughness">
-            roughness vs max {hazard.max_roughness_m} m:{" "}
+            bumpiness vs max {hazard.max_roughness_m} m:{" "}
             <span className="text-foreground">{flag(hazard.roughness_exceeds)}</span>
           </li>
         )}
@@ -90,30 +91,36 @@ function Results({ result }: { result: SiteTerrain }) {
   return (
     <section className="space-y-3" data-testid="terrain-results" aria-label="Terrain analysis results">
       <p className="text-xs text-muted-foreground">
-        {result.latitude_deg.toFixed(4)}°, {result.longitude_deg.toFixed(4)}° E · footprint radius{" "}
+        {formatLatitude(result.latitude_deg)} {formatLongitude(result.longitude_deg)} · footprint radius{" "}
         {fp.radius_m} m ({fp.cell_count} cells) · {result.dem.title} · scale factor k ={" "}
         {result.scale_factor.toFixed(5)}
       </p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Metric label="Height" testId="metric-height">
-          <CellEvidence cell={c.height} label="Height" testId="value-height" />
+          <CellEvidence
+            cell={c.height}
+            label="Height"
+            testId="value-height"
+            mapNote="20 m map"
+            meaning="Ground height at the site above the Moon's reference sphere (radius 1,737.4 km), read from the 20 m map. The Compare page reads the coarser 240 m map, so its value can differ by a few metres."
+          />
         </Metric>
         <Metric label="Slope at site" testId="metric-slope-site">
           <CellEvidence cell={c.slopeAtSite} label="Slope at site" testId="value-slope-site" />
         </Metric>
-        <Metric label="Slope p95 (footprint)" testId="metric-slope-p95">
-          <CellEvidence cell={c.slopeP95} label="Slope p95" testId="value-slope-p95" />
+        <Metric label="Steep spots (slope, worst 5 %)" testId="metric-slope-p95">
+          <CellEvidence cell={c.slopeP95} label="Steep spots (slope, worst 5 %)" testId="value-slope-p95" />
         </Metric>
-        <Metric label="Roughness" testId="metric-roughness">
-          <CellEvidence cell={c.roughness} label="Roughness" testId="value-roughness" />
+        <Metric label="Bumpiness" testId="metric-roughness">
+          <CellEvidence cell={c.roughness} label="Bumpiness" testId="value-roughness" />
         </Metric>
-        <Metric label="Slope mean" testId="metric-slope-mean">
-          <CellEvidence cell={c.slopeMean} label="Slope mean" testId="value-slope-mean" />
+        <Metric label="Average slope" testId="metric-slope-mean">
+          <CellEvidence cell={c.slopeMean} label="Average slope" testId="value-slope-mean" />
         </Metric>
-        <Metric label="Slope max" testId="metric-slope-max">
-          <CellEvidence cell={c.slopeMax} label="Slope max" testId="value-slope-max" />
+        <Metric label="Steepest slope" testId="metric-slope-max">
+          <CellEvidence cell={c.slopeMax} label="Steepest slope" testId="value-slope-max" />
         </Metric>
-        <Metric label="Missing cells" testId="metric-missing">
+        <Metric label="Map gaps (cells)" testId="metric-missing">
           <CellEvidence cell={c.missingCells} label="Missing DEM cells" testId="value-missing" />
         </Metric>
       </div>
@@ -221,7 +228,7 @@ export function TerrainAnalysis() {
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor={`${formId}-rough`}>Max roughness (m) · assumption</Label>
+          <Label htmlFor={`${formId}-rough`}>Max bumpiness (m) · assumption</Label>
           <Input
             id={`${formId}-rough`}
             data-testid="terrain-max-roughness"

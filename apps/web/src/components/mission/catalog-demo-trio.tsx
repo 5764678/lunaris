@@ -56,17 +56,21 @@ export function CatalogDemoTrio() {
           <Plus /> {missing === 0 ? "All added" : `Add ${missing} cited site${missing === 1 ? "" : "s"}`}
         </Button>
       </div>
-      <ul className="space-y-0.5">
+      <p className="mb-1.5 text-3xs leading-relaxed text-dim">
+        Three of the candidate landing regions NASA named for Artemis III in 2022, near the Moon&apos;s south
+        pole, with published 5 m elevation maps.
+      </p>
+      <ul className="space-y-1">
         {trio.map((s) => (
           <li key={s.id} className="flex items-baseline justify-between gap-2 text-3xs">
-            <span className="truncate text-muted-foreground">
+            <span className="min-w-0 text-muted-foreground">
               {s.name}
               <span className="text-dim"> · {s.pgda_site_id}</span>
               {s.artemis_iii_2022_region && <span className="text-dim"> · Artemis III region (2022)</span>}
             </span>
             <span className="numeric shrink-0 font-mono text-dim">
-              {formatLatitude(s.reference_point.latitude_deg, 2)}{" "}
-              {formatLongitude(s.reference_point.longitude_deg, 2)}
+              {formatLatitude(s.reference_point.latitude_deg)}{" "}
+              {formatLongitude(s.reference_point.longitude_deg)}
             </span>
           </li>
         ))}
@@ -86,7 +90,6 @@ export function CatalogDemoTrio() {
         ) : (
           catalog.data.citation
         )}
-        .
       </p>
       {register.isError && (
         <p role="alert" className="mt-1 text-3xs text-critical">

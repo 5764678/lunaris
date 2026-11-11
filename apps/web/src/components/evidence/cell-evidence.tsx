@@ -1,27 +1,20 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { X } from "lucide-react";
 
 import { EVIDENCE_TAGS, EvidenceBadge } from "@/components/evidence/evidence-badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SourceFiles, SourceList } from "@/components/evidence/references";
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { CompareCell } from "@/lib/api/client";
 import { formatBaseline, formatCellValue } from "@/lib/comparison/format";
+import { isTechnicalNote } from "@/lib/references";
 import { cn } from "@/lib/utils";
 
-function isHttps(url: string | null | undefined): url is string {
-  if (!url) return false;
-  try {
-    return new URL(url).protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 /**
- * One computed value as a button; clicking opens its own evidence: what the number means,
- * kind, statement, method, sources (link, SHA-256 or HTTP validators, citation),
- * assumptions, limitations and the measurement baseline. A null value shows its reason —
- * never 0, never blank.
+ * One computed value as a button; clicking opens its own evidence. The popup reads top to bottom
+ * as: the value and what it means in plain words, what kind of knowledge it is, the limits that
+ * matter, and then, folded away, the method, the sources (each dataset and reference once) and
+ * the technical details. A null value shows its reason, never 0, never blank.
  */
 export function CellEvidence({
   cell,
@@ -30,6 +23,7 @@ export function CellEvidence({
   align = "start",
   className,
   meaning,
+  mapNote,
 }: {
   cell: CompareCell;
   label: string;
@@ -38,11 +32,18 @@ export function CellEvidence({
   className?: string;
   /** Plain-language explanation of what the number means, shown first in the popover. */
   meaning?: string;
+  /** Which elevation map the value was read from, shown under it ("240 m map"). */
+  mapNote?: string;
 }) {
   const value = formatCellValue(cell);
   const baseline = formatBaseline(cell);
   const ev = cell.evidence;
   const tag = ev ? EVIDENCE_TAGS[ev.kind] : EVIDENCE_TAGS.not_computed;
+  const limits = cell.limitations.filter((l) => !isTechnicalNote(l));
+  const technical = cell.limitations.filter(isTechnicalNote);
+  const hasDetails = Boolean(
+    ev && (ev.method || ev.sources.length > 0 || ev.assumptions.length > 0 || technical.length > 0),
+  );
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -67,12 +68,13 @@ export function CellEvidence({
             </span>
           )}
           {baseline && <span className="font-mono text-3xs text-dim">{baseline}</span>}
+          {mapNote && value !== null && <span className="text-3xs text-dim">{mapNote}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
         align={align}
-        className="max-h-[min(30rem,calc(100dvh-6rem))] overflow-y-auto"
+        className="max-h-[min(34rem,var(--radix-popover-content-available-height))] overflow-y-auto"
         data-testid="cell-evidence"
         aria-label={`Evidence for ${label}`}
         tabIndex={-1}
@@ -81,14 +83,23 @@ export function CellEvidence({
           (event.currentTarget as HTMLElement | null)?.focus();
         }}
       >
-        <p className="mb-1 flex items-center gap-2 font-medium text-foreground">
-          <EvidenceBadge kind={ev ? ev.kind : "not_computed"} />
-          {label}
-        </p>
-        <p className="font-mono text-xs text-foreground" data-testid="cell-evidence-value">
+        <div className="mb-1 flex items-start justify-between gap-2">
+          <p className="flex min-w-0 items-center gap-2 text-xs font-medium text-foreground">
+            <EvidenceBadge kind={ev ? ev.kind : "not_computed"} />
+            <span className="min-w-0 [overflow-wrap:anywhere]">{label}</span>
+          </p>
+          <PopoverClose
+            aria-label="Close evidence"
+            data-testid="cell-evidence-close"
+            className="-mt-1 -mr-1 inline-flex size-6 shrink-0 items-center justify-center rounded-md text-dim outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <X className="size-4" aria-hidden="true" />
+          </PopoverClose>
+        </div>
+        <p className="numeric font-mono text-base text-foreground" data-testid="cell-evidence-value">
           {value ?? "Not computed"}
-          {baseline && <span className="text-dim"> · baseline {baseline.slice(2)}</span>}
-          <span className="text-dim"> · unit {cell.unit}</span>
+          {baseline && <span className="text-xs text-dim"> · baseline {baseline.slice(2)}</span>}
+          {mapNote && value !== null && <span className="text-xs text-dim"> · {mapNote}</span>}
         </p>
         {meaning && (
           <p className="mt-1 text-foreground/90" data-testid="cell-evidence-meaning">
@@ -101,69 +112,70 @@ export function CellEvidence({
           </p>
         )}
         {ev && (
-          <dl className="mt-2 space-y-1.5">
-            <div>
-              <dt className="label-caps">{tag.title}</dt>
-              <dd className="text-foreground/90">{ev.statement}</dd>
-            </div>
-            {ev.method && (
-              <div>
-                <dt className="label-caps">Method</dt>
-                <dd className="text-muted-foreground">{ev.method}</dd>
-              </div>
-            )}
-            {ev.sources.length > 0 && (
-              <div>
-                <dt className="label-caps">Sources</dt>
-                <dd>
-                  <ul className="space-y-1">
-                    {ev.sources.map((src) => (
-                      <li
-                        key={src.source_id}
-                        className="text-muted-foreground"
-                        data-testid="cell-evidence-source"
-                      >
-                        {isHttps(src.url) ? (
-                          <a
-                            href={src.url}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="inline-flex items-center gap-1 text-foreground underline decoration-dotted underline-offset-2 hover:text-primary"
-                          >
-                            {src.title}
-                            <ExternalLink className="size-3" aria-hidden="true" />
-                          </a>
-                        ) : (
-                          <span className="text-foreground">{src.title}</span>
-                        )}
-                        <span className="block font-mono text-3xs break-all text-dim">
-                          {src.source_id}
-                          {src.sha256 ? ` · SHA-256 ${src.sha256}` : src.version ? ` · ${src.version}` : ""}
-                        </span>
-                        {src.citation && <span className="block text-3xs">{src.citation}</span>}
-                      </li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            )}
-          </dl>
+          <p className="mt-2 text-muted-foreground">
+            <span className="label-caps mr-1.5">{tag.title}</span>
+            {ev.statement}
+          </p>
         )}
-        {(ev?.assumptions.length ?? 0) + cell.limitations.length > 0 && (
+        {limits.length > 0 && (
           <ul className="mt-2 space-y-1 border-t border-hairline pt-2">
-            {ev?.assumptions.map((a) => (
-              <li key={`a-${a}`} className="flex items-start gap-2">
-                <EvidenceBadge kind="assumption" className="mt-px" />
-                <span className="text-muted-foreground">{a}</span>
-              </li>
-            ))}
-            {cell.limitations.map((l) => (
+            {limits.map((l) => (
               <li key={`l-${l}`} className="flex items-start gap-2 text-muted-foreground">
-                <span className="mt-px shrink-0 font-mono text-3xs uppercase text-warn">Limit</span>
+                <span className="mt-px shrink-0 text-3xs font-medium uppercase text-warn">Limit</span>
                 {l}
               </li>
             ))}
           </ul>
+        )}
+        {ev && hasDetails && (
+          <details className="mt-2 border-t border-hairline pt-2" data-testid="cell-evidence-details">
+            <summary className="cursor-pointer select-none text-muted-foreground hover:text-foreground">
+              Method, sources and technical details
+            </summary>
+            <dl className="mt-2 space-y-2">
+              {ev.method && (
+                <div>
+                  <dt className="label-caps">Method</dt>
+                  <dd className="text-muted-foreground">{ev.method}</dd>
+                </div>
+              )}
+              {ev.sources.length > 0 && (
+                <div>
+                  <dt className="label-caps">Sources</dt>
+                  <dd>
+                    <SourceList sources={ev.sources} />
+                  </dd>
+                </div>
+              )}
+              {ev.assumptions.length > 0 && (
+                <div>
+                  <dt className="label-caps">Assumptions</dt>
+                  <dd>
+                    <ul className="space-y-1">
+                      {ev.assumptions.map((a) => (
+                        <li key={`a-${a}`} className="text-muted-foreground">
+                          {a}
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              )}
+              {(ev.sources.length > 0 || technical.length > 0) && (
+                <div>
+                  <dt className="label-caps">Files and checksums</dt>
+                  <dd className="space-y-1.5">
+                    <SourceFiles sources={ev.sources} />
+                    {technical.map((t) => (
+                      <p key={t} className="font-mono text-3xs break-all text-dim">
+                        {t}
+                      </p>
+                    ))}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </details>
         )}
       </PopoverContent>
     </Popover>

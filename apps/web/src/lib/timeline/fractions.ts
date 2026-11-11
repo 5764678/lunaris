@@ -25,9 +25,9 @@ export interface FractionSeries {
 export type LineOfSight = "clear" | "terrain_obstructed" | "below_geometric_horizon";
 
 export const LINE_OF_SIGHT_LABEL: Record<LineOfSight, string> = {
-  clear: "clear",
-  terrain_obstructed: "terrain-obstructed",
-  below_geometric_horizon: "below horizon",
+  clear: "In view",
+  terrain_obstructed: "Blocked by terrain",
+  below_geometric_horizon: "Below the skyline",
 };
 
 export function fractionSeriesFromTimeline(analysis: TimelineAnalysis): {
@@ -93,7 +93,21 @@ export function formatFractionReadout(
   series: Pick<FractionSeries, "anyUpperBound">,
   value: { astronomical: number; terrain: number | null } | null,
 ): string {
-  if (value === null) return "—";
-  if (value.terrain === null) return `no hills ${pct(value.astronomical)} · terrain n/a`;
-  return `${series.anyUpperBound ? "≤ " : ""}${pct(value.terrain)} · no hills ${pct(value.astronomical)}`;
+  const parts = fractionReadoutParts(series, value);
+  return parts.note ? `${parts.main} ${parts.note}` : parts.main;
+}
+
+/** The same text in two pieces, so the number can be set large and the qualifier small. */
+export function fractionReadoutParts(
+  series: Pick<FractionSeries, "anyUpperBound">,
+  value: { astronomical: number; terrain: number | null } | null,
+): { main: string; note: string } {
+  if (value === null) return { main: "—", note: "" };
+  if (value.terrain === null) {
+    return { main: pct(value.astronomical), note: "with no hills · terrain map not available" };
+  }
+  return {
+    main: `${series.anyUpperBound ? "≤ " : ""}${pct(value.terrain)}`,
+    note: `(${pct(value.astronomical)} with no hills)`,
+  };
 }

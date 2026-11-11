@@ -113,8 +113,17 @@ jobs:
       - run: uv sync --frozen
       - run: npm ci
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
         working-directory: apps/web
+        # The browser download and the system packages are separate on purpose. The
+        # packages come from Ubuntu's servers, which runners could not resolve on
+        # 2026-11-11 (three runs failed here before any test started). The runner image
+        # already carries the libraries headless Chromium needs, so the package step is
+        # time-boxed and allowed to fail; if the browser then cannot start, the test
+        # step fails and says so.
+        run: |
+          npx playwright install chromium
+          timeout --kill-after=10 180 npx playwright install-deps chromium \
+            || echo "::warning::System packages for Chromium were not installed (package servers unreachable); using the runner image's libraries."
       - name: Run end-to-end tests
         run: npm run test:e2e
         env:

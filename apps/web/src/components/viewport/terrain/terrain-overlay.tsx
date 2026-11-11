@@ -10,7 +10,7 @@ import { heightColor } from "@/lib/terrain/scene-data";
 
 import { describeError } from "@/lib/api/client";
 import { useSiteTimeline } from "@/lib/api/queries";
-import { formatUtc } from "@/lib/time/time";
+import { formatUtcReadable } from "@/lib/time/time";
 import { siteIlluminationAt } from "@/lib/timeline/illumination";
 import { useMissionStore } from "@/store/mission-store";
 
@@ -194,7 +194,7 @@ function LightingDisclosure({ sun }: { sun: TerrainSun }) {
           <span className="numeric text-foreground" data-testid="terrain-sun-elevation">
             {signed(sun.elevationDeg)}
           </span>{" "}
-          (astronomical) · {formatUtc(sun.epochMs)} UTC · {sun.siteName}
+          (astronomical) · {formatUtcReadable(sun.epochMs)} UTC · {sun.siteName}
         </span>
       </div>
       <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ function SiteIllumination({ siteName }: { siteName: string }) {
             {pct(value.terrain)} (terrain horizon)
           </span>
         )}{" "}
-        · {pct(value.astronomical)} (astronomical) at {formatUtc(value.sampleMs, false)} UTC
+        · {pct(value.astronomical)} (astronomical) at {formatUtcReadable(value.sampleMs)} UTC
         <br />
         Window ({s.horizon} horizon): mean disk {pct(s.meanVisibleDiskFraction)} · any part lit{" "}
         {pct(s.illuminatedFraction)}

@@ -6,7 +6,7 @@ import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
-import { formatUtc } from "@/lib/time/time";
+import { formatUtcReadable } from "@/lib/time/time";
 import { useMissionStore, type LayerVisibility, type ViewPreset } from "@/store/mission-store";
 
 import { VIEW_PRESETS } from "./camera-rig";
@@ -56,7 +56,7 @@ export function ViewportOverlay({
             Lunar globe
           </p>
           <p className="hidden font-mono text-3xs text-dim sm:block">
-            Body-fixed MOON_ME · reference sphere R = 1737.4 km
+            The Moon as it is now, lit by the real Sun · radius 1,737.4 km
           </p>
         </div>
         <ToggleGroup
@@ -97,13 +97,13 @@ export function ViewportOverlay({
 
       {/* Telemetry */}
       <dl className="absolute right-6 bottom-5 hidden grid-cols-[auto_auto] gap-x-3 gap-y-0.5 rounded-md border border-hairline bg-[#05070a]/80 px-3 py-2 font-mono text-3xs backdrop-blur-sm sm:grid">
-        <dt className="text-dim">VIEW CENTER</dt>
+        <dt className="text-dim">Looking at</dt>
         <dd className="numeric text-right text-foreground" data-testid="view-center">
           {telemetry.subLatitudeDeg === null || telemetry.subLongitudeDeg === null
             ? "—"
             : `${formatLatitude(telemetry.subLatitudeDeg, 2)} ${formatLongitude(telemetry.subLongitudeDeg, 2)}`}
         </dd>
-        <dt className="text-dim">RANGE (ALT)</dt>
+        <dt className="text-dim">Camera height</dt>
         <dd className="numeric text-right text-foreground">
           {telemetry.altitudeKm === null
             ? "—"
@@ -179,7 +179,7 @@ function GlobeLightingDisclosure({ sun }: { sun: GlobeSun }) {
       <div className="flex min-w-0 items-center gap-2">
         <EvidenceBadge
           kind={sun.evidence.kind}
-          label="SPICE Sun (CN+S)"
+          label="Sun position · NASA SPICE"
           detail={`${sun.evidence.statement} Light direction: Moon-centred apparent Sun direction in MOON_ME at the timeline epoch, interpolated between hourly samples.`}
         />
         <span className="truncate font-mono text-3xs text-muted-foreground">
@@ -187,7 +187,7 @@ function GlobeLightingDisclosure({ sun }: { sun: GlobeSun }) {
           <span className="numeric text-foreground" data-testid="subsolar-point">
             {formatLatitude(sun.subsolarLatDeg, 2)} {formatLongitude(sun.subsolarLonDeg, 2)}
           </span>{" "}
-          · {formatUtc(sun.epochMs, false)} UTC
+          · {formatUtcReadable(sun.epochMs)} UTC
         </span>
       </div>
       <span className="font-mono text-3xs text-dim">
