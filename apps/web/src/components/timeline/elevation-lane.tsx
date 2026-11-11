@@ -7,7 +7,7 @@ import { elevationRange } from "@/lib/timeline/series";
 
 import { loadPlotly } from "./plotly-loader";
 
-export const ELEVATION_LANE_HEIGHT_PX = 56;
+export const ELEVATION_LANE_HEIGHT_PX = 64;
 
 const COLORS = { sun: "#f0b54a", earth: "#7cb5ff" } as const;
 

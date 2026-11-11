@@ -13,10 +13,10 @@ export function Sidebar() {
   return (
     <nav
       aria-label="Modules"
-      className="flex w-14 shrink-0 flex-col border-r border-border bg-surface xl:w-56"
+      className="flex w-[4.25rem] shrink-0 flex-col border-r border-border bg-surface xl:w-56"
     >
       <div className="label-caps hidden px-4 pt-4 pb-2 xl:block">LUNARIS</div>
-      <ul className="flex flex-col gap-0.5 p-2 pt-3 xl:pt-0">
+      <ul className="flex flex-col gap-0.5 p-1 pt-3 xl:p-2 xl:pt-0">
         {NAV_ITEMS.map((item) => (
           <li key={item.id}>
             <NavLink item={item} active={item.href === pathname} />
@@ -44,13 +44,14 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           aria-current={active ? "page" : undefined}
           data-testid={`nav-${item.id}`}
           className={cn(
-            "relative flex h-9 items-center justify-center gap-2.5 rounded-md px-2.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 xl:justify-start",
+            "relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1.5 text-3xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 xl:h-9 xl:min-h-0 xl:flex-row xl:justify-start xl:gap-2.5 xl:px-2.5 xl:py-0 xl:text-xs",
             active
               ? "bg-accent text-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary"
               : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
           )}
         >
           <Icon className="size-4 shrink-0" aria-hidden="true" />
+          <span className="max-w-full truncate text-center leading-tight xl:hidden">{item.shortTitle}</span>
           <span className="hidden min-w-0 flex-1 truncate xl:inline">{item.title}</span>
         </Link>
       </TooltipTrigger>

@@ -5,7 +5,8 @@ import { useMemo } from "react";
 import { CellEvidence } from "@/components/evidence/cell-evidence";
 import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
 import { describeError, type TimelineAnalysis } from "@/lib/api/client";
-import { formatUtc } from "@/lib/time/time";
+import { TableTime, Timestamp, ZoneToggle } from "@/components/time/timestamp";
+import { formatUtcReadable } from "@/lib/time/time";
 
 import {
   bodyTracks,
@@ -81,7 +82,7 @@ function Legend({ hasLowerBounds }: { hasLowerBounds: boolean }) {
       {item(SKY_COLORS.terrain, "Terrain skyline (LOLA 240 m)", "bar")}
       {hasLowerBounds &&
         item(SKY_COLORS.lowerBound, "Ray left DEM coverage: skyline is a lower bound", "tri")}
-      {item(SKY_COLORS.terrain, "Astronomical horizon (0°)", "dash")}
+      {item(SKY_COLORS.terrain, "No hills: level horizon (0°)", "dash")}
       {item(SKY_COLORS.sun, "Sun centre, bar = ± disk radius", "dot")}
       {item(SKY_COLORS.earth, "Earth centre, bar = ± disk radius", "dot")}
     </ul>
@@ -102,7 +103,7 @@ function SummaryTable({ title, rows, testId }: { title: string; rows: SummaryRow
               Terrain horizon
             </th>
             <th scope="col" className="label-caps py-1 font-normal">
-              No hills (0°)
+              No hills
             </th>
           </tr>
         </thead>
@@ -123,7 +124,7 @@ function SummaryTable({ title, rows, testId }: { title: string; rows: SummaryRow
               <td className="py-1">
                 <Value
                   c={r.astronomical}
-                  label={`${r.label} · astronomical horizon`}
+                  label={`${r.label} · no hills`}
                   testId={`${testId}-${r.key}-astronomical`}
                   meaning={r.meaning}
                 />
@@ -136,12 +137,23 @@ function SummaryTable({ title, rows, testId }: { title: string; rows: SummaryRow
   );
 }
 
-function WindowTable({ title, list, testId }: { title: string; list: WindowList; testId: string }) {
+function WindowTable({
+  title,
+  list,
+  testId,
+  wholePeriodText,
+}: {
+  title: string;
+  list: WindowList;
+  testId: string;
+  /** What a run that fills the whole period reads as, e.g. "Sunlit for the whole period". */
+  wholePeriodText: string;
+}) {
   const shown = list.windows.slice(0, MAX_WINDOWS_SHOWN);
   return (
     <div className="space-y-1">
       <p className="label-caps">
-        {title} · {list.windows.length} · {list.horizon === "terrain" ? "terrain horizon" : "no hills (0°)"}
+        {title} · {list.windows.length} · {list.horizon === "terrain" ? "terrain horizon" : "no hills"}
       </p>
       {list.windows.length === 0 ? (
         <p className="text-3xs text-dim" data-testid={`${testId}-empty`}>
@@ -154,10 +166,10 @@ function WindowTable({ title, list, testId }: { title: string; list: WindowList;
             <thead>
               <tr className="text-left">
                 <th scope="col" className="label-caps py-1 pr-2 font-normal">
-                  Start (UTC)
+                  Start
                 </th>
                 <th scope="col" className="label-caps py-1 pr-2 font-normal">
-                  End (UTC)
+                  End
                 </th>
                 <th scope="col" className="label-caps py-1 font-normal">
                   Duration
@@ -174,16 +186,26 @@ function WindowTable({ title, list, testId }: { title: string; list: WindowList;
                     data-testid={`${testId}-row`}
                     data-censored={c.lowerBound ? "true" : "false"}
                   >
-                    <td className="numeric py-1 pr-2 font-mono text-3xs text-muted-foreground">
-                      {formatUtc(Date.parse(w.start_utc), false)}
-                      {w.censored_start && (
-                        <span className="block text-warn">window start: began earlier</span>
-                      )}
-                    </td>
-                    <td className="numeric py-1 pr-2 font-mono text-3xs text-muted-foreground">
-                      {formatUtc(Date.parse(w.end_utc), false)}
-                      {w.censored_end && <span className="block text-warn">window end: continues</span>}
-                    </td>
+                    {w.censored_start && w.censored_end ? (
+                      <td colSpan={2} className="py-1 pr-2 text-2xs text-muted-foreground">
+                        {wholePeriodText}
+                      </td>
+                    ) : (
+                      <>
+                        <td className="numeric py-1 pr-2 font-mono text-3xs text-muted-foreground">
+                          <TableTime ms={Date.parse(w.start_utc)} />
+                          {w.censored_start && (
+                            <span className="block text-warn">began before this period</span>
+                          )}
+                        </td>
+                        <td className="numeric py-1 pr-2 font-mono text-3xs text-muted-foreground">
+                          <TableTime ms={Date.parse(w.end_utc)} />
+                          {w.censored_end && (
+                            <span className="block text-warn">continues after this period</span>
+                          )}
+                        </td>
+                      </>
+                    )}
                     <td className="py-1">
                       <Value
                         c={c}
@@ -252,7 +274,7 @@ function SkySection({
               </dd>
             </div>
             <div className="flex items-baseline justify-between gap-2">
-              <dt className="text-muted-foreground">Azimuths that are lower bounds</dt>
+              <dt className="text-muted-foreground">Directions where the map ran out</dt>
               <dd>
                 <Value
                   c={horizonTruncatedCell(horizon.data)}
@@ -320,10 +342,19 @@ export function SiteIllumination({
 
       {data && (
         <>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-2xs text-muted-foreground">Times in the tables below are shown in:</p>
+            <ZoneToggle />
+          </div>
           <section aria-label="Sunlight" className="space-y-3 rounded-md border border-border bg-panel p-3">
             <h2 className="text-sm font-medium text-foreground">Sunlight</h2>
             <SummaryTable title="Sunlight summary" rows={sunRows(data)} testId="sun-summary" />
-            <WindowTable title="Sunlit windows" list={sunlitWindows(data)} testId="sun-windows" />
+            <WindowTable
+              title="Sunlit windows"
+              list={sunlitWindows(data)}
+              testId="sun-windows"
+              wholePeriodText="Sunlit for the whole period"
+            />
           </section>
 
           <section
@@ -338,13 +369,18 @@ export function SiteIllumination({
               {radioLinkDisclaimer(data)}
             </p>
             <SummaryTable title="Earth visibility summary" rows={earthRows(data)} testId="earth-summary" />
-            <WindowTable title="Earth visibility windows" list={earthWindows(data)} testId="earth-windows" />
+            <WindowTable
+              title="Earth visibility windows"
+              list={earthWindows(data)}
+              testId="earth-windows"
+              wholePeriodText="Earth in view for the whole period"
+            />
           </section>
 
           <p className="text-3xs text-dim" data-testid="illumination-period">
-            {data.site_name} · {formatUtc(Date.parse(data.start_utc), false)} →{" "}
-            {formatUtc(Date.parse(data.end_utc), false)} UTC · {data.sample_count} samples every{" "}
-            {data.step_s / 3600} h · computed {formatUtc(Date.parse(data.computed_at_utc), false)} UTC
+            {data.site_name} · {formatUtcReadable(Date.parse(data.start_utc))} to{" "}
+            {formatUtcReadable(Date.parse(data.end_utc))} UTC · {data.sample_count} samples every{" "}
+            {data.step_s / 3600} h · computed <Timestamp ms={Date.parse(data.computed_at_utc)} />
           </p>
         </>
       )}

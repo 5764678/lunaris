@@ -18,13 +18,21 @@ export interface MetricCopy {
   tip: string;
 }
 
+/** Printed under every height on the comparison and site panel, which read the coarser 240 m map. */
+export const COMPARE_HEIGHT_MAP_NOTE = "240 m map";
+
+/** The map note for a metric key: only the height depends on which elevation map was read. */
+export function mapNoteFor(key: string): string | undefined {
+  return key === "surface_height_m" ? COMPARE_HEIGHT_MAP_NOTE : undefined;
+}
+
 const CENSORED =
   "If it touches the start or end of the dates, the real stretch may be longer, so treat it as a minimum.";
 
 const METRIC_COPY: Record<string, MetricCopy> = {
   surface_height_m: {
     label: "Height",
-    tip: "Ground height at the site above the Moon's reference sphere (radius 1,737.4 km).",
+    tip: "Ground height at the site above the Moon's reference sphere (radius 1,737.4 km). Here it is read from the 240 m map; the Terrain page uses the finer 20 m map, so the two can differ by a few metres.",
   },
   slope_at_site_deg: {
     label: "Slope at site",

@@ -78,9 +78,9 @@ def test_known_dominance_and_verdict() -> None:
     assert a.dominated_by == []
     assert b.dominated_by == ["a"]
     assert len(b.trails) == 8
-    assert a.dominance == "Best or tied on 8 of 8 directed metrics; worst on none."
-    assert "dominated by A" in b.dominance
-    assert summary.verdict.startswith("A is best or tied on every directed metric compared (8)")
+    assert a.dominance == "Best or tied on 8 of 8 measures; worst on none."
+    assert "no better than A on any shared measure" in b.dominance
+    assert summary.verdict.startswith("A is best or tied on every measure compared (8)")
     assert summary.score is None  # no profile → no score
 
 
@@ -90,8 +90,8 @@ def test_trade_off_and_no_clear_winner() -> None:
     assert one.sites[0].trails == ["roughness_rms_m"]
     assert one.sites[0].dominated_by == []
     assert one.sites[1].dominated_by == []
-    assert one.verdict.startswith("No single site is best on every directed metric")
-    assert "worst on roughness" in one.verdict
+    assert one.verdict.startswith("No single site is best on every measure")
+    assert "worst on bumpiness" in one.verdict
     # A clear dominator with a tie still dominates.
     tie = summarize(
         [row("a", **{**GOOD, "roughness_rms_m": 0.6}), row("b", **BAD)], DIRECTED_COLUMNS
@@ -116,7 +116,7 @@ def test_null_cells_never_win() -> None:
     assert c.dominated_by == []  # no shared values with anyone
     assert summary.sites[1].directed_compared == 7
     empty = summarize([row("x"), row("y")], DIRECTED_COLUMNS)
-    assert empty.verdict.startswith("No directed metric has values for two or more sites")
+    assert empty.verdict.startswith("No measure has values for two or more sites")
 
 
 def test_non_transitive_dominance_with_null_cells() -> None:
@@ -132,10 +132,10 @@ def test_non_transitive_dominance_with_null_cells() -> None:
     assert "a" not in st["x"].dominated_by
     assert st["a"].dominated_by == []
     # Only A is undominated, but A does not dominate X: no "A dominates" claim.
-    assert "dominates" not in summary.verdict
-    assert summary.verdict.startswith("No single site is best on every directed metric.")
-    assert "X is dominated by Y." in summary.verdict
-    assert "Y is dominated by A." in summary.verdict
+    assert "is ahead of" not in summary.verdict
+    assert summary.verdict.startswith("No single site is best on every measure.")
+    assert "X is no better than Y on any shared measure." in summary.verdict
+    assert "Y is no better than A on any shared measure." in summary.verdict
 
 
 def test_empty_front_is_stated_honestly() -> None:
@@ -146,7 +146,7 @@ def test_empty_front_is_stated_honestly() -> None:
     c = {"slope_p95_deg": 2.0, "roughness_rms_m": 0.1}
     summary = summarize([row("a", **a), row("b", **b), row("c", **c)], DIRECTED_COLUMNS)
     assert all(s.dominated_by for s in summary.sites)
-    assert summary.verdict.startswith("No site is Pareto-optimal")
+    assert summary.verdict.startswith("There is no clear winner")
 
 
 @pytest.mark.parametrize("profile", ["power", "comms", "landing"])
@@ -199,7 +199,7 @@ def test_live_demo_trio_verdict_2027() -> None:
         assert len(peak["leads"]) == 7
         assert peak["dominated_by"] == []
         assert "roughness_rms_m" in by_name["Malapert massif"]["leads"]
-        assert summary["verdict"].startswith("No single site is best on every directed metric.")
+        assert summary["verdict"].startswith("No single site is best on every measure.")
         peak_part = (
             "Peak near Shackleton leads on slope, sunlight and darkness and Earth visibility"
         )

@@ -138,9 +138,12 @@ test("comparison table: demo trio by default, every cell opens its own evidence,
     const panel = page.getByTestId("cell-evidence");
     await expect(panel.getByTestId("cell-evidence-meaning")).toContainText("How steep the ground is");
     await expect(panel).toContainText("SYNTHETIC E2E FIXTURE — slope");
-    await expect(panel).toContainText(`SHA-256 ${SHA}`);
     await expect(panel).toContainText("synthetic limit");
-    await expect(panel.getByRole("link", { name: /Synthetic DEM source/ })).toHaveAttribute(
+    // Method, sources and checksums are folded away until asked for.
+    await panel.getByText("Method, sources and technical details").click();
+    await expect(panel).toContainText(`SHA-256 ${SHA}`);
+    await expect(panel).toContainText("Synthetic citation.");
+    await expect(panel.getByRole("link", { name: /LOLA south-pole elevation map/ })).toHaveAttribute(
       "href",
       "https://pgda.gsfc.nasa.gov/products/90",
     );

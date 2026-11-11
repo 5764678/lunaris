@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-
 import { BrandMark } from "./brand-mark";
 import { ConnectionStatus } from "./connection-status";
 import { DataStatusIndicator } from "./data-status";
@@ -20,22 +18,16 @@ export function TopBar() {
       </Link>
       <span className="hidden h-4 w-px bg-border sm:block" aria-hidden="true" />
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
-        <Badge variant="info">Mission</Badge>
         <span className="truncate text-2xs text-muted-foreground max-xl:hidden">
-          Lunar Mission Intelligence &amp; Surface Operations Platform
+          Compare lunar south-pole landing sites by sunlight, Earth contact and terrain
         </span>
       </div>
 
       <div className="ml-auto flex items-center gap-2">
         <DataStatusIndicator />
         <ConnectionStatus />
-        <Badge variant="muted" className="hidden lg:inline-flex" title="Milestone 01 foundation build">
-          M01
-        </Badge>
         <span className="hidden h-4 w-px bg-border md:block" aria-hidden="true" />
-        <div className="hidden md:block">
-          <UtcClock />
-        </div>
+        <UtcClock />
       </div>
     </header>
   );

@@ -273,17 +273,18 @@ def _evidence(
 ) -> Evidence:
     name = body.value.capitalize()
     assumptions = list(observer.assumptions)
+    # A radius read from a NASA kernel is data, not an assumption, so it goes in the method.
     if body is Body.EARTH:
-        assumptions.append(
+        radius_note = (
             f"Earth angular radius uses the equatorial radius {radii_m[0] / KM:.4f} km from the "
             f"loaded PCK (polar radius {radii_m[2] / KM:.4f} km; the difference is ≤ 0.34% "
             "of the angular radius)."
         )
     else:
-        assumptions.append(f"Solar radius {radii_m[0] / KM:.1f} km from the loaded PCK.")
+        radius_note = f"Solar radius {radii_m[0] / KM:.1f} km from the loaded PCK."
     assumptions.append(
         "Gravitational light deflection is not modelled (JPL Horizons includes it); "
-        "measured agreement with Horizons is within 0.002 arcsec (docs/SCIENCE.md §5.2)."
+        "measured agreement with Horizons is within 0.002 arcsec."
     )
     return Evidence(
         kind=EvidenceKind.MODEL,
@@ -298,7 +299,7 @@ def _evidence(
             f"'{aberration_correction}', site, 'MOON', 'MOON_ME'); local ENU basis from the "
             "reference-sphere radial direction (C0); azimuth = atan2(E, N) mod 360° clockwise "
             "from north; elevation = asin(U/|r|); angular radius = asin(R_body/|r|). "
-            f"MOON_ME resolves to {context.frame_resolution.resolves_to}."
+            f"MOON_ME resolves to {context.frame_resolution.resolves_to}. {radius_note}"
         ),
         assumptions=tuple(assumptions),
     )

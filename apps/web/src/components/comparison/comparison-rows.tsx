@@ -8,7 +8,7 @@ import { CellEvidence } from "@/components/evidence/cell-evidence";
 import { SiteOriginBadge } from "@/components/mission/site-origin";
 import { Button } from "@/components/ui/button";
 import type { CompareCell, CompareRow } from "@/lib/api/client";
-import { metricCopy } from "@/lib/comparison/labels";
+import { mapNoteFor, metricCopy } from "@/lib/comparison/labels";
 import { describeRowError, type CompareColumn } from "@/lib/comparison/progress";
 import type { Leader } from "@/lib/comparison/summary";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ function SiteHeaderCell({
         <span className="max-w-36 truncate">{name}</span>
       </span>
       <span className="numeric block font-mono text-3xs text-dim">
-        {formatLatitude(latitude, 2)} {formatLongitude(longitude, 2)}
+        {formatLatitude(latitude)} {formatLongitude(longitude)}
       </span>
       <span className="mt-0.5 inline-block">{badge}</span>
     </th>
@@ -78,10 +78,11 @@ export function ReadyRow({
                 cell={cell}
                 label={`${row.name} · ${copy.label}`}
                 meaning={copy.tip}
+                mapNote={mapNoteFor(c.key)}
                 testId={`cell-${c.key}`}
               />
             ) : (
-              <span className="font-mono text-3xs text-dim italic">N/C · not in response</span>
+              <span className="text-3xs text-dim italic">N/C · not in response</span>
             )}
             {leads && (
               <span className="block px-1 font-mono text-3xs text-primary" data-testid="leader-mark">

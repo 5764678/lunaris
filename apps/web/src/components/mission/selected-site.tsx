@@ -8,13 +8,17 @@ import { useMemo, type ReactNode } from "react";
 import { CellEvidence } from "@/components/evidence/cell-evidence";
 import { describeError, type CompareCell, type CompareRow } from "@/lib/api/client";
 import { useSiteComparison, useSiteEphemeris, useSiteTimeline, useSitesQuery } from "@/lib/api/queries";
-import { calendarYearOf, formatPeriodUtc, metricCopy } from "@/lib/comparison/labels";
+import { calendarYearOf, formatPeriodUtc, mapNoteFor, metricCopy } from "@/lib/comparison/labels";
 import { azElAt, toDirectionSeries } from "@/lib/terrain/sun";
 import { formatLatitude, formatLongitude } from "@/lib/geo/selenographic";
-import { formatUtc } from "@/lib/time/time";
+import { earthWindows, sunlitWindows } from "@/app/illumination/_lib/model";
+import { Linkified } from "@/components/evidence/references";
+import { Timestamp } from "@/components/time/timestamp";
+import { formatSpan, nextVisibilityEvent, type NextEvent } from "@/lib/timeline/events";
 import {
   LINE_OF_SIGHT_LABEL,
   formatFractionReadout,
+  fractionReadoutParts,
   fractionAt,
   fractionSeriesFromTimeline,
 } from "@/lib/timeline/fractions";
@@ -59,19 +63,9 @@ export function SelectedSite() {
         {site.name}
       </p>
       <dl>
-        <DataRow label="Latitude">{formatLatitude(site.coordinate.latitude_deg, 4)}</DataRow>
-        <DataRow label="Longitude">{formatLongitude(site.coordinate.longitude_deg, 4)}</DataRow>
+        <DataRow label="Latitude">{formatLatitude(site.coordinate.latitude_deg)}</DataRow>
+        <DataRow label="Longitude">{formatLongitude(site.coordinate.longitude_deg)}</DataRow>
         <DataRow label="Frame">{site.coordinate.frame}</DataRow>
-        {site.origin === "published" && (
-          <DataRow label="Source">
-            <span
-              className="min-w-0 text-2xs [overflow-wrap:anywhere] whitespace-normal text-muted-foreground"
-              data-testid="selected-site-source"
-            >
-              {site.reference ?? "Published catalogue"} · {TILE_CENTRE_NOTE}
-            </span>
-          </DataRow>
-        )}
         <DataRow label="Body-fixed (km)">
           <EvidenceBadge
             kind="calculation"
@@ -82,6 +76,17 @@ export function SelectedSite() {
           </span>
         </DataRow>
       </dl>
+      <NextEvents siteId={site.id} />
+      {site.origin === "published" && (
+        <p
+          className="mt-2 text-3xs leading-relaxed text-dim [overflow-wrap:anywhere]"
+          data-testid="selected-site-source"
+        >
+          <span className="text-muted-foreground">Source:</span>{" "}
+          <Linkified text={site.reference ?? "Published catalogue"} />
+          <span className="mt-0.5 block text-warn">{TILE_CENTRE_NOTE}</span>
+        </p>
+      )}
       <SiteGroup id="now" title="At the selected time" detail={<SelectedTime />}>
         <GeometryRows siteId={site.id} />
         <SelectedTimeFractions siteId={site.id} />
@@ -123,12 +128,113 @@ function SiteGroup({
   );
 }
 
+/**
+ * "Sun sets in 3 d 4 h" and "Earth comes into view in 12 h": the next change for each body after
+ * the selected time, read from the visibility windows of the timeline analysis (terrain skyline
+ * where a map is served). Not computed, with the reason, when the analysis is unavailable.
+ */
+function NextEvents({ siteId }: { siteId: string }) {
+  const epochMs = useMissionStore((s) => s.epochMs);
+  const startMs = useMissionStore((s) => s.windowStartMs);
+  const endMs = useMissionStore((s) => s.windowEndMs);
+  const query = useSiteTimeline(siteId, startMs, endMs);
+  const events = useMemo(() => {
+    if (!query.data || epochMs === null) return null;
+    const from = Date.parse(query.data.start_utc);
+    const to = Date.parse(query.data.end_utc);
+    return {
+      sun: nextVisibilityEvent(sunlitWindows(query.data).windows, epochMs, from, to),
+      earth: nextVisibilityEvent(earthWindows(query.data).windows, epochMs, from, to),
+    };
+  }, [query.data, epochMs]);
+  const pending = query.isPending || epochMs === null;
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-2" data-testid="next-events">
+      <EventCard
+        title="Sun"
+        event={events?.sun ?? null}
+        pending={pending}
+        failed={query.isError}
+        words={{
+          up: "Sets in",
+          down: "Rises in",
+          stayUp: "Stays up to the end of the period",
+          stayDown: "Hidden to the end of the period",
+        }}
+        testId="next-sun"
+      />
+      <EventCard
+        title="Earth"
+        event={events?.earth ?? null}
+        pending={pending}
+        failed={query.isError}
+        words={{
+          up: "Out of view in",
+          down: "In view in",
+          stayUp: "Stays in view to the end of the period",
+          stayDown: "Out of view to the end of the period",
+        }}
+        testId="next-earth"
+      />
+    </div>
+  );
+}
+
+function EventCard({
+  title,
+  event,
+  pending,
+  failed,
+  words,
+  testId,
+}: {
+  title: string;
+  event: NextEvent | null;
+  pending: boolean;
+  failed: boolean;
+  words: { up: string; down: string; stayUp: string; stayDown: string };
+  testId: string;
+}) {
+  let headline: string;
+  let detail: ReactNode = null;
+  if (failed) headline = "Not computed";
+  else if (pending) headline = "Computing…";
+  else if (!event) headline = "Outside the computed dates";
+  else if (event.change) {
+    headline = `${event.state === "up" ? words.up : words.down} ${formatSpan(event.change.inMs)}`;
+    detail = <Timestamp ms={event.change.atMs} />;
+  } else {
+    headline = event.state === "up" ? words.stayUp : words.stayDown;
+    detail = (
+      <>
+        until <Timestamp ms={event.periodEndMs} />
+      </>
+    );
+  }
+  return (
+    <div
+      className="min-w-0 rounded-md border border-hairline bg-panel-sunken/50 px-2.5 py-2"
+      data-testid={testId}
+    >
+      <p className="label-caps">{title}</p>
+      <p className="mt-0.5 text-sm font-medium leading-snug text-foreground">{headline}</p>
+      {detail && <p className="mt-0.5 text-3xs leading-snug text-dim">{detail}</p>}
+    </div>
+  );
+}
+
 /** The timeline's selected moment, which the first group's values are computed for. */
 function SelectedTime() {
   const epochMs = useMissionStore((s) => s.epochMs);
   return (
     <span data-testid="selected-site-time">
-      {epochMs === null ? "Loading the timeline…" : `${formatUtc(epochMs)} UTC (set on the timeline)`}
+      {epochMs === null ? (
+        "Loading the timeline…"
+      ) : (
+        <>
+          <Timestamp ms={epochMs} /> (set on the timeline)
+        </>
+      )}
     </span>
   );
 }
@@ -227,7 +333,7 @@ function SelectedTimeFractions({ siteId }: { siteId: string }) {
 
   return (
     <>
-      <DataRow label="Sunlit">
+      <DataRow label="Sunlit" emphasis>
         {series && sun ? (
           <>
             <EvidenceBadge
@@ -238,14 +344,17 @@ function SelectedTimeFractions({ siteId }: { siteId: string }) {
               )}
             />
             <span className="numeric min-w-0" data-testid="selected-site-now-sunlit">
-              {formatFractionReadout(series.illumination, sun)}
+              {fractionReadoutParts(series.illumination, sun).main}{" "}
+              <span className="block text-3xs text-dim">
+                {fractionReadoutParts(series.illumination, sun).note}
+              </span>
             </span>
           </>
         ) : (
           notComputed
         )}
       </DataRow>
-      <DataRow label="Earth visible">
+      <DataRow label="Earth visible" emphasis>
         {series && earth ? (
           <>
             <EvidenceBadge
@@ -257,7 +366,7 @@ function SelectedTimeFractions({ siteId }: { siteId: string }) {
             />
             <span className="numeric min-w-0" data-testid="selected-site-now-earth">
               {earth.state ? LINE_OF_SIGHT_LABEL[earth.state] : "—"}
-              <span className="text-dim"> · geometric only</span>
+              <span className="block text-3xs text-dim"> line of sight only, not a radio link</span>
             </span>
           </>
         ) : (
@@ -293,6 +402,7 @@ function ComparisonGroups({ siteId }: { siteId: string }) {
             cell={cell}
             label={`${label} (${siteLabel(row)})`}
             meaning={metricCopy(key, key).tip}
+            mapNote={mapNoteFor(key)}
             align="end"
             testId={`selected-site-${key}`}
           />

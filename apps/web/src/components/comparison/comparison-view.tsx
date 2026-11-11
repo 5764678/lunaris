@@ -139,13 +139,13 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
   return (
     <section aria-label="Comparison table" aria-busy={pending > 0} className="space-y-2">
       {pending > 0 && (
-        <p role="status" className="font-mono text-3xs text-dim" data-testid="compare-progress">
+        <p role="status" className="text-3xs text-dim" data-testid="compare-progress">
           {progressMessage(progress)}
         </p>
       )}
       {first && (
         <p
-          className="font-mono text-3xs text-dim"
+          className="text-3xs text-dim"
           data-testid="compare-window"
           title={`Exact window: ${first.start_utc} → ${first.end_utc}`}
         >
@@ -173,7 +173,7 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
                   scope="col"
                   title={`${metricTitle(c.key, c.label, c.description)}${c.better_rationale ? ` Ranking: ${c.better_rationale}` : ""}`}
                   data-better={c.better ?? "none"}
-                  className="px-2 py-1.5 align-bottom font-mono text-3xs font-medium text-muted-foreground"
+                  className="px-2 py-1.5 align-bottom text-3xs font-medium text-muted-foreground"
                 >
                   <span className="block max-w-28 whitespace-normal">
                     {metricCopy(c.key, c.label, c.description).label}

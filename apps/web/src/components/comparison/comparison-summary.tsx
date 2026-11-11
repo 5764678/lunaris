@@ -115,11 +115,11 @@ function SummaryBody({ state, columns }: { state: SummaryState; columns: readonl
                 data-dominated={s.dominated_by.length > 0 ? "true" : "false"}
               >
                 <p className="text-2xs font-medium text-foreground">{s.name}</p>
-                <p className="font-mono text-3xs text-muted-foreground" data-testid="compare-standing-leads">
+                <p className="text-3xs text-muted-foreground" data-testid="compare-standing-leads">
                   Leads:{" "}
                   {s.leads.length > 0 ? s.leads.map((k) => leaderLabel(k, columns)).join(", ") : "none"}
                 </p>
-                <p className="font-mono text-3xs text-muted-foreground" data-testid="compare-standing-trails">
+                <p className="text-3xs text-muted-foreground" data-testid="compare-standing-trails">
                   Trails:{" "}
                   {s.trails.length > 0 ? s.trails.map((k) => leaderLabel(k, columns)).join(", ") : "none"}
                 </p>
@@ -199,7 +199,7 @@ function ProfileSection({
           </p>
           <div>
             <p className="label-caps">Weights (assumed)</p>
-            <ul className="flex flex-wrap gap-x-3 font-mono text-3xs text-muted-foreground">
+            <ul className="flex flex-wrap gap-x-3 text-3xs text-muted-foreground">
               {weightLines(score.weights, columns).map((w) => (
                 <li key={w.key} data-testid="compare-weight">
                   {w.label} × {w.weight}

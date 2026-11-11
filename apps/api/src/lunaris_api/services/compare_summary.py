@@ -73,7 +73,7 @@ DIRECTIONS: dict[str, tuple[Better | None, str]] = {
 SHORT: dict[str, str] = {
     "slope_at_site_deg": "slope at the site",
     "slope_p95_deg": "footprint slope",
-    "roughness_rms_m": "roughness",
+    "roughness_rms_m": "bumpiness",
     "sun_mean_visible_disk_fraction": "mean sunlight",
     "sun_illuminated_fraction": "sunlit time",
     "sun_longest_hidden_s": "longest darkness",
@@ -215,14 +215,13 @@ def _verdict(rows: Sequence[CompareRow], standings: dict[str, SiteStanding], ran
     if len(rows) < 2:  # noqa: PLR2004
         return "Only one site: nothing to compare."
     if ranked == 0:
-        return "No directed metric has values for two or more sites, so no site can be ranked."
+        return "No measure has values for two or more sites, so no site can be ranked."
     front = [r.site_id for r in rows if not standings[r.site_id].dominated_by]
     if not front:
         # Possible when cells are null: dominance over shared columns is not transitive.
         return (
-            "No site is Pareto-optimal: every site is dominated by another on the metrics "
-            "they share, and some cells are null, so dominance is not transitive. Compare "
-            "each site's leads and trails instead."
+            "There is no clear winner: every site is behind another on the measures they "
+            "share, and some values are missing. Compare each site's leads and trails instead."
         )
     if len(front) == 1:
         sid = front[0]
@@ -233,12 +232,12 @@ def _verdict(rows: Sequence[CompareRow], standings: dict[str, SiteStanding], ran
         if set(beaten) == set(others):
             if not s.trails and len(s.leads) == s.directed_compared:
                 return (
-                    f"{names[sid]} is best or tied on every directed metric compared "
-                    f"({s.directed_compared}) and dominates {_list([names[o] for o in others])}."
+                    f"{names[sid]} is best or tied on every measure compared "
+                    f"({s.directed_compared}) and is ahead of {_list([names[o] for o in others])}."
                 )
             tradeoff = f"; trade-off: worst on {_phrase(s.trails)}" if s.trails else ""
             return (
-                f"{names[sid]} dominates {_list([names[o] for o in others])}: it leads on "
+                f"{names[sid]} is ahead of {_list([names[o] for o in others])}: it leads on "
                 f"{_phrase(s.leads)}{tradeoff}."
             )
     front.sort(key=lambda sid: -len(standings[sid].leads))
@@ -249,16 +248,16 @@ def _verdict(rows: Sequence[CompareRow], standings: dict[str, SiteStanding], ran
             text = f"{names[sid]} leads on {_phrase(st.leads)}"
             text += f"; trade-off: worst on {_phrase(st.trails)}" if st.trails else ""
         else:
-            text = f"{names[sid]} leads on no metric but is not dominated"
+            text = f"{names[sid]} leads on no measure, but no other site is better on all of them"
             text += f"; worst on {_phrase(st.trails)}" if st.trails else ""
         parts.append(text + ".")
     tail = [
-        f"{names[r.site_id]} is dominated by "
-        f"{_list([names[d] for d in standings[r.site_id].dominated_by])}."
+        f"{names[r.site_id]} is no better than "
+        f"{_list([names[d] for d in standings[r.site_id].dominated_by])} on any shared measure."
         for r in rows
         if standings[r.site_id].dominated_by
     ]
-    return " ".join(["No single site is best on every directed metric.", *parts, *tail])
+    return " ".join(["No single site is best on every measure.", *parts, *tail])
 
 
 def _list(names: Sequence[str]) -> str:
@@ -340,10 +339,11 @@ def summarize(
         compared = sum(1 for lead in ranked if _value(r, lead.key) is not None)
         dominated_by = [o.site_id for o in rows if o is not r and _dominates(o, r, directed)]
         names = {o.site_id: o.name for o in rows}
-        text = f"Best or tied on {len(leads)} of {compared} directed metrics"
+        text = f"Best or tied on {len(leads)} of {compared} measures"
         text += f"; worst on {_phrase(trails)}" if trails else "; worst on none"
         if dominated_by:
-            text += f"; dominated by {_list([names[d] for d in dominated_by])}"
+            behind = _list([names[d] for d in dominated_by])
+            text += f"; no better than {behind} on any shared measure"
         standings[r.site_id] = SiteStanding(
             site_id=r.site_id,
             name=r.name,

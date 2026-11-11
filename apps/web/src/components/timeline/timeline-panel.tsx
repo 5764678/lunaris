@@ -6,7 +6,8 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { DAY_MS, HOUR_MS, PLAYBACK_RATES, formatOffset, formatUtc } from "@/lib/time/time";
+import { Timestamp } from "@/components/time/timestamp";
+import { DAY_MS, HOUR_MS, PLAYBACK_RATES } from "@/lib/time/time";
 import { describeError } from "@/lib/api/client";
 import { useSitesQuery, useSiteEphemeris, useSiteTimeline } from "@/lib/api/queries";
 import { fractionSeriesFromTimeline } from "@/lib/timeline/fractions";
@@ -115,25 +116,21 @@ export function TimelinePanel() {
         </div>
 
         <div className="flex items-baseline gap-2">
-          <span className="label-caps">Epoch</span>
-          <span className="numeric font-mono text-sm text-foreground" data-testid="timeline-epoch">
-            {ready ? formatUtc(epochMs) : "----------  --:--:--"}
+          <span className="label-caps">Selected time</span>
+          <span className="numeric font-mono text-base text-foreground" data-testid="timeline-epoch">
+            {ready ? <Timestamp ms={epochMs} seconds /> : "-- --- ---- --:--:--"}
           </span>
-          <span className="font-mono text-3xs text-dim">UTC</span>
-          {ready && (
-            <span className="numeric font-mono text-2xs text-muted-foreground">
-              T{formatOffset(epochMs - startMs)}
-            </span>
-          )}
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="label-caps">Rate</span>
+          <span className="label-caps" title="How much time passes on the timeline for every real second">
+            Speed (per second)
+          </span>
           <ToggleGroup
             type="single"
             value={String(rate)}
             onValueChange={(value) => value && setRate(Number(value))}
-            aria-label="Playback rate"
+            aria-label="Playback speed: simulated time per real second"
           >
             {PLAYBACK_RATES.map((r) => (
               <ToggleGroupItem key={r.value} value={String(r.value)}>

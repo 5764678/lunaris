@@ -4,12 +4,14 @@ import type { DatasetSummary } from "@lunaris/shared-types";
 import { ExternalLink, RotateCcw } from "lucide-react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
+import { CopyReferencesButton, Linkified, ReferenceList } from "@/components/evidence/references";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { describeError } from "@/lib/api/client";
 import { useDatasetsQuery, useRuntimeQuery } from "@/lib/api/queries";
 import { datasetAvailability } from "@/lib/datasets/availability";
+import { datasetReferences, distinctReferences } from "@/lib/references";
 
 import { CopyCommand, DatasetAvailabilityPill } from "./dataset-status";
 import { useShippedTextures } from "./use-shipped-textures";
@@ -111,7 +113,10 @@ function DatasetCard({
         <div className="space-y-3">
           <div>
             <p className="label-caps mb-1">Citation</p>
-            <p className="text-2xs leading-relaxed text-muted-foreground">{dataset.citation}</p>
+            <ReferenceList
+              references={datasetReferences(dataset.id, dataset.citation)}
+              className="text-2xs leading-relaxed text-muted-foreground"
+            />
           </div>
           <div>
             <p className="label-caps mb-1">Usage</p>
@@ -164,7 +169,7 @@ function DatasetCard({
                 </td>
                 <td className="px-2 py-1.5 text-muted-foreground">{file.role}</td>
                 <td className={`px-2 py-1.5 ${file.present ? "text-ok" : "text-dim"}`}>
-                  {file.present ? "present" : "absent"}
+                  {file.present ? "stored" : webTexture ? "in web app" : "not stored"}
                 </td>
                 <td className="numeric px-2 py-1.5 text-right text-muted-foreground">
                   {formatBytes(file.size_bytes)}
@@ -188,6 +193,47 @@ function DatasetCard({
         </ul>
       )}
     </article>
+  );
+}
+
+/**
+ * Every NASA dataset and every reference in one place, in the order a submission form asks for
+ * them, with a button that copies the lot as plain text.
+ */
+function ReferencesBlock({ datasets }: { datasets: DatasetSummary[] }) {
+  const references = distinctReferences(datasets.map((d) => datasetReferences(d.id, d.citation)));
+  const listing =
+    "NASA data used\n" +
+    datasets.map((d) => `${d.title} (${d.provider}): ${d.source_page}`).join("\n") +
+    "\n\nReferences";
+  return (
+    <section
+      aria-labelledby="references-heading"
+      className="space-y-4 rounded-lg border border-border bg-panel px-5 py-4"
+      data-testid="references-block"
+    >
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="references-heading" className="text-sm font-medium text-foreground">
+          NASA data used and references
+        </h2>
+        <CopyReferencesButton references={references} intro={listing} />
+      </header>
+      <div>
+        <p className="label-caps mb-1.5">Data</p>
+        <ul className="space-y-1 text-2xs leading-relaxed text-muted-foreground">
+          {datasets.map((d) => (
+            <li key={d.id}>
+              <span className="text-foreground">{d.title}</span> ({d.provider}).{" "}
+              <Linkified text={d.source_page} />
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <p className="label-caps mb-1.5">References</p>
+        <ReferenceList references={references} className="text-2xs leading-relaxed text-muted-foreground" />
+      </div>
+    </section>
   );
 }
 
@@ -217,6 +263,7 @@ export function DatasetRegistry() {
   }
   return (
     <div className="space-y-4">
+      <ReferencesBlock datasets={datasets.data.datasets} />
       {datasets.data.datasets.map((dataset) => (
         <DatasetCard key={dataset.id} dataset={dataset} shippedTextureIds={textures.ids} />
       ))}

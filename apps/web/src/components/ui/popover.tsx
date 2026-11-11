@@ -13,6 +13,10 @@ function PopoverTrigger(props: React.ComponentProps<typeof PopoverPrimitive.Trig
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
+function PopoverClose(props: React.ComponentProps<typeof PopoverPrimitive.Close>) {
+  return <PopoverPrimitive.Close data-slot="popover-close" {...props} />;
+}
+
 function PopoverContent({
   className,
   align = "start",
@@ -25,7 +29,8 @@ function PopoverContent({
         data-slot="popover-content"
         align={align}
         sideOffset={sideOffset}
-        collisionPadding={12}
+        collisionPadding={16}
+        avoidCollisions
         className={cn(
           "z-50 w-[min(26rem,calc(100vw-1.5rem))] rounded-md border border-border-strong bg-popover p-3 text-2xs leading-relaxed text-popover-foreground shadow-lg shadow-black/40 outline-none",
           "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
@@ -37,4 +42,4 @@ function PopoverContent({
   );
 }
 
-export { Popover, PopoverContent, PopoverTrigger };
+export { Popover, PopoverClose, PopoverContent, PopoverTrigger };
