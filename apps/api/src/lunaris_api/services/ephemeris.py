@@ -16,6 +16,8 @@ from lunaris_api.schemas.ephemeris import (
     BodyEphemeris,
     EphemerisObserver,
     EphemerisSample,
+    MoonPhaseSample,
+    MoonPhaseSeries,
     SiteEphemeris,
     SunDirectionSample,
     SunDirectionSeries,
@@ -40,6 +42,11 @@ from lunaris_science.geometry import (
     uniform_utc_grid,
     utc_to_et,
 )
+from lunaris_science.geometry.moon_phase import (
+    MOON_PHASE_LIMITATIONS,
+    moon_phase_series,
+)
+from lunaris_science.geometry.moon_phase import MoonPhaseSeries as MoonPhaseResult
 from lunaris_science.geometry.spice import SpiceContext
 from lunaris_science.provenance import Evidence
 
@@ -273,6 +280,20 @@ class EphemerisService:
             ) from exc
         return sun_direction_schema(series, epochs, start_utc, end_utc, step_s)
 
+    def moon_phase(self, start_utc: datetime, end_utc: datetime, step_s: float) -> MoonPhaseSeries:
+        """Geocentric Moon phase, Earth direction and sub-Earth point (K-01, contract L1)."""
+        self._validate_window(start_utc, end_utc, step_s, "query")
+        context = self._context()
+        epochs = uniform_utc_grid(start_utc, end_utc, step_s)
+        ets = utc_to_et(context, epochs)
+        try:
+            series = moon_phase_series(context, ets)
+        except GeometryError as exc:
+            raise EphemerisRequestError(
+                f"{exc}. Kernel coverage: see docs/API.md.", ["query"], "outside_kernel_coverage"
+            ) from exc
+        return moon_phase_schema(series, epochs, start_utc, end_utc, step_s)
+
     def site_ephemeris(
         self, site_id: str, start_utc: datetime, end_utc: datetime, step_s: float
     ) -> SiteEphemeris:
@@ -335,6 +356,52 @@ def sun_direction_schema(
     )
 
 
+def moon_phase_schema(
+    series: MoonPhaseResult,
+    epochs: tuple[datetime, ...],
+    start: datetime,
+    end: datetime,
+    step_s: float,
+) -> MoonPhaseSeries:
+    samples = [
+        MoonPhaseSample(
+            epoch_utc=epoch,
+            earth_direction_moon_me=direction,
+            subearth_latitude_deg=lat,
+            subearth_longitude_deg=lon,
+            phase_angle_deg=phase,
+            illuminated_fraction=fraction,
+            elongation_deg=elongation,
+            waxing=waxing,
+        )
+        for epoch, direction, lat, lon, phase, fraction, elongation, waxing in zip(
+            epochs,
+            series.earth.direction_moon_me.tolist(),
+            series.earth.subpoint_latitude_deg.tolist(),
+            series.earth.subpoint_longitude_deg.tolist(),
+            series.phase_angle_deg.tolist(),
+            series.illuminated_fraction.tolist(),
+            series.elongation_deg.tolist(),
+            series.waxing.tolist(),
+            strict=True,
+        )
+    ]
+    return MoonPhaseSeries(
+        start_utc=start,
+        end_utc=end,
+        step_s=step_s,
+        sample_count=len(samples),
+        max_samples=MAX_EPHEMERIS_SAMPLES,
+        frame="MOON_ME",
+        origin="MOON",
+        viewpoint="geocentric",
+        aberration_correction=APPARENT_CORRECTION,
+        samples=samples,
+        evidence=evidence_schema(series.evidence),
+        limitations=list(MOON_PHASE_LIMITATIONS),
+    )
+
+
 SUN_DIRECTION_LIMITATIONS = (
     "Moon-centred direction: from a surface point the Sun's direction differs by at most "
     "R_moon / range (about 2.4 arcsec). Use the site ephemeris for topocentric azimuth and "
@@ -352,5 +419,6 @@ __all__ = [
     "KernelsUnavailableError",
     "SiteGeometry",
     "evidence_schema",
+    "moon_phase_schema",
     "observer_schema",
 ]

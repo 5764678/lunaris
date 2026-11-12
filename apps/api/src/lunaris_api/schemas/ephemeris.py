@@ -106,6 +106,53 @@ class SunDirectionSeries(Schema):
     limitations: list[str]
 
 
+class MoonPhaseSample(Schema):
+    """Geocentric Moon phase at one epoch (K-01, contract L1)."""
+
+    epoch_utc: AwareDatetime
+    earth_direction_moon_me: list[float] = Field(
+        min_length=3,
+        max_length=3,
+        description="Apparent unit vector [x, y, z] from the Moon's centre to the Earth's "
+        "centre, MOON_ME (CN+S, as the Sun direction series).",
+    )
+    subearth_latitude_deg: float = Field(
+        description="Planetocentric latitude of the sub-Earth point (1737.4 km sphere)."
+    )
+    subearth_longitude_deg: float = Field(description="East longitude, [0, 360).")
+    phase_angle_deg: float = Field(
+        description="Sun–Moon–Earth angle at the Moon's centre, [0, 180]."
+    )
+    illuminated_fraction: float = Field(
+        description="Lit fraction of the disk seen from the Earth's centre, "
+        "(1 + cos(phase angle)) / 2, in [0, 1]."
+    )
+    elongation_deg: float = Field(description="Sun–Earth–Moon angle at the Earth's centre.")
+    waxing: bool = Field(
+        description="True while the Moon's geocentric ecliptic longitude leads the Sun's by "
+        "0–180°."
+    )
+
+
+class MoonPhaseSeries(Schema):
+    """Moon phases as seen from the Earth's centre (K-01, contract L1)."""
+
+    start_utc: AwareDatetime
+    end_utc: AwareDatetime
+    step_s: float
+    sample_count: int
+    max_samples: int = Field(description="Cap on samples per request.")
+    frame: Literal["MOON_ME"]
+    origin: Literal["MOON"] = Field(description="Earth directions are from the Moon's centre.")
+    viewpoint: Literal["geocentric"] = Field(
+        description="Phases are as seen from the Earth's centre, not a site on Earth (D12)."
+    )
+    aberration_correction: Literal["CN+S"]
+    samples: list[MoonPhaseSample]
+    evidence: EvidenceSchema
+    limitations: list[str]
+
+
 __all__ = [
     "MAX_EPHEMERIS_SAMPLES",
     "MAX_STEP_S",
@@ -113,6 +160,8 @@ __all__ = [
     "BodyEphemeris",
     "EphemerisObserver",
     "EphemerisSample",
+    "MoonPhaseSample",
+    "MoonPhaseSeries",
     "SiteEphemeris",
     "SunDirectionSample",
     "SunDirectionSeries",
