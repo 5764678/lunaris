@@ -14,6 +14,7 @@ export function Sidebar() {
 
   return (
     <nav
+      data-testid="main-nav"
       aria-label={t.shell.modulesLabel}
       className="flex w-[4.75rem] shrink-0 flex-col border-r border-border bg-surface xl:w-56"
     >
