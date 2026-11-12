@@ -129,8 +129,7 @@ class MoonPhaseSample(Schema):
     )
     elongation_deg: float = Field(description="Sun–Earth–Moon angle at the Earth's centre.")
     waxing: bool = Field(
-        description="True while the Moon's geocentric ecliptic longitude leads the Sun's by "
-        "0–180°."
+        description="True while the Moon's geocentric ecliptic longitude leads the Sun's by 0–180°."
     )
 
 

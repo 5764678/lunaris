@@ -50,14 +50,21 @@ def test_single_epoch_near_full_moon(kernel_client: TestClient) -> None:  # noqa
 
 
 def test_one_lunation_hourly(kernel_client: TestClient) -> None:  # noqa: F811
-    params = {"start_utc": "2027-01-07T00:00:00Z", "end_utc": "2027-02-06T00:00:00Z", "step_s": 3600}
+    params = {
+        "start_utc": "2027-01-07T00:00:00Z",
+        "end_utc": "2027-02-06T00:00:00Z",
+        "step_s": 3600,
+    }
     body = kernel_client.get(URL, params=params).json()
     assert body["sample_count"] == 30 * 24 + 1
     fraction = np.array([s["illuminated_fraction"] for s in body["samples"]])
     waxing = np.array([s["waxing"] for s in body["samples"]])
-    assert fraction.min() < 0.001 and fraction.max() > 0.999
+    assert fraction.min() < 0.001
+    assert fraction.max() > 0.999
     # Waning before the 2027-01-07 20:24 new Moon, waxing to full Moon, waning after it.
-    assert not waxing[0] and waxing[24] and not waxing[-1]
+    assert not waxing[0]
+    assert waxing[24]
+    assert not waxing[-1]
     assert np.count_nonzero(np.diff(waxing.astype(int))) == 2
 
 
@@ -69,7 +76,11 @@ def test_window_and_cap(kernel_client: TestClient) -> None:  # noqa: F811
     assert kernel_client.get(URL, params=late).json()["error"]["details"][0]["type"] == (
         "outside_kernel_coverage"
     )
-    backwards = {"start_utc": "2027-01-02T00:00:00Z", "end_utc": "2027-01-01T00:00:00Z", "step_s": 60}
+    backwards = {
+        "start_utc": "2027-01-02T00:00:00Z",
+        "end_utc": "2027-01-01T00:00:00Z",
+        "step_s": 60,
+    }
     assert kernel_client.get(URL, params=backwards).status_code == 422
 
 

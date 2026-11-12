@@ -35,8 +35,7 @@ from lunaris_science.geometry.spice import SpiceContext
 from lunaris_science.provenance import EvidenceKind
 
 FIXTURE = (
-    Path(__file__).resolve().parents[3]
-    / "data/fixtures/validation/horizons-moon-phases-2027.json"
+    Path(__file__).resolve().parents[3] / "data/fixtures/validation/horizons-moon-phases-2027.json"
 )
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 ARCSEC = 1.0 / 3600.0

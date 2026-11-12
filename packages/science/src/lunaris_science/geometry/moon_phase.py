@@ -57,6 +57,7 @@ EQUATORIAL_FRAME = "J2000"
 SEARCH_STEP_S = 3600.0
 """Grid spacing used to bracket principal phases (D changes by ≈ 0.5° per hour)."""
 BISECTION_TOLERANCE_S = 0.01
+HALF_TURN_DEG = 180.0
 
 
 class PrincipalPhase(StrEnum):
@@ -139,9 +140,7 @@ def _geocentric(context: SpiceContext, ets: FloatArray, frame: str) -> tuple[Flo
         with context.session():
             for i, et in enumerate(ets):
                 sun[i] = spiceypy.spkpos("SUN", float(et), frame, APPARENT_CORRECTION, "EARTH")[0]
-                moon[i] = spiceypy.spkpos("MOON", float(et), frame, APPARENT_CORRECTION, "EARTH")[
-                    0
-                ]
+                moon[i] = spiceypy.spkpos("MOON", float(et), frame, APPARENT_CORRECTION, "EARTH")[0]
     except SpiceyError as exc:
         raise GeometryError(f"SPICE could not compute geocentric positions: {exc.short}") from exc
     return sun, moon
@@ -153,7 +152,7 @@ def longitude_difference_deg(context: SpiceContext, epochs_et_s: ArrayLike) -> F
     sun, moon = _geocentric(context, ets, ECLIPTIC_FRAME)
     lam_sun = np.degrees(np.arctan2(sun[:, 1], sun[:, 0]))
     lam_moon = np.degrees(np.arctan2(moon[:, 1], moon[:, 0]))
-    return np.mod(lam_moon - lam_sun, 360.0)
+    return np.asarray(np.mod(lam_moon - lam_sun, 360.0), dtype=np.float64)
 
 
 def moon_phase_series(context: SpiceContext, epochs_et_s: ArrayLike) -> MoonPhaseSeries:
@@ -178,7 +177,7 @@ def moon_phase_series(context: SpiceContext, epochs_et_s: ArrayLike) -> MoonPhas
     sun_eq, moon_eq = _geocentric(context, ets, EQUATORIAL_FRAME)
     elongation = _angle_deg(sun_eq, moon_eq)
     difference = longitude_difference_deg(context, ets)
-    waxing = difference < 180.0
+    waxing = difference < HALF_TURN_DEG
 
     evidence = Evidence(
         kind=EvidenceKind.MODEL,
@@ -235,7 +234,7 @@ def principal_phases(
     """
     if not (math.isfinite(start_et_s) and math.isfinite(end_et_s)) or end_et_s < start_et_s:
         raise GeometryError("principal_phases needs a finite window with end >= start")
-    count = int(math.floor((end_et_s - start_et_s) / SEARCH_STEP_S)) + 1
+    count = math.floor((end_et_s - start_et_s) / SEARCH_STEP_S) + 1
     grid = start_et_s + SEARCH_STEP_S * np.arange(count, dtype=np.float64)
     if grid[-1] < end_et_s:
         grid = np.append(grid, end_et_s)
@@ -246,7 +245,7 @@ def principal_phases(
         # A crossing is a sign change from negative to non-negative with a small jump
         # (the wrap from +180 to −180 is the opposite phase, not a crossing).
         crossings = np.nonzero((offset[:-1] < 0.0) & (offset[1:] >= 0.0))[0]
-        for i in crossings:
+        for i in crossings.tolist():
             lo, hi = float(grid[i]), float(grid[i + 1])
             while hi - lo > BISECTION_TOLERANCE_S:
                 mid = 0.5 * (lo + hi)
