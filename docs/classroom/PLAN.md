@@ -11,6 +11,32 @@ The working rules in `docs/TASKS.md` section 1 apply to every session here: your
 branch and draft PR, edit only the paths you own, `npm run check` green before you ask
 for review, and the PR body lists each acceptance criterion with its evidence.
 
+## Status: paused on 12 November 2026
+
+The user paused this build to save usage for the NASA Space Apps weekend (14–15
+November). Nothing here is merged except the plan and the submission pack. To resume,
+start from this list; do not rely on any session's memory.
+
+| PR | Task | State when paused |
+|---|---|---|
+| #46 | K-12 stage 1, light theme samples | Draft. Samples sent to the team for the advisor's yes or no; **no answer yet**. Contains a throwaway page, `apps/web/src/app/design-sample/`, that must be deleted before merge. Full check and Playwright not run. Stage 2 not started. |
+| #47 | K-01, Moon phase series | Draft, told to push and stop. Not reviewed by the TD. Check its body for the validation status. |
+| #50 | K-03 part 1, message catalogue and translated shell | Draft, told to push and stop. Not reviewed by the TD. |
+| #48 | K-06, teaching kit | Draft, in progress, told to push and stop. Not reviewed by the TD or the team. |
+
+Not started: K-02 (lesson pack), the `/learn` route and K-04, K-05, K-09, K-12 stage 2,
+K-13.
+
+Lessons from the first day, for whoever resumes:
+
+- Four sessions at once exhausted the account's five-hour usage limit within minutes and
+  every session lost its unpushed work. Run at most two, give each one PR per turn, and
+  have them push after every step.
+- The entry form the team first drafted described a different product. The agreed entry is
+  the Moon classroom kit; the matching form text is in `submission/entry-form-part2.md`.
+- 27 November 16:30 is the deadline. With the build paused until 16 November, the P0 list
+  in section 4 will need cutting; decide what to drop before restarting anything.
+
 ## 1. What is being built
 
 The entry is a **six-period ม.3 learning-activity set** with LUNARIS inside it. Three
