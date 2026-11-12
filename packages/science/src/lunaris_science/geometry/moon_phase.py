@@ -117,7 +117,7 @@ def _angle_deg(a: FloatArray, b: FloatArray) -> FloatArray:
     """Angle between row vectors, robust near 0° and 180° (atan2 of |a×b| and a·b)."""
     cross = np.linalg.norm(np.cross(a, b), axis=1)
     dot = np.sum(a * b, axis=1)
-    return np.degrees(np.arctan2(cross, dot))
+    return np.asarray(np.degrees(np.arctan2(cross, dot)), dtype=np.float64)
 
 
 def _check_epochs(context: SpiceContext, epochs_et_s: ArrayLike) -> FloatArray:
