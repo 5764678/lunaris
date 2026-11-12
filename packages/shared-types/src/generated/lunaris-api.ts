@@ -151,6 +151,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ephemeris/moon-phase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Moon phase as seen from the Earth's centre
+         * @description Geocentric phase angle, illuminated fraction, elongation and waxing flag, with the
+         *     apparent Moon-centred Earth direction in MOON_ME and the sub-Earth point, at every step
+         *     (contract L1). Computed with NAIF SPICE (DE440, CN+S) and validated against JPL
+         *     Horizons. Same window rules, 10 000-sample cap and error codes as the Sun direction.
+         */
+        get: operations["get_moon_phase_api_v1_ephemeris_moon_phase_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ephemeris/sun": {
         parameters: {
             query?: never;
@@ -1283,6 +1306,104 @@ export interface components {
             /** Sunlit Windows */
             sunlit_windows: components["schemas"]["VisibilityWindow"][];
         };
+        /**
+         * MoonPhaseSample
+         * @description Geocentric Moon phase at one epoch (K-01, contract L1).
+         */
+        MoonPhaseSample: {
+            /**
+             * Earth Direction Moon Me
+             * @description Apparent unit vector [x, y, z] from the Moon's centre to the Earth's centre, MOON_ME (CN+S, as the Sun direction series).
+             */
+            earth_direction_moon_me: number[];
+            /**
+             * Elongation Deg
+             * @description Sun–Earth–Moon angle at the Earth's centre.
+             */
+            elongation_deg: number;
+            /**
+             * Epoch Utc
+             * Format: date-time
+             */
+            epoch_utc: string;
+            /**
+             * Illuminated Fraction
+             * @description Lit fraction of the disk seen from the Earth's centre, (1 + cos(phase angle)) / 2, in [0, 1].
+             */
+            illuminated_fraction: number;
+            /**
+             * Phase Angle Deg
+             * @description Sun–Moon–Earth angle at the Moon's centre, [0, 180].
+             */
+            phase_angle_deg: number;
+            /**
+             * Subearth Latitude Deg
+             * @description Planetocentric latitude of the sub-Earth point (1737.4 km sphere).
+             */
+            subearth_latitude_deg: number;
+            /**
+             * Subearth Longitude Deg
+             * @description East longitude, [0, 360).
+             */
+            subearth_longitude_deg: number;
+            /**
+             * Waxing
+             * @description True while the Moon's geocentric ecliptic longitude leads the Sun's by 0–180°.
+             */
+            waxing: boolean;
+        };
+        /**
+         * MoonPhaseSeries
+         * @description Moon phases as seen from the Earth's centre (K-01, contract L1).
+         */
+        MoonPhaseSeries: {
+            /**
+             * Aberration Correction
+             * @constant
+             */
+            aberration_correction: "CN+S";
+            /**
+             * End Utc
+             * Format: date-time
+             */
+            end_utc: string;
+            evidence: components["schemas"]["EvidenceSchema"];
+            /**
+             * Frame
+             * @constant
+             */
+            frame: "MOON_ME";
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Max Samples
+             * @description Cap on samples per request.
+             */
+            max_samples: number;
+            /**
+             * Origin
+             * @description Earth directions are from the Moon's centre.
+             * @constant
+             */
+            origin: "MOON";
+            /** Sample Count */
+            sample_count: number;
+            /** Samples */
+            samples: components["schemas"]["MoonPhaseSample"][];
+            /**
+             * Start Utc
+             * Format: date-time
+             */
+            start_utc: string;
+            /** Step S */
+            step_s: number;
+            /**
+             * Viewpoint
+             * @description Phases are as seen from the Earth's centre, not a site on Earth (D12).
+             * @constant
+             */
+            viewpoint: "geocentric";
+        };
         /** ProfileScore */
         ProfileScore: {
             evidence: components["schemas"]["EvidenceSchema"];
@@ -2291,6 +2412,60 @@ export interface operations {
             };
             /** @description Unexpected server error. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_moon_phase_api_v1_ephemeris_moon_phase_get: {
+        parameters: {
+            query: {
+                /** @description Window start, ISO 8601 UTC. */
+                start_utc: string;
+                /** @description Window end (inclusive when on a step); start = end gives one epoch. */
+                end_utc: string;
+                /** @description Sample spacing in seconds. */
+                step_s: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoonPhaseSeries"];
+                };
+            };
+            /** @description Request validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SPICE kernels not acquired or failing verification on this server. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
