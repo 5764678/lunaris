@@ -42,7 +42,8 @@ export function UtcClock() {
           className="numeric hidden font-mono text-2xs text-muted-foreground 2xl:inline"
           suppressHydrationWarning
         >
-          {formatLocalTime(now, true)} <span className="font-sans text-dim">your time ({utcOffsetLabel(now)})</span>
+          {formatLocalTime(now, true)}{" "}
+          <span className="font-sans text-dim">your time ({utcOffsetLabel(now)})</span>
         </span>
       )}
     </div>

@@ -52,9 +52,7 @@ export function ViewportOverlay({
       {/* Title + view presets */}
       <div className="pointer-events-auto absolute top-4 left-4 flex flex-col gap-2 sm:top-5 sm:left-6">
         <div className="w-fit rounded-md border border-hairline bg-scrim px-2.5 py-1.5 backdrop-blur-sm">
-          <p className="text-xs font-semibold text-foreground">
-            Lunar globe
-          </p>
+          <p className="text-xs font-semibold text-foreground">Lunar globe</p>
           <p className="hidden text-3xs text-dim sm:block">
             The Moon as it is now, lit by the real Sun · radius 1,737.4 km
           </p>

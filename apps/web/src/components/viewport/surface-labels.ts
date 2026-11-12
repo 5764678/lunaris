@@ -11,9 +11,9 @@ import type { LabelSpec } from "./label-layer";
 const GRATICULE_CLASS =
   "font-mono text-[12px] tracking-wider text-chart-label [text-shadow:0_0_3px_#000,0_0_6px_#000]";
 const SITE_CLASS =
-  "rounded-[3px] border border-white/15 bg-scrim-chip px-1.5 py-px font-mono text-[12px] text-foreground backdrop-blur-sm";
+  "rounded-[3px] border border-white/15 bg-scrim-chip px-2 py-0.5 text-[13px] text-foreground backdrop-blur-sm";
 const SITE_SELECTED_CLASS =
-  "rounded-[3px] border border-primary/60 bg-scrim-selected px-1.5 py-px font-mono text-[12px] text-primary";
+  "rounded-[3px] border border-primary/60 bg-scrim-selected px-2 py-0.5 text-[13px] text-primary";
 
 const GRATICULE_LABELS: LabelSpec[] = [
   ...[-60, -70, -80, -85].map((lat) => ({

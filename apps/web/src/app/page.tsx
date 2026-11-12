@@ -4,7 +4,7 @@ import { MoonViewport } from "@/components/viewport/moon-viewport";
 
 export default function MissionOverviewPage() {
   return (
-    <div className="grid h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22.5rem] lg:grid-rows-[minmax(24rem,1fr)_auto] 2xl:grid-cols-[minmax(0,1fr)_25rem]">
+    <div className="grid h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22.5rem] lg:grid-rows-[minmax(30rem,1fr)_auto] 2xl:grid-cols-[minmax(0,1fr)_25rem]">
       <div className="h-[62vh] min-h-0 lg:h-auto">
         <MoonViewport />
       </div>

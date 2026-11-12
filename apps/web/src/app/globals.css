@@ -33,15 +33,15 @@
   --dim: #5f5b52;
 
   /* Accent: terracotta, with a deeper shade for hover and a gold for highlights */
-  --primary: #b24a14;
+  --primary: #a8450f;
   --primary-strong: #8f3a0e;
   --primary-foreground: #ffffff;
-  --ring: #b24a14;
+  --ring: #a8450f;
   --highlight: #8a6200;
   --highlight-soft: #f7e9bf;
 
   /* Status */
-  --ok: #1d7a4d;
+  --ok: #1a7447;
   --warn: #8a5a00;
   --critical: #b42318;
   --info: #1d5fa8;
@@ -50,7 +50,7 @@
   --ev-observation: #1d5fa8;
   --ev-derived: #4a4fb5;
   --ev-model: #7a3fb0;
-  --ev-calculation: #0f766e;
+  --ev-calculation: #0d6e66;
   --ev-assumption: #8a5a00;
   --ev-placeholder: #a8430e;
   --ev-not-computed: #5f5b52;

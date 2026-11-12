@@ -54,10 +54,20 @@ export function Graticule() {
   return (
     <group name="graticule">
       <lineSegments geometry={minor}>
-        <lineBasicMaterial color={readToken("chart-graticule")} transparent opacity={0.2} depthWrite={false} />
+        <lineBasicMaterial
+          color={readToken("chart-graticule")}
+          transparent
+          opacity={0.2}
+          depthWrite={false}
+        />
       </lineSegments>
       <lineSegments geometry={major}>
-        <lineBasicMaterial color={readToken("chart-graticule")} transparent opacity={0.5} depthWrite={false} />
+        <lineBasicMaterial
+          color={readToken("chart-graticule")}
+          transparent
+          opacity={0.5}
+          depthWrite={false}
+        />
       </lineSegments>
     </group>
   );

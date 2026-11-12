@@ -27,11 +27,7 @@ function ViewportMessage({ title, detail, pulse }: { title: string; detail: stri
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="text-center">
-        <p
-          className={`text-xs font-medium text-muted-foreground ${pulse ? "animate-pulse" : ""}`}
-        >
-          {title}
-        </p>
+        <p className={`text-xs font-medium text-muted-foreground ${pulse ? "animate-pulse" : ""}`}>{title}</p>
         <p className="mt-1 text-3xs text-dim">{detail}</p>
       </div>
     </div>

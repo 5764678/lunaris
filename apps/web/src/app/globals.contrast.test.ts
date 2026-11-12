@@ -9,11 +9,16 @@ import { describe, expect, it } from "vitest";
  * globals.css, so lightening a surface or darkening a text colour fails here.
  */
 const css = readFileSync(fileURLToPath(new URL("./globals.css", import.meta.url)), "utf8");
-const rootStart = css.indexOf(":root {");
-const root = css.slice(rootStart, css.indexOf("\n}", rootStart));
-const tokens: Record<string, string> = Object.fromEntries(
-  [...root.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6})\b/gi)].map((m) => [m[1]!, m[2]!]),
-);
+function block(selector: string): Record<string, string> {
+  const start = css.indexOf(`${selector} {`);
+  const body = css.slice(start, css.indexOf("\n}", start));
+  return Object.fromEntries(
+    [...body.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6})\b/gi)].map((m) => [m[1]!, m[2]!]),
+  );
+}
+/** The light page, and the dark "space" windows (globe, terrain, sky chart), which re-declare the tokens. */
+const light = block(":root");
+const space = { ...light, ...block(".space") };
 
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((i) => {
@@ -58,7 +63,12 @@ const TEXT = [
   "ev-not-computed",
 ];
 
-describe("text colour contrast (WCAG AA, 4.5:1)", () => {
+const THEMES = [
+  ["light page", light],
+  ["space window", space],
+] as const;
+
+describe.each(THEMES)("text colour contrast, %s (WCAG AA, 4.5:1)", (_name, tokens) => {
   it("finds the tokens in globals.css", () => {
     for (const name of [...SURFACES, ...TEXT]) expect(tokens[name], name).toMatch(/^#[0-9a-f]{6}$/i);
   });
@@ -74,5 +84,9 @@ describe("text colour contrast (WCAG AA, 4.5:1)", () => {
     expect(contrast(tokens["dim"]!, tokens["panel"]!)).toBeLessThan(
       contrast(tokens["muted-foreground"]!, tokens["panel"]!),
     );
+  });
+
+  it("keeps button label text readable on the primary colour", () => {
+    expect(contrast(tokens["primary-foreground"]!, tokens["primary"]!)).toBeGreaterThanOrEqual(4.5);
   });
 });

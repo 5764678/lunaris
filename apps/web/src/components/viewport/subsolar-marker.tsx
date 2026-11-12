@@ -19,7 +19,13 @@ export function SubsolarMarker({ latDeg, lonDeg }: { latDeg: number; lonDeg: num
     <group position={position} quaternion={quaternion} name="subsolar-point">
       <mesh>
         <ringGeometry args={[0.012, 0.016, 40]} />
-        <meshBasicMaterial color={readToken("chart-sun")} side={DoubleSide} transparent opacity={0.95} depthWrite={false} />
+        <meshBasicMaterial
+          color={readToken("chart-sun")}
+          side={DoubleSide}
+          transparent
+          opacity={0.95}
+          depthWrite={false}
+        />
       </mesh>
       <mesh>
         <circleGeometry args={[0.005, 24]} />

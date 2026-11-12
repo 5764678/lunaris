@@ -254,10 +254,7 @@ export function TimelineTrack({
                   {value?.state ? LINE_OF_SIGHT_LABEL[value.state] : "—"}
                 </span>
               )}
-              <span
-                className="numeric text-2xs text-foreground"
-                data-testid={`lane-readout-${lane.id}`}
-              >
+              <span className="numeric text-2xs text-foreground" data-testid={`lane-readout-${lane.id}`}>
                 {formatFractionReadout(fraction, value)}
               </span>
             </div>
