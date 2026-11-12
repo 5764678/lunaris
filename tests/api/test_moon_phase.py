@@ -22,7 +22,8 @@ FIELDS = {
 
 
 def test_single_epoch_near_full_moon(kernel_client: TestClient) -> None:  # noqa: F811
-    # 2027-01-22 12:00 UTC: Horizons S-T-O 0.8768°, Illu% 99.99415 (fixture sample 86).
+    # 2027-01-22 12:00 UTC. Horizons (fixture row 86): Illu% 99.97851, S-O-T 178.3165°,
+    # S-T-O 1.6793°.
     params = {"start_utc": "2027-01-22T12:00:00Z", "end_utc": "2027-01-22T12:00:00Z", "step_s": 60}
     response = kernel_client.get(URL, params=params)
     assert response.status_code == 200, response.text
@@ -36,8 +37,10 @@ def test_single_epoch_near_full_moon(kernel_client: TestClient) -> None:  # noqa
     assert set(sample) == FIELDS
     assert np.linalg.norm(sample["earth_direction_moon_me"]) == pytest.approx(1.0)
     assert 0.0 <= sample["subearth_longitude_deg"] < 360.0
-    assert sample["illuminated_fraction"] > 0.999
-    assert sample["waxing"] is True  # 17 min before full Moon (D = 179.86°)
+    assert sample["phase_angle_deg"] == pytest.approx(1.6793, abs=1e-4)
+    assert sample["elongation_deg"] == pytest.approx(178.3165, abs=1e-4)
+    assert sample["illuminated_fraction"] == pytest.approx(0.9997851, abs=1e-4)
+    assert sample["waxing"] is True  # 17 min before full Moon (D < 180°)
     evidence = body["evidence"]
     assert evidence["kind"] == "model"
     assert "phaseq" in evidence["method"]

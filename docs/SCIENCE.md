@@ -330,6 +330,87 @@ the Moon's centre at t, which is what lights the globe. Validation:
   light time (≈ 500 s) earlier, so it differs by about 0.07° of lunar rotation: a
   different definition, not a disagreement.
 
+**Moon phase series (K-01, contract L1).** `geometry.moon_phase`. Geocentric: the Moon
+as seen from the Earth's centre, north up (D12). Per epoch:
+
+1. Earth direction and sub-Earth point: `moon_centred_direction(context, Body.EARTH, …)`,
+   i.e. CSPICE `spkpos('EARTH', et, 'MOON_ME', 'CN+S', 'MOON')`, the convention of the
+   Moon-centred Sun direction (T-26).
+2. Phase angle i (Sun–Moon–Earth at the Moon's centre): CSPICE
+   `phaseq(et, 'MOON', 'SUN', 'EARTH', 'CN+S')`, the Horizons S-T-O definition.
+3. Illuminated fraction k = (1 + cos i) / 2 (geometric lit fraction of a sphere's disk).
+4. Elongation (Sun–Earth–Moon at the Earth's centre): angle between the apparent
+   geocentric positions of the Sun and the Moon (`spkpos(…, 'J2000', 'CN+S', 'EARTH')`).
+5. Waxing: D = (λ☾ − λ☉) mod 360° in [0°, 180°), apparent geocentric ecliptic longitudes
+   in `ECLIPJ2000`. The mean ecliptic of date (`ECLIPDATE`) needs a frame kernel that is
+   not in the verified set; the equinox cancels in D, and the residual effect of the
+   ecliptic plane's tilt since J2000 is inside the measured differences below.
+
+Principal phases (`principal_phases`): the instants where D = 0°, 90°, 180°, 270°,
+bracketed on a 1 h grid and bisected to 0.01 s. 49 events in 2027, in 0.3 s.
+
+Not modelled (stated in the evidence and `limitations`): topocentric parallax for an
+observer in Thailand (up to about 1°), the tilt of the lit side, rise and set times,
+libration-dependent brightness, surface reflectance, earthshine. The lunar-calendar day
+(ค่ำ) is a calendar convention and is not computed.
+
+*Validation against JPL Horizons* (DE441; fixture
+`data/fixtures/validation/horizons-moon-phases-2027.json`, built by
+`fetch_horizons_moon_phases.py` on 2026-11-11 with every request's parameters and the
+verbatim `$$SOE…$$EOE` block; tests `tests/science/geometry/test_moon_phase.py`). USNO and
+the published almanac tables (astropixels, NASA GSFC, timeanddate) were refused by this
+session's network, so Horizons is the only independent source used.
+
+- *2027 principal-phase instants.* Horizons' apparent ecliptic longitudes **of date** of
+  the Moon and the Sun (`QUANTITIES='31'`, geocentric, every minute from 5 min before to
+  6 min after each event; `TLIST` is silently cut at 80 epochs, so 4 events per request).
+  Horizons' instant is the zero of λ☾ − λ☉ − target, interpolated linearly between
+  minutes (D changes by ≈ 0.008° per minute). Measured LUNARIS − Horizons, 49 events:
+
+  | Phase | n | mean | min | max | max abs |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | New Moon | 13 | −0.63 s | −1.75 s | +0.53 s | 1.75 s |
+  | First quarter | 12 | −0.78 s | −1.94 s | +0.41 s | 1.94 s |
+  | Full Moon | 12 | −0.75 s | −1.98 s | +0.38 s | 1.98 s |
+  | Last quarter | 12 | −0.80 s | −1.92 s | +0.40 s | 1.92 s |
+
+  **Tolerance: 5 s.** The causes were not separated: `ECLIPJ2000` instead of the ecliptic
+  of date, DE440s instead of DE441, no gravitational light deflection. 5 s is 2.5× the
+  largest measured difference and well below the 33–45 s shift that dropping light time
+  (`NONE` instead of `CN+S`) produces at these events, which was measured too. Stellar
+  aberration cancels in D (both bodies are seen by the same observer), so D does not test
+  it; the phase angle and elongation below do. Instants are reported to the minute in
+  lessons, so 5 s is far below what a student sees.
+- *Per-sample quantities*, every 6 h over January 2027 (125 samples,
+  `QUANTITIES='10,14,23,24'`):
+
+  | Quantity | Horizons print resolution | max abs Δ | tolerance |
+  | --- | --- | ---: | ---: |
+  | Phase angle (S-T-O) | 1e-4° | 5.0e-5° | 1e-4° |
+  | Elongation (S-O-T) | 1e-4° | 5.0e-5° | 1e-4° |
+  | Illuminated fraction | 1e-7 | 2.5e-5 | 1e-4 |
+
+  Phase angle and elongation agree to Horizons' rounding. The illuminated fraction differs
+  by up to 2.5e-5 (0.0025 percentage points), more than the phase-angle difference
+  explains (≤ 5e-7); the cause was not established. It is 1/400 of the 0.1 % a lesson
+  displays.
+- *Waxing.* Agrees with Horizons' /T (trails the Sun, evening sky) and /L flags at all 118
+  samples more than 6° of D from new or full Moon. Horizons' flag is not defined on
+  ecliptic longitude, and at one excluded sample (2027-01-22 12:00, 17 min before full
+  Moon) the two disagree. The flip instants themselves are the new- and full-Moon instants
+  validated above.
+- *Sub-Earth point.* Horizons' sub-observer point (`QUANTITIES='14'`) is the reversed
+  geocentric Moon direction with **light time only** (no stellar aberration), in MOON_ME at
+  t − lt. Computed that way, LUNARIS agrees to 0.005″ in longitude and 0.002″ in latitude
+  (tolerance 0.05″). The L1 value is the CN+S Moon-centred Earth direction (the Sun-series
+  convention), which includes stellar aberration: it differs from Horizons by up to 20.9″
+  in longitude, ≈ 20.5″ · cos D (largest at new and full Moon, zero at the quarters, as
+  expected for the Earth's orbital velocity), and 1.9″ in latitude. Bound in the test:
+  22″. 20.9″ is 0.006°, about 180 m on the lunar surface.
+
+Performance: one lunation hourly (721 epochs) in 0.06 s, one year hourly (8 761) in 0.8 s
+on the development machine.
+
 **Angular sizes.** Solar angular radius ≈ 0.267° at 1 au; Earth angular radius roughly
 0.9°–1.0° over the lunar orbit. Both are computed per epoch, never fixed.
 
