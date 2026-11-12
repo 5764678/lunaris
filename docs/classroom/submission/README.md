@@ -20,12 +20,14 @@ Registration and document download: https://shorturl.asia/ESNVj
   need an advisor teacher's endorsement.
 - **Target learners of the kit:** lower secondary, ม.3. The advisor confirmed secondary,
   most likely lower secondary, on 11 November.
+- **Entrants:** two ม.4 students of โรงเรียนสาธิตมหาวิทยาลัยศรีนครินทรวิโรฒ ปทุมวัน, with their
+  advisor teacher. The school logo for the poster is in `assets/school-logo.png`.
 
 ## The three files
 
 | # | Item | Requirement | Status |
 |---|---|---|---|
-| 1 | Entry form (แบบเสนอผลงานเข้าร่วมประกวด) | Complete; PDF; at most 10 MB; uploaded in the online form | **The blank form has not been obtained yet** |
+| 1 | Entry form (แบบเสนอผลงานเข้าร่วมประกวด) | Complete; PDF; at most 10 MB; uploaded in the online form. Four parts: general information, concept and details (**one A4 page at most**), the poster image, checklist and signatures (applicant and advisor) | Part 2 drafted in `entry-form-part2.md`; the team holds the form itself |
 | 2 | Presentation video | Landscape, sharp; at most 3 minutes; MP4; on Google Drive with a link anyone can open | not started |
 | 3 | Poster | One page, **A0 (84.1 × 118.9 cm)**; laid out in the organisers' template for the entry type; PDF on Google Drive with a link anyone can open | template obtained (below) |
 
