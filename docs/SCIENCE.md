@@ -379,8 +379,7 @@ session's network, so Horizons is the only independent source used.
   largest measured difference and well below the 33–45 s shift that dropping light time
   (`NONE` instead of `CN+S`) produces at these events, which was measured too. Stellar
   aberration cancels in D (both bodies are seen by the same observer), so D does not test
-  it; the phase angle and elongation below do. Instants are reported to the minute in
-  lessons, so 5 s is far below what a student sees.
+  it; the phase angle and elongation below do. Shown to the minute, 5 s is invisible.
 - *Per-sample quantities*, every 6 h over January 2027 (125 samples,
   `QUANTITIES='10,14,23,24'`):
 
@@ -392,8 +391,7 @@ session's network, so Horizons is the only independent source used.
 
   Phase angle and elongation agree to Horizons' rounding. The illuminated fraction differs
   by up to 2.5e-5 (0.0025 percentage points), more than the phase-angle difference
-  explains (≤ 5e-7); the cause was not established. It is 1/400 of the 0.1 % a lesson
-  displays.
+  explains (≤ 5e-7); the cause was not established. It is 1/40 of a 0.1 % display step.
 - *Waxing.* Agrees with Horizons' /T (trails the Sun, evening sky) and /L flags at all 118
   samples more than 6° of D from new or full Moon. Horizons' flag is not defined on
   ecliptic longitude, and at one excluded sample (2027-01-22 12:00, 17 min before full
