@@ -121,7 +121,7 @@ export function CellEvidence({
           <ul className="mt-2 space-y-1 border-t border-hairline pt-2">
             {limits.map((l) => (
               <li key={`l-${l}`} className="flex items-start gap-2 text-muted-foreground">
-                <span className="mt-px shrink-0 text-3xs font-medium uppercase text-warn">Limit</span>
+                <span className="mt-px shrink-0 text-3xs font-semibold text-warn">Limit</span>
                 {l}
               </li>
             ))}

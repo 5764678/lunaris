@@ -78,7 +78,7 @@ export function TimelinePanel() {
   const lanes = useMemo(() => ({ ...geometry.lanes, ...fractions.lanes }), [geometry.lanes, fractions.lanes]);
 
   return (
-    <section aria-label="Timeline" className="border-t border-border bg-panel px-4 pt-2.5 pb-3">
+    <section aria-label="Timeline" className="border-t border-border bg-panel px-5 pt-4 pb-4">
       <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex items-center gap-1">
           <TransportButton label="Back 1 day" onClick={() => stepEpoch(-DAY_MS)} disabled={!ready}>

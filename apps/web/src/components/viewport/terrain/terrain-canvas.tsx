@@ -16,6 +16,7 @@ import {
 import type { TerrainScene } from "@/lib/api/queries";
 import { heightColors } from "@/lib/terrain/scene-data";
 import type { Direction } from "@/lib/terrain/sun";
+import { readToken } from "@/lib/theme/tokens";
 import { useMissionStore } from "@/store/mission-store";
 
 import { LabelProjector } from "../label-layer";
@@ -236,7 +237,7 @@ function SitePin({ placement, selected }: { placement: TerrainSitePlacement; sel
     const d = camera.position.distanceTo(group.current.position);
     group.current.scale.setScalar(Math.max(0.05, d * 0.012));
   });
-  const color = selected ? "#7cb5ff" : "#e6eaef";
+  const color = selected ? readToken("primary") : readToken("chart-marker-idle");
   return (
     <group ref={group} position={placement.position} quaternion={quaternion}>
       <mesh

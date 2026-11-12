@@ -39,18 +39,18 @@ export function AnalysisReadiness() {
                         .join("\n")}
                       data-testid="readiness-input"
                       data-status={tag.status}
-                      className="inline-flex items-center gap-1 font-mono text-3xs text-dim"
+                      className="inline-flex items-center gap-1 text-3xs text-dim"
                     >
                       <span className={cn("size-1 rounded-full", DATASET_STATUS[tag.status].dot)} />
                       {tag.category}
                     </span>
                   ))}
-                  {datasets.isError && <span className="font-mono text-3xs text-dim">inputs unknown</span>}
+                  {datasets.isError && <span className="text-3xs text-dim">inputs unknown</span>}
                 </p>
               </div>
               {module.status === "available" ? (
                 <span
-                  className="rounded-sm border border-ev-model/40 bg-ev-model/10 px-1.5 py-px font-mono text-3xs uppercase tracking-wider text-ev-model"
+                  className="rounded-sm border border-ev-model/25 bg-ev-model/8 px-1.5 py-px text-3xs font-medium text-ev-model"
                   title={`${milestoneLabel(module.milestone)}\n${module.availableIn ?? ""}`.trim()}
                   data-testid={`readiness-${module.id}`}
                 >
@@ -58,7 +58,7 @@ export function AnalysisReadiness() {
                 </span>
               ) : (
                 <span
-                  className="hatch rounded-sm border border-hairline px-1.5 py-px font-mono text-3xs uppercase tracking-wider text-dim"
+                  className="hatch rounded-sm border border-hairline px-1.5 py-px text-3xs text-dim"
                   title={milestoneLabel(module.milestone)}
                   data-testid={`readiness-${module.id}`}
                 >

@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { BufferGeometry, Float32BufferAttribute } from "three";
 
 import { selenographicToScene } from "@/lib/geo/selenographic";
+import { readToken } from "@/lib/theme/tokens";
 
 const RADIUS = 1.0015;
 
@@ -53,10 +54,10 @@ export function Graticule() {
   return (
     <group name="graticule">
       <lineSegments geometry={minor}>
-        <lineBasicMaterial color="#8fc1ff" transparent opacity={0.2} depthWrite={false} />
+        <lineBasicMaterial color={readToken("chart-graticule")} transparent opacity={0.2} depthWrite={false} />
       </lineSegments>
       <lineSegments geometry={major}>
-        <lineBasicMaterial color="#8fc1ff" transparent opacity={0.5} depthWrite={false} />
+        <lineBasicMaterial color={readToken("chart-graticule")} transparent opacity={0.5} depthWrite={false} />
       </lineSegments>
     </group>
   );

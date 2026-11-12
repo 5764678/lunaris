@@ -28,7 +28,7 @@ function ViewportMessage({ title, detail, pulse }: { title: string; detail: stri
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="text-center">
         <p
-          className={`font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground ${pulse ? "animate-pulse" : ""}`}
+          className={`text-xs font-medium text-muted-foreground ${pulse ? "animate-pulse" : ""}`}
         >
           {title}
         </p>
@@ -86,7 +86,7 @@ export function MoonViewport() {
   return (
     <section
       aria-label="Lunar visualization"
-      className="hud-grid relative h-full min-h-[22rem] overflow-hidden"
+      className="space hud-grid relative h-full min-h-[22rem] overflow-hidden"
       data-scene={scene}
     >
       <RendererBoundary>

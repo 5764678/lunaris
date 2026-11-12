@@ -5,9 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import type { FractionSeries } from "@/lib/timeline/fractions";
 
 import { ELEVATION_LANE_HEIGHT_PX } from "./elevation-lane";
+import { readToken } from "@/lib/theme/tokens";
+
 import { loadPlotly } from "./plotly-loader";
 
-const COLORS = { illumination: "#f0b54a", los: "#7cb5ff" } as const;
+const TOKENS = { illumination: "chart-sun", los: "chart-earth" } as const;
 
 /**
  * Visible-disk fraction (0–100 %) over the window, as a static Plotly plot: the
@@ -30,7 +32,7 @@ export function FractionLane({
     const node = ref.current;
     if (!node) return;
     let cancelled = false;
-    const color = COLORS[series.lane];
+    const color = readToken(TOKENS[series.lane], node);
     const x = series.epochsMs.map((ms) => new Date(ms));
     const traces: Partial<Plotly.ScatterData>[] = [
       {
@@ -38,7 +40,7 @@ export function FractionLane({
         y: series.astronomical,
         type: "scatter",
         mode: "lines",
-        line: { color: "rgba(160,174,192,0.8)", width: 1, dash: "dot" },
+        line: { color: readToken("chart-reference", node), width: 1, dash: "dot" },
       },
     ];
     if (series.terrainAvailable) {
@@ -107,7 +109,7 @@ export function FractionLane({
           </span>
           {!series.terrainAvailable && (
             <span
-              className="pointer-events-none absolute bottom-0.5 left-1 rounded-sm bg-panel-sunken/90 px-1 font-mono text-3xs uppercase tracking-[0.1em] text-dim"
+              className="pointer-events-none absolute bottom-0.5 left-1 rounded-sm bg-panel-sunken/90 px-1 text-3xs text-dim"
               data-testid={`lane-note-${series.lane}`}
             >
               Terrain horizon not available · astronomical only (dotted)

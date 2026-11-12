@@ -10,7 +10,7 @@ export function BrandMark({ className }: { className?: string }) {
       <circle cx="16" cy="16" r="10.5" stroke="currentColor" strokeWidth="1.5" />
       <path d="M5.5 16a10.5 10.5 0 0 0 21 0" fill="currentColor" fillOpacity="0.22" />
       <path d="M5.5 16h21" stroke="currentColor" strokeWidth="1.1" strokeOpacity="0.75" />
-      <circle cx="16" cy="26.5" r="1.7" fill="#e6eaef" />
+      <circle cx="16" cy="26.5" r="1.7" fill="currentColor" />
     </svg>
   );
 }

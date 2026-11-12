@@ -18,9 +18,9 @@ export function PanelSection({
 }) {
   const headingId = id ? `${id}-heading` : undefined;
   return (
-    <section aria-labelledby={headingId} className={cn("border-b border-hairline px-4 py-3.5", className)}>
-      <header className="mb-2.5 flex min-h-5 items-center justify-between gap-2">
-        <h2 id={headingId} className="label-caps text-muted-foreground">
+    <section aria-labelledby={headingId} className={cn("border-b border-hairline px-5 py-5", className)}>
+      <header className="mb-3 flex min-h-6 items-center justify-between gap-2">
+        <h2 id={headingId} className="text-sm font-semibold text-foreground">
           {title}
         </h2>
         {aside}
@@ -44,8 +44,8 @@ export function DataRow({
   emphasis?: boolean;
 }) {
   return (
-    <div className={cn("grid grid-cols-[7.5rem_1fr] items-center gap-2 py-[3px]", className)}>
-      <dt className="text-2xs text-dim">{label}</dt>
+    <div className={cn("grid grid-cols-[8.5rem_1fr] items-center gap-2 py-1", className)}>
+      <dt className="text-2xs text-muted-foreground">{label}</dt>
       <dd
         className={cn(
           "numeric flex min-w-0 items-center justify-end gap-1.5 text-right font-mono text-foreground",

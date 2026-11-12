@@ -54,11 +54,11 @@ export function DataStatusIndicator() {
           href="/data"
           data-testid="data-status"
           data-state={state}
-          className="hidden h-7 items-center gap-2 rounded-md border border-border bg-panel px-2.5 outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring/50 md:flex"
+          className="hidden h-9 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-panel px-2.5 outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring/50 md:flex"
         >
           <span className={cn("size-1.5 rounded-full", look.dot)} aria-hidden="true" />
           <span className="label-caps text-muted-foreground">Data</span>
-          <span className={cn("numeric font-mono text-2xs", look.text)}>{label}</span>
+          <span className={cn("numeric text-2xs font-medium", look.text)}>{label}</span>
         </Link>
       </TooltipTrigger>
       <TooltipContent side="bottom" align="end">

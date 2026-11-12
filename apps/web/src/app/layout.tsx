@@ -38,13 +38,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05070a",
-  colorScheme: "dark",
+  // Browser chrome colour; metadata cannot read a CSS token, so this repeats --background.
+  themeColor: "#f6f3ec",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`dark ${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
         <Providers>
           <AppShell>{children}</AppShell>

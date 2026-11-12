@@ -23,7 +23,7 @@ export function DataSourcesCard() {
       aside={
         <Link
           href="/data"
-          className="flex items-center gap-0.5 font-mono text-3xs uppercase tracking-wider text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex items-center gap-0.5 text-3xs font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           Registry <ArrowUpRight className="size-3" />
         </Link>
@@ -49,12 +49,12 @@ export function DataSourcesCard() {
                 </p>
                 <p className="mt-0.5 flex items-center gap-1.5">
                   <EvidenceBadge kind={dataset.evidence_kind} />
-                  <span className="truncate font-mono text-3xs text-dim">{dataset.provider}</span>
+                  <span className="truncate text-3xs text-dim">{dataset.provider}</span>
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
                 <DatasetAvailabilityPill dataset={dataset} shippedTextureIds={textures.ids} />
-                <span className="font-mono text-3xs text-dim" title={dataset.url_verification.note}>
+                <span className="text-3xs text-dim" title={dataset.url_verification.note}>
                   {dataset.url_verification.status === "verified"
                     ? `URLs verified ${dataset.url_verification.checked_on ?? ""}`
                     : "URLs unverified"}

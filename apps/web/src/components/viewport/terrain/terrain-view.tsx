@@ -22,9 +22,9 @@ export const TERRAIN_SCENE_ID = "south-pole";
 const TerrainCanvas = dynamic(() => import("./terrain-canvas"), { ssr: false });
 
 const SITE_CLASS =
-  "rounded-[3px] border border-white/15 bg-black/60 px-1.5 py-px font-mono text-[12px] text-[#e6eaef] backdrop-blur-sm";
+  "rounded-[3px] border border-white/15 bg-scrim-chip px-1.5 py-px font-mono text-[12px] text-foreground backdrop-blur-sm";
 const SITE_SELECTED_CLASS =
-  "rounded-[3px] border border-primary/60 bg-[#071425]/90 px-1.5 py-px font-mono text-[12px] text-primary";
+  "rounded-[3px] border border-primary/60 bg-scrim-selected px-1.5 py-px font-mono text-[12px] text-primary";
 
 /**
  * Vertex grid requested from C3: 1024² (≈245 m spacing, close to the DEM's 240 m) on
@@ -137,7 +137,7 @@ export function TerrainView({ labelRegistry }: { labelRegistry: LabelRegistry })
 
       <div className="pointer-events-none absolute inset-0">
         <div className="pointer-events-auto absolute top-4 left-4 flex flex-col gap-2 sm:top-5 sm:left-6">
-          <div className="w-fit rounded-md border border-hairline bg-[#05070a]/75 px-2.5 py-1.5 backdrop-blur-sm">
+          <div className="w-fit rounded-md border border-hairline bg-scrim px-2.5 py-1.5 backdrop-blur-sm">
             <p className="font-mono text-2xs font-medium uppercase tracking-[0.2em] text-foreground">
               South-pole terrain
             </p>
@@ -177,7 +177,7 @@ export function TerrainView({ labelRegistry }: { labelRegistry: LabelRegistry })
         </div>
 
         {query.data && (
-          <div className="pointer-events-auto absolute right-3 bottom-3 left-3 flex flex-col gap-1.5 rounded-md border border-hairline bg-[#05070a]/80 p-2 backdrop-blur-sm sm:right-auto sm:bottom-5 sm:left-6 sm:max-w-[min(36rem,calc(100%-3rem))]">
+          <div className="pointer-events-auto absolute right-3 bottom-3 left-3 flex flex-col gap-1.5 rounded-md border border-hairline bg-scrim p-2 backdrop-blur-sm sm:right-auto sm:bottom-5 sm:left-6 sm:max-w-[min(36rem,calc(100%-3rem))]">
             <TerrainDisclosures scene={query.data} sun={sun} />
             <p className="font-mono text-3xs text-dim" data-testid="terrain-site-count">
               {placements.length === 0

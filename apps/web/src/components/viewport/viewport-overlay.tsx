@@ -51,11 +51,11 @@ export function ViewportOverlay({
 
       {/* Title + view presets */}
       <div className="pointer-events-auto absolute top-4 left-4 flex flex-col gap-2 sm:top-5 sm:left-6">
-        <div className="w-fit rounded-md border border-hairline bg-[#05070a]/75 px-2.5 py-1.5 backdrop-blur-sm">
-          <p className="font-mono text-2xs font-medium uppercase tracking-[0.2em] text-foreground">
+        <div className="w-fit rounded-md border border-hairline bg-scrim px-2.5 py-1.5 backdrop-blur-sm">
+          <p className="text-xs font-semibold text-foreground">
             Lunar globe
           </p>
-          <p className="hidden font-mono text-3xs text-dim sm:block">
+          <p className="hidden text-3xs text-dim sm:block">
             The Moon as it is now, lit by the real Sun · radius 1,737.4 km
           </p>
         </div>
@@ -90,21 +90,21 @@ export function ViewportOverlay({
       </div>
 
       {/* Disclosures */}
-      <div className="pointer-events-auto absolute right-3 bottom-3 left-3 flex flex-col gap-1.5 rounded-md border border-hairline bg-[#05070a]/80 p-2 backdrop-blur-sm sm:right-auto sm:bottom-5 sm:left-6 sm:max-w-[min(34rem,calc(100%-16rem))]">
+      <div className="pointer-events-auto absolute right-3 bottom-3 left-3 flex flex-col gap-1.5 rounded-md border border-hairline bg-scrim p-2 backdrop-blur-sm sm:right-auto sm:bottom-5 sm:left-6 sm:max-w-[min(34rem,calc(100%-16rem))]">
         <SurfaceDisclosure surface={surface} textureState={textureState} />
         <GlobeLightingDisclosure sun={sun} />
       </div>
 
       {/* Telemetry */}
-      <dl className="absolute right-6 bottom-5 hidden grid-cols-[auto_auto] gap-x-3 gap-y-0.5 rounded-md border border-hairline bg-[#05070a]/80 px-3 py-2 font-mono text-3xs backdrop-blur-sm sm:grid">
+      <dl className="absolute right-6 bottom-5 hidden grid-cols-[auto_auto] gap-x-3 gap-y-0.5 rounded-md border border-hairline bg-scrim px-3 py-2 text-3xs backdrop-blur-sm sm:grid">
         <dt className="text-dim">Looking at</dt>
-        <dd className="numeric text-right text-foreground" data-testid="view-center">
+        <dd className="numeric text-right font-mono text-foreground" data-testid="view-center">
           {telemetry.subLatitudeDeg === null || telemetry.subLongitudeDeg === null
             ? "—"
             : `${formatLatitude(telemetry.subLatitudeDeg, 2)} ${formatLongitude(telemetry.subLongitudeDeg, 2)}`}
         </dd>
         <dt className="text-dim">Camera height</dt>
-        <dd className="numeric text-right text-foreground">
+        <dd className="numeric text-right font-mono text-foreground">
           {telemetry.altitudeKm === null
             ? "—"
             : `${Math.round(telemetry.altitudeKm).toLocaleString("en-US")} km`}
@@ -132,10 +132,10 @@ function SurfaceDisclosure({
           data-testid="surface-disclosure"
           data-surface={surface.kind}
         >
-          <span className="shrink-0 whitespace-nowrap font-mono text-3xs font-medium uppercase tracking-[0.12em] text-ev-placeholder">
+          <span className="shrink-0 whitespace-nowrap text-3xs font-semibold text-ev-placeholder">
             Visual placeholder
           </span>
-          <span className="font-mono text-3xs text-muted-foreground">
+          <span className="text-3xs text-muted-foreground">
             Procedural surface — not lunar data, no real features depicted
           </span>
         </div>
@@ -166,11 +166,11 @@ function GlobeLightingDisclosure({ sun }: { sun: GlobeSun }) {
             label="Display light"
             detail="Lighting follows the camera for legibility. It is not the computed solar direction."
           />
-          <span className="font-mono text-3xs text-muted-foreground">
+          <span className="text-3xs text-muted-foreground">
             View-relative lighting — not the computed Sun direction
           </span>
         </div>
-        <span className="font-mono text-3xs text-dim">{sun.reason}</span>
+        <span className="text-3xs text-dim">{sun.reason}</span>
       </div>
     );
   }
@@ -182,7 +182,7 @@ function GlobeLightingDisclosure({ sun }: { sun: GlobeSun }) {
           label="Sun position · NASA SPICE"
           detail={`${sun.evidence.statement} Light direction: Moon-centred apparent Sun direction in MOON_ME at the timeline epoch, interpolated between hourly samples.`}
         />
-        <span className="truncate font-mono text-3xs text-muted-foreground">
+        <span className="truncate text-3xs text-muted-foreground">
           Sub-solar point{" "}
           <span className="numeric text-foreground" data-testid="subsolar-point">
             {formatLatitude(sun.subsolarLatDeg, 2)} {formatLongitude(sun.subsolarLonDeg, 2)}
@@ -190,7 +190,7 @@ function GlobeLightingDisclosure({ sun }: { sun: GlobeSun }) {
           · {formatUtcReadable(sun.epochMs)} UTC
         </span>
       </div>
-      <span className="font-mono text-3xs text-dim">
+      <span className="text-3xs text-dim">
         No earthshine modelled: the night side is shown dark, not black, for visibility.
       </span>
     </div>
