@@ -39,14 +39,20 @@ USER lunaris
 ENV PATH="/app/.venv/bin:${PATH}" \
     LUNARIS_DATA_DIR=/data \
     LUNARIS_ENVIRONMENT=production \
-    LUNARIS_SEED_CATALOG=true
+    LUNARIS_SEED_CATALOG=true \
+    MALLOC_ARENA_MAX=2 \
+    MALLOC_MMAP_THRESHOLD_=262144 \
+    MALLOC_TRIM_THRESHOLD_=262144
+# The three MALLOC_* settings make glibc return freed numpy buffers to the OS instead of keeping
+# the high-water mark: a year-long timeline peaks near 100 MiB, and Render's free plan has 512 MiB.
 
 # Optional, for hosts without a persistent disk (e.g. a Render free web service):
 #   LUNARIS_BAKE_DATASETS  space-separated manifest ids, acquired and checksum-verified
 #                          into /data at build time (docker-compose bind-mounts ./data
 #                          instead, so the default is empty);
-#   LUNARIS_PREWARM_DEMO   "1" registers the cited demo trio and runs the site comparison
-#                          once, so horizon masks and PGDA windows are cached in the image.
+#   LUNARIS_PREWARM_DEMO   "1" runs the site comparison once per cited site, so horizon masks
+#                          and PGDA windows are cached in the image and each site's 2027
+#                          timeline is baked to /data/processed/timelines (served from disk).
 ARG LUNARIS_BAKE_DATASETS=""
 ARG LUNARIS_PREWARM_DEMO=""
 COPY apps/api/scripts/prewarm_demo.py /app/prewarm_demo.py

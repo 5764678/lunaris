@@ -145,7 +145,7 @@ Two Docker web services, both built from this repository's root:
 
 | Service | Dockerfile | Environment (also passed as build args) |
 |---|---|---|
-| API | `apps/api/Dockerfile` | `LUNARIS_BAKE_DATASETS=naif-generic-kernels-lunar lola-ldem-75s-240m`, `LUNARIS_PREWARM_DEMO=1`, `LUNARIS_CORS_ORIGINS=<web URL>` |
+| API | `apps/api/Dockerfile` | `LUNARIS_BAKE_DATASETS=naif-generic-kernels-lunar lola-ldem-75s-240m`, `LUNARIS_PREWARM_DEMO=1` (warms all 27 sites and bakes their 2027 timelines), `LUNARIS_CORS_ORIGINS=<web URL>` |
 | Web | `apps/web/Dockerfile` | `NEXT_PUBLIC_LUNARIS_API_URL=<API URL>` |
 
 - Without a persistent disk, the API image bakes the checksum-verified kernels and the LOLA
@@ -175,6 +175,7 @@ npm run contracts:generate   # after changing API schemas
 | `LUNARIS_CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | Explicit browser origins (no wildcards) |
 | `LUNARIS_DATA_DIR` | `./data` | Local data store root |
 | `LUNARIS_DATABASE_URL` | SQLite in `<data>/state/` | SQLAlchemy URL |
+| `LUNARIS_BAKE_TIMELINES` | `false` | Write computed timelines to `<data>/processed/timelines/` so later requests read them from disk. Set only by the image-build prewarm |
 | `LUNARIS_DOCS_ENABLED` | `true` | Serve `/docs`, `/redoc`, `/openapi.json` |
 | `LUNARIS_SEED_CATALOG` | `false` (the API image sets `true`) | Register all 27 cited PGDA product 78 sites at start-up; idempotent |
 | `NEXT_PUBLIC_LUNARIS_API_URL` | `http://localhost:8000` | API base URL for the browser (inlined at build time) |
