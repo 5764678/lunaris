@@ -3,8 +3,8 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
 /**
  * T-38: the comparison summary (T-18) on the Compare page. Deterministic tests serve a SYNTHETIC
  * comparison (labelled in its evidence; not lunar results) for the real registered demo trio, with
- * a summary built from the request: leaders, standings, a verdict, and a score only when the
- * request names a profile. One test runs against the live API.
+ * a summary built from the request: leaders, standings, a verdict and a recommendation built from
+ * the mission answers in the query. One test runs against the live API.
  */
 
 const API = "http://localhost:8100";
@@ -57,10 +57,77 @@ const COLUMNS = [
   },
 ];
 
+/** SYNTHETIC recommendation: the first site, or the gentlest one when a slope limit is given. */
+function recommendation(
+  ids: string[],
+  at: (id: string) => number,
+  name: (id: string) => string,
+  power: string,
+  maxSlope: string | null,
+) {
+  const slope = (id: string) => [2, 4, 6][at(id)] ?? 6;
+  const excluded = (id: string) => maxSlope !== null && slope(id) > Number(maxSlope);
+  const pick = ids.find((id) => at(id) === 0 && !excluded(id)) ?? ids.find((id) => !excluded(id)) ?? null;
+  return {
+    mission: {
+      power,
+      comms: "medium",
+      landing: "medium",
+      limits: { max_slope_deg: maxSlope === null ? null : Number(maxSlope) },
+    },
+    site_id: pick,
+    name: pick === null ? null : name(pick),
+    runner_up_site_id: null,
+    margin: null,
+    confidence: pick === null ? "none" : "clear",
+    headline: pick === null ? "SYNTHETIC: no site meets the limits." : `SYNTHETIC pick: ${name(pick)}.`,
+    reasons: pick === null ? [] : ["SYNTHETIC reason."],
+    tradeoffs: [],
+    caveats: [],
+    robustness: { tested: 6, held: 6, flips: [], statement: "SYNTHETIC: stable." },
+    needs: [
+      { need: "power", label: "Sunlight and power", priority: power, weight: 1 / 3 },
+      { need: "comms", label: "Direct-to-Earth comms", priority: "medium", weight: 1 / 3 },
+      { need: "landing", label: "Landing safety", priority: "medium", weight: 1 / 3 },
+    ],
+    scales: [],
+    ranking: ids.map((id) =>
+      excluded(id)
+        ? {
+            site_id: id,
+            name: name(id),
+            status: "excluded",
+            rank: null,
+            score: null,
+            need_scores: {},
+            reasons: [`SYNTHETIC: slope over the ${maxSlope}° limit`],
+          }
+        : {
+            site_id: id,
+            name: name(id),
+            status: id === pick ? "recommended" : "ranked",
+            rank: at(id) + 1,
+            score: 0.7 - at(id) * 0.1,
+            need_scores: { power: 0.5, comms: 0.5, landing: 0.5 },
+            reasons: [],
+          },
+    ),
+    method: "SYNTHETIC recommendation method.",
+    evidence: {
+      kind: "assumption",
+      statement: "SYNTHETIC mission-fit weights chosen by LUNARIS, not mission requirements.",
+      sources: [],
+      method: "synthetic",
+      assumptions: ["SYNTHETIC weight Sunlit, average = 0.133"],
+    },
+  };
+}
+
 function synthetic(url: string, names: Map<string, string>) {
   const query = new URL(url).searchParams;
   const ids = query.get("site_ids")!.split(",");
-  const profile = query.get("profile");
+  const power = query.get("power") ?? "medium";
+  const maxSlope = query.get("max_slope_deg");
   // Site 0 is the gentlest, site 1 the smoothest; site 2 is worst on both.
   const slope = (i: number) => [2, 4, 6][i] ?? 6;
   const rough = (i: number) => [0.5, 0.3, 0.7][i] ?? 0.7;
@@ -129,30 +196,7 @@ function synthetic(url: string, names: Map<string, string>) {
       })),
       verdict: "SYNTHETIC verdict: no single site is best on every directed metric.",
       method: "SYNTHETIC method: leaders and Pareto dominance over directed columns.",
-      score:
-        profile === "power"
-          ? {
-              profile: "power",
-              weights: { sun_mean_visible_disk_fraction: 0.4, roughness_rms_m: 0.6 },
-              normalisation: "SYNTHETIC min-max within the compared sites.",
-              scores: [
-                { site_id: ids[0], name: name(ids[0]!), score: 0.75, reason: null },
-                ...ids.slice(1).map((id) => ({
-                  site_id: id,
-                  name: name(id),
-                  score: null,
-                  reason: "no value for sunlight",
-                })),
-              ],
-              evidence: {
-                kind: "assumption",
-                statement: "SYNTHETIC 'power' weights chosen by LUNARIS, not a mission requirement.",
-                sources: [],
-                method: "synthetic",
-                assumptions: [],
-              },
-            }
-          : null,
+      recommendation: recommendation(ids, at, name, power, maxSlope),
     },
   };
 }
@@ -191,7 +235,7 @@ async function serve(page: Page, names: Map<string, string>, failSummary = false
   return summaryRequests;
 }
 
-test("verdict, standings and column leaders; no score until a profile is chosen", async ({
+test("verdict, standings and column leaders; the default mission still names a site", async ({
   page,
   request,
 }) => {
@@ -234,11 +278,11 @@ test("verdict, standings and column leaders; no score until a profile is chosen"
     );
     await expect(page.getByTestId("col-direction-surface_height_m")).toHaveText("not ranked");
 
-    // No default score: nothing ranked by weights, and the request named no profile.
-    await expect(page.getByTestId("compare-no-score")).toBeVisible();
-    await expect(page.getByTestId("compare-score")).toHaveCount(0);
+    // Unanswered questions: the request carries no mission answers, yet a site is named.
+    await expect(page.getByTestId("compare-mission-default")).toBeVisible();
+    await expect(page.getByTestId("compare-recommendation-name")).toHaveText(gentle!.name);
     expect(summaryRequests.length).toBeGreaterThan(0);
-    expect(summaryRequests.every((p) => !p.has("profile"))).toBe(true);
+    expect(summaryRequests.every((p) => !p.has("power") && !p.has("max_slope_deg"))).toBe(true);
   } finally {
     await cleanup(
       request,
@@ -247,47 +291,50 @@ test("verdict, standings and column leaders; no score until a profile is chosen"
   }
 });
 
-test("a chosen profile shows its weights as assumptions and its ordering; None removes it", async ({
+test("mission answers are sent to the API; a limit excludes sites with the reason; Reset clears them", async ({
   page,
   request,
 }) => {
   const sites = await registerTrio(request);
   const names = new Map(sites.map((s) => [s.id, s.name]));
+  const [gentle, smooth, worst] = sites;
   try {
     const summaryRequests = await serve(page, names);
     await page.goto("/compare");
     await expect(page.getByTestId("compare-summary")).toHaveAttribute("data-state", "ready");
 
-    await page.getByTestId("compare-profile-power").click();
-    const score = page.getByTestId("compare-score");
-    await expect(score).toHaveAttribute("data-profile", "power");
-    await expect.poll(() => summaryRequests.some((p) => p.get("profile") === "power")).toBe(true);
-    await expect(score.locator('[data-evidence="assumption"]')).toBeVisible();
-    await expect(score).toContainText(
-      "SYNTHETIC 'power' weights chosen by LUNARIS, not a mission requirement.",
-    );
-    await expect(page.getByTestId("compare-weight")).toHaveText([
-      "Bumpiness × 0.60",
-      "Sunlit, average × 0.40",
-    ]);
-    await expect(page.getByTestId("compare-normalisation")).toHaveText(
-      "SYNTHETIC min-max within the compared sites.",
-    );
-    const entries = page.getByTestId("compare-score-entry");
-    await expect(entries).toHaveCount(3);
-    await expect(entries.first()).toContainText("0.75");
-    await expect(entries.nth(1)).toHaveAttribute("data-null", "true");
-    await expect(entries.nth(1)).toContainText("no score · no value for sunlight");
-    await expect(entries.nth(1)).not.toContainText("0.00");
+    await page.getByTestId("compare-need-power-high").click();
+    await expect.poll(() => summaryRequests.some((p) => p.get("power") === "high")).toBe(true);
+    await expect(page.getByTestId("compare-recommendation")).toHaveAttribute("data-confidence", "clear");
+    await expect(
+      page.getByTestId("compare-recommendation").locator('[data-evidence="assumption"]'),
+    ).toBeVisible();
+    await expect(page.getByTestId("compare-ranking-entry")).toHaveCount(3);
+    await expect(page.getByTestId("compare-robustness")).toHaveText("SYNTHETIC: stable.");
 
-    // The verdict does not change with the profile: it never comes from weights.
+    // A hard limit: sites over it are excluded and say why, never given a number.
+    await page.getByText("Hard limits (optional)").click();
+    const limit = page.getByTestId("compare-limit-maxSlopeDeg");
+    await limit.fill("3");
+    await limit.press("Enter");
+    await expect.poll(() => summaryRequests.some((p) => p.get("max_slope_deg") === "3")).toBe(true);
+    await expect(page.getByTestId("compare-recommendation-name")).toHaveText(gentle!.name);
+    const excluded = page.locator('[data-testid="compare-ranking-entry"][data-status="excluded"]');
+    await expect(excluded).toHaveCount(2);
+    await expect(excluded.first()).toContainText("Excluded: SYNTHETIC: slope over the 3° limit");
+    await expect(page.getByText(smooth!.name).first()).toBeVisible();
+    await expect(page.getByText(worst!.name).first()).toBeVisible();
+
+    // The verdict does not change with the answers: it never comes from weights.
     await expect(page.getByTestId("compare-verdict")).toHaveText(
       "SYNTHETIC verdict: no single site is best on every directed metric.",
     );
 
-    await page.getByTestId("compare-profile-none").click();
-    await expect(score).toHaveCount(0);
-    await expect(page.getByTestId("compare-no-score")).toBeVisible();
+    await page.getByTestId("compare-mission-reset").click();
+    await expect(page.getByTestId("compare-mission-default")).toBeVisible();
+    await expect(page.locator('[data-testid="compare-ranking-entry"][data-status="excluded"]')).toHaveCount(
+      0,
+    );
   } finally {
     await cleanup(
       request,
@@ -330,7 +377,7 @@ test("live API: the summary ends ready, with its own error, or says which sites 
     if ((await summary.getAttribute("data-state")) === "ready") {
       await expect(page.getByTestId("compare-verdict")).not.toBeEmpty();
       await expect(page.getByTestId("compare-standing")).toHaveCount(3);
-      await expect(page.getByTestId("compare-score")).toHaveCount(0);
+      await expect(page.getByTestId("compare-recommendation")).toBeVisible();
     }
   } finally {
     await cleanup(

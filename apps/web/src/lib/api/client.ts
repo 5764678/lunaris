@@ -26,8 +26,38 @@ export type SiteComparison = components["schemas"]["SiteComparison"];
 export type CompareCell = components["schemas"]["CompareCell"];
 export type CompareRow = components["schemas"]["CompareRow"];
 export type ComparisonSummary = components["schemas"]["ComparisonSummary"];
-/** Optional mission profile for a weighted ordering (T-18). No profile, no score. */
-export type MissionProfile = "power" | "comms" | "landing";
+/** The mission recommendation returned next to the verdict: one named site, with reasons. */
+export type Recommendation = components["schemas"]["Recommendation"];
+export type Priority = components["schemas"]["Mission"]["power"];
+
+/**
+ * The answers to the mission questions: how much the mission needs sunlight, direct Earth
+ * contact and gentle ground, and four optional hard limits (null = no limit).
+ */
+export interface MissionAnswers {
+  power: Priority;
+  comms: Priority;
+  landing: Priority;
+  maxSlopeDeg: number | null;
+  maxDarknessD: number | null;
+  maxEarthOutageD: number | null;
+  minSunlitD: number | null;
+}
+
+/** Query parameters for the answers. Defaults and empty limits are left out. */
+export function missionParams(mission: MissionAnswers): Record<string, string> {
+  const params: Record<string, string> = {};
+  for (const need of ["power", "comms", "landing"] as const)
+    if (mission[need] !== "medium") params[need] = mission[need];
+  const limits: Array<[string, number | null]> = [
+    ["max_slope_deg", mission.maxSlopeDeg],
+    ["max_darkness_d", mission.maxDarknessD],
+    ["max_earth_outage_d", mission.maxEarthOutageD],
+    ["min_sunlit_d", mission.minSunlitD],
+  ];
+  for (const [name, value] of limits) if (value !== null) params[name] = String(value);
+  return params;
+}
 
 /** Moon-centred SPICE Sun direction series (T-26, generated contract). */
 export type SunDirectionSeries = components["schemas"]["SunDirectionSeries"];
@@ -278,7 +308,35 @@ const isSunDirectionSeries: Guard<SunDirectionSeries> = (v): v is SunDirectionSe
 const isStringArray = (v: unknown): v is string[] =>
   Array.isArray(v) && v.every((x) => typeof x === "string");
 
-/** T-18 summary: leaders, standings and verdict; a score only as a full ProfileScore or null. */
+const isRecommendation = (v: unknown): v is Recommendation =>
+  isObject(v) &&
+  (v.site_id === null || typeof v.site_id === "string") &&
+  (v.name === null || typeof v.name === "string") &&
+  typeof v.confidence === "string" &&
+  typeof v.headline === "string" &&
+  typeof v.method === "string" &&
+  isStringArray(v.reasons) &&
+  isStringArray(v.tradeoffs) &&
+  isStringArray(v.caveats) &&
+  isObject(v.evidence) &&
+  typeof v.evidence.kind === "string" &&
+  isStringArray(v.evidence.assumptions) &&
+  Array.isArray(v.needs) &&
+  v.needs.every((n) => isObject(n) && typeof n.need === "string" && typeof n.weight === "number") &&
+  Array.isArray(v.ranking) &&
+  v.ranking.every(
+    (e) =>
+      isObject(e) &&
+      typeof e.site_id === "string" &&
+      typeof e.name === "string" &&
+      typeof e.status === "string" &&
+      (e.score === null || e.score === undefined || typeof e.score === "number"),
+  ) &&
+  (v.robustness === null ||
+    v.robustness === undefined ||
+    (isObject(v.robustness) && typeof v.robustness.statement === "string"));
+
+/** T-18 summary: leaders, standings, verdict and the mission recommendation. */
 export const isComparisonSummary = (v: unknown): v is ComparisonSummary =>
   isObject(v) &&
   typeof v.verdict === "string" &&
@@ -303,22 +361,7 @@ export const isComparisonSummary = (v: unknown): v is ComparisonSummary =>
       isStringArray(s.dominated_by) &&
       typeof s.dominance === "string",
   ) &&
-  (v.score === null ||
-    (isObject(v.score) &&
-      typeof v.score.profile === "string" &&
-      isObject(v.score.weights) &&
-      Object.values(v.score.weights).every((w) => typeof w === "number" && Number.isFinite(w)) &&
-      typeof v.score.normalisation === "string" &&
-      isObject(v.score.evidence) &&
-      typeof v.score.evidence.kind === "string" &&
-      Array.isArray(v.score.scores) &&
-      v.score.scores.every(
-        (e) =>
-          isObject(e) &&
-          typeof e.site_id === "string" &&
-          typeof e.name === "string" &&
-          (e.score === null || typeof e.score === "number"),
-      )));
+  isRecommendation(v.recommendation);
 
 const isSiteComparisonWithSummary: Guard<SiteComparison> = (v): v is SiteComparison =>
   isSiteComparison(v) && isComparisonSummary((v as Record<string, unknown>).summary);
@@ -441,17 +484,13 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/analysis/site-comparison?${new URLSearchParams({ site_ids: siteIds.join(",") }).toString()}`,
         { signal, guard: isSiteComparison, timeoutMs: SITE_COMPARISON_TIMEOUT_MS },
       ),
-    /** The same comparison across several sites, with its summary required (T-18). */
-    siteComparisonSummary: (
-      siteIds: readonly string[],
-      profile: MissionProfile | null,
-      signal?: AbortSignal,
-    ) =>
+    /** The same comparison across several sites, with its summary and recommendation required. */
+    siteComparisonSummary: (siteIds: readonly string[], mission: MissionAnswers, signal?: AbortSignal) =>
       request<SiteComparison>(
         "GET",
         `/api/v1/analysis/site-comparison?${new URLSearchParams({
           site_ids: siteIds.join(","),
-          ...(profile ? { profile } : {}),
+          ...missionParams(mission),
         }).toString()}`,
         { signal, guard: isSiteComparisonWithSummary, timeoutMs: SITE_COMPARISON_TIMEOUT_MS },
       ),

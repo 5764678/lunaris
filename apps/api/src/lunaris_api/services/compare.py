@@ -12,8 +12,8 @@ A cell that cannot be computed is ``null`` with a reason, never 0.
 Row cache: the cells of a row depend only on the site's id and coordinates and on
 (start, end, step_s, observer_height_m, footprint_radius_m), so they are memoized in a
 bounded, thread-safe LRU shared by every request of an app (:func:`row_cache_for`).
-``summary`` and ``score`` are recomputed from the rows on every request, and the mission
-profile is never part of the key. A row is not cached when any of its cells came from a
+``summary`` and the mission recommendation are recomputed from the rows on every request, and
+the mission answers are never part of the key. A row is not cached when any of its cells came from a
 server-side failure (status >= 500, e.g. PGDA unreachable or a dataset not acquired):
 those can recover, and caching them would freeze an outage. Deterministic nulls
 (outside coverage, no terrain horizon in the timeline) are cached.
@@ -32,12 +32,19 @@ import numpy as np
 
 from lunaris_api.errors import ApiError
 from lunaris_api.schemas.common import ErrorDetail, EvidenceSchema, SourceReferenceSchema
-from lunaris_api.schemas.compare import CompareCell, CompareColumn, CompareRow, SiteComparison
+from lunaris_api.schemas.compare import (
+    CompareCell,
+    CompareColumn,
+    CompareRow,
+    Mission,
+    SiteComparison,
+)
 from lunaris_api.schemas.ephemeris import MAX_EPHEMERIS_SAMPLES
 from lunaris_api.schemas.illumination import TimelineRequest
 from lunaris_api.schemas.sites import CandidateSite
 from lunaris_api.schemas.terrain import SiteTerrainResponse
-from lunaris_api.services.compare_summary import Profile, summarize, with_directions
+from lunaris_api.services.compare_recommend import CENSORED_NOTE
+from lunaris_api.services.compare_summary import summarize, with_directions
 from lunaris_api.services.horizon import HorizonMaskService
 from lunaris_api.services.illumination import TimelineService
 from lunaris_api.services.sites import SiteService
@@ -111,6 +118,12 @@ COLUMNS = [
         description="Longest continuous period with the solar disk hidden.",
     ),
     CompareColumn(
+        key="sun_longest_visible_s",
+        label="Sun: longest sunlit period",
+        unit="s",
+        description="Longest continuous period with any part of the solar disk visible.",
+    ),
+    CompareColumn(
         key="earth_visible_fraction",
         label="Earth: visible",
         unit="fraction",
@@ -130,6 +143,7 @@ ILLUMINATION_KEYS = (
     "sun_mean_visible_disk_fraction",
     "sun_illuminated_fraction",
     "sun_longest_hidden_s",
+    "sun_longest_visible_s",
     "earth_visible_fraction",
     "earth_longest_outage_s",
 )
@@ -244,7 +258,7 @@ class CompareService:
         *,
         observer_height_m: float,
         footprint_radius_m: float = DEFAULT_FOOTPRINT_RADIUS_M,
-        profile: Profile | None = None,
+        mission: Mission | None = None,
     ) -> SiteComparison:
         ids = list(dict.fromkeys(i.strip() for i in site_ids if i.strip()))
         if not 1 <= len(ids) <= MAX_COMPARE_SITES:
@@ -293,7 +307,7 @@ class CompareService:
                 f"Observer eye {observer_height_m:g} m above the surface (horizon and timelines).",
                 f"Footprint radius {footprint_radius_m:g} m for slope p95 and roughness.",
             ],
-            summary=summarize(rows, DIRECTED_COLUMNS, profile=profile),
+            summary=summarize(rows, DIRECTED_COLUMNS, mission=mission),
         )
 
     # ── cells ────────────────────────────────────────────────────────────────
@@ -502,7 +516,7 @@ def timeline_provider(timelines: TimelineService) -> IlluminationProvider:
         def cell(
             value: float, key: str, evidence: EvidenceSchema, lim: list[str], censored: bool
         ) -> CompareCell:
-            extra = ["Longest run touches the window edge: a lower bound."] if censored else []
+            extra = [CENSORED_NOTE] if censored else []
             return CompareCell(
                 value=value, unit=units[key], evidence=evidence, limitations=[*lim, *extra]
             )
@@ -528,6 +542,13 @@ def timeline_provider(timelines: TimelineService) -> IlluminationProvider:
                 analysis.illumination.evidence,
                 sun_lim,
                 sun.longest_darkness_censored,
+            ),
+            "sun_longest_visible_s": cell(
+                sun.longest_illumination_s,
+                "sun_longest_visible_s",
+                analysis.illumination.evidence,
+                sun_lim,
+                sun.longest_illumination_censored,
             ),
             "earth_visible_fraction": cell(
                 earth.visible_fraction,

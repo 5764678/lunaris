@@ -16,11 +16,15 @@ from lunaris_api.db.engine import (
     make_engine,
     make_session_factory,
 )
+from lunaris_api.db.repositories import SqlAlchemySiteRepository
 from lunaris_api.errors import register_exception_handlers
 from lunaris_api.logging import configure_logging
 from lunaris_api.middleware import REQUEST_ID_HEADER, RequestContextMiddleware
 from lunaris_api.routers import api_v1, health
+from lunaris_api.services.catalog import CatalogService
+from lunaris_api.services.sites import SiteService
 from lunaris_api.settings import Settings, get_settings
+from lunaris_data.catalogs.sites import load_site_catalog
 from lunaris_data.registry import DatasetRegistry
 from lunaris_data.store import DataLayout
 
@@ -53,6 +57,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.data_layout = layout
         app.state.engine = engine
         app.state.session_factory = make_session_factory(engine)
+        if settings.seed_catalog:
+            with app.state.session_factory() as session:
+                result = CatalogService(
+                    load_site_catalog(), SiteService(SqlAlchemySiteRepository(session))
+                ).register_all()
+            logger.info(
+                "catalogue seeded: %d registered, %d already present",
+                len(result.created),
+                len(result.already_registered),
+            )
         app.state.dataset_registry = DatasetRegistry.load_builtin()
         app.state.started_monotonic = time.monotonic()
         logger.info(

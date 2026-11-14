@@ -8,10 +8,16 @@ report the astronomical horizon only and say so (``terrain_horizon_available: fa
 
 from __future__ import annotations
 
+import gzip
+import hashlib
+import json
+import threading
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Protocol
 
 from lunaris_api import __version__
+from lunaris_api.logging import get_logger
 from lunaris_api.schemas.ephemeris import MAX_EPHEMERIS_SAMPLES
 from lunaris_api.schemas.illumination import (
     IlluminationResult,
@@ -236,14 +242,84 @@ class HorizonMaskProvider(Protocol):
     ) -> HorizonMask: ...
 
 
+logger = get_logger("timeline")
+
+MAX_CONCURRENT_TIMELINES = 1
+"""Computing a full-year hourly timeline peaks at roughly 100 MiB of numpy temporaries, so on a
+small host (Render's free plan has 512 MiB) the computations are queued one at a time,
+process-wide, instead of running in parallel. Timelines read from disk never wait for it."""
+_HEAVY = threading.BoundedSemaphore(MAX_CONCURRENT_TIMELINES)
+
+
 class TimelineService:
-    """Illumination and Earth-visibility timelines (contract C4)."""
+    """Illumination and Earth-visibility timelines (contract C4).
+
+    Timelines computed ahead of time (``apps/api/scripts/prewarm_demo.py`` at image build, with
+    ``persist=True``) are served from ``timeline_dir`` instead of being recomputed: on a small
+    CPU a cold year-long timeline costs seconds, from disk it costs milliseconds. Requests
+    never write there unless ``persist`` is set, so visitors cannot fill the disk with odd
+    windows.
+    """
 
     def __init__(
-        self, ephemeris: EphemerisService, masks: HorizonMaskProvider | None = None
+        self,
+        ephemeris: EphemerisService,
+        masks: HorizonMaskProvider | None = None,
+        *,
+        timeline_dir: Path | None = None,
+        persist: bool = False,
     ) -> None:
         self._ephemeris = ephemeris
         self._masks = masks
+        self._timeline_dir = timeline_dir
+        self._persist = persist
+
+    # ── timelines baked to disk ──────────────────────────────────────────────
+
+    def _disk_path(
+        self, request: TimelineRequest, mask: HorizonMask, lat: float, lon: float
+    ) -> Path | None:
+        """File for this exact request. The name is a hash of everything the numbers depend
+        on (coordinates, window, step, observer height, the DEM checksum the mask was built
+        from, and the versions of the service and scientific components), so a code or data
+        change never serves a stale file. It does not contain the site id: ids are generated
+        per registry, so a file baked at image build serves any registry's copy of the site."""
+        if self._timeline_dir is None:
+            return None
+        identity = json.dumps(
+            [
+                __version__,
+                {c.name: c.version for c in (*scientific_runtime(), *data_runtime())},
+                mask.dem_sha256,
+                lat,
+                lon,
+                request.start_utc.isoformat(),
+                request.end_utc.isoformat(),
+                request.step_s,
+                mask.observer_height_m,
+            ],
+            sort_keys=True,
+        )
+        return self._timeline_dir / f"{hashlib.sha256(identity.encode()).hexdigest()[:32]}.json.gz"
+
+    @staticmethod
+    def _read_baked(path: Path | None) -> TimelineAnalysis | None:
+        if path is None or not path.is_file():
+            return None
+        try:
+            return TimelineAnalysis.model_validate_json(gzip.decompress(path.read_bytes()))
+        except (OSError, ValueError):
+            logger.warning("unreadable baked timeline %s; recomputing", path.name)
+            return None
+
+    @staticmethod
+    def _write_baked(path: Path | None, analysis: TimelineAnalysis) -> None:
+        if path is None:
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_bytes(gzip.compress(analysis.model_dump_json().encode(), compresslevel=6))
+        tmp.replace(path)
 
     def _terrain_mask(self, site_id: str) -> tuple[HorizonMask | None, str | None]:
         """The site's horizon mask, or None and the reason none is available."""
@@ -255,8 +331,27 @@ class TimelineService:
             return None, exc.message
 
     def timeline(self, request: TimelineRequest) -> TimelineAnalysis:
-        self._ephemeris.site(request.site_id)  # 404 before any terrain work
+        site = self._ephemeris.site(request.site_id)  # 404 before any terrain work
         mask, unavailable_reason = self._terrain_mask(request.site_id)
+        path = (
+            self._disk_path(
+                request, mask, site.coordinate.latitude_deg, site.coordinate.longitude_deg
+            )
+            if mask is not None
+            else None
+        )
+        if (baked := self._read_baked(path)) is not None:
+            # The caller's current site record wins over whatever was stored.
+            return baked.model_copy(update={"site_id": site.id, "site_name": site.name})
+        with _HEAVY:  # bound peak memory; see MAX_CONCURRENT_TIMELINES
+            analysis = self._compute(request, mask, unavailable_reason)
+        if self._persist:
+            self._write_baked(path, analysis)
+        return analysis
+
+    def _compute(
+        self, request: TimelineRequest, mask: HorizonMask | None, unavailable_reason: str | None
+    ) -> TimelineAnalysis:
         geometry = self._ephemeris.compute_geometry(
             request.site_id,
             request.start_utc,

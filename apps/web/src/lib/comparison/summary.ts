@@ -1,19 +1,11 @@
 /**
  * Helpers for the T-18 comparison summary: plain labels for column keys, the column leaders as a
- * lookup for the table, the weights of a profile as display lines, and the summary's state.
+ * lookup for the table, and the header note for a column's ranking direction.
  */
-import type { ComparisonSummary, MissionProfile } from "@/lib/api/client";
+import type { ComparisonSummary } from "@/lib/api/client";
 
 import { metricCopy } from "./labels";
 import type { CompareColumn } from "./progress";
-
-export const PROFILES: readonly MissionProfile[] = ["power", "comms", "landing"];
-
-const PROFILE_NAMES: Record<MissionProfile, string> = { power: "Power", comms: "Comms", landing: "Landing" };
-
-export function profileName(profile: MissionProfile): string {
-  return PROFILE_NAMES[profile];
-}
 
 /** The page's plain label for a column key; the key itself when the column is unknown. */
 export function leaderLabel(key: string, columns: readonly CompareColumn[]): string {
@@ -37,13 +29,6 @@ export function leadersByColumn(summary: ComparisonSummary | null | undefined): 
     map.set(l.key, { siteIds: new Set(l.site_ids), tied: l.site_ids.length > 1 });
   }
   return map;
-}
-
-/** A profile's weights, largest first, with the page's labels; weights shown to two decimals. */
-export function weightLines(weights: Record<string, number>, columns: readonly CompareColumn[]) {
-  return Object.entries(weights)
-    .sort(([, a], [, b]) => b - a)
-    .map(([key, weight]) => ({ key, label: leaderLabel(key, columns), weight: weight.toFixed(2) }));
 }
 
 /** Header note for a column's ranking direction. */

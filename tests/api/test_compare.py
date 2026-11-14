@@ -156,6 +156,8 @@ def test_timeline_provider_maps_terrain_summaries() -> None:
         illuminated_fraction=0.83,
         longest_darkness_s=360000.0,
         longest_darkness_censored=True,
+        longest_illumination_s=900000.0,
+        longest_illumination_censored=False,
     )
     earth = SimpleNamespace(
         visible_fraction=0.42, longest_outage_s=1.2e6, longest_outage_censored=False
@@ -175,6 +177,8 @@ def test_timeline_provider_maps_terrain_summaries() -> None:
     assert cells["earth_longest_outage_s"].unit == "s"
     assert cells["sun_longest_hidden_s"].limitations[0].startswith("Period 2027-01-01")
     assert "lower bound" in cells["sun_longest_hidden_s"].limitations[-1]
+    assert cells["sun_longest_visible_s"].value == 900000.0
+    assert "lower bound" not in " ".join(cells["sun_longest_visible_s"].limitations)
     assert "no radio link" in cells["earth_visible_fraction"].limitations
     analysis.terrain_horizon_available = False
     cells = timeline_provider(fake)("s1", start, end, 3600.0, 2.0)  # type: ignore[arg-type]

@@ -23,6 +23,7 @@ export const EXPECTED_COLUMNS: readonly Pick<CompareColumn, "key" | "unit">[] = 
   { key: "sun_mean_visible_disk_fraction", unit: "fraction" },
   { key: "sun_illuminated_fraction", unit: "fraction" },
   { key: "sun_longest_hidden_s", unit: "s" },
+  { key: "sun_longest_visible_s", unit: "s" },
   { key: "earth_visible_fraction", unit: "fraction" },
   { key: "earth_longest_outage_s", unit: "s" },
 ];
