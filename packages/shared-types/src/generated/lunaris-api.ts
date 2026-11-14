@@ -377,12 +377,36 @@ export interface paths {
         };
         /**
          * Service status and version
-         * @description Liveness/readiness of the API. Returns 200 when every check passes, 503 otherwise.
+         * @description Liveness of the API. Returns 200 when every check passes, 503 otherwise.
          *
          *     Checks are cheap and side-effect free: a ``SELECT 1`` on the database, presence of
-         *     the data directory, and the number of loaded dataset manifests.
+         *     the data directory, and the number of loaded dataset manifests. Use this path for a
+         *     host's health check and the container ``HEALTHCHECK``: it does not depend on the
+         *     science datasets, so a missing download never makes the host restart the service.
          */
         get: operations["health_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Readiness: liveness checks plus the science datasets
+         * @description Everything ``/health`` checks, plus whether the SPICE kernels and the LOLA DEM are on
+         *     disk. Returns 503 while either is missing, because site analysis would fail. Checks file
+         *     presence only (no hashing; ``lunaris-data verify`` does that).
+         */
+        get: operations["ready_health_ready_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3093,6 +3117,35 @@ export interface operations {
                 };
             };
             /** @description Service is degraded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    ready_health_ready_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+            /** @description Not ready to analyse sites. */
             503: {
                 headers: {
                     [name: string]: unknown;

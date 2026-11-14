@@ -5442,7 +5442,7 @@
     },
     "/health": {
       "get": {
-        "description": "Liveness/readiness of the API. Returns 200 when every check passes, 503 otherwise.\n\nChecks are cheap and side-effect free: a ``SELECT 1`` on the database, presence of\nthe data directory, and the number of loaded dataset manifests.",
+        "description": "Liveness of the API. Returns 200 when every check passes, 503 otherwise.\n\nChecks are cheap and side-effect free: a ``SELECT 1`` on the database, presence of\nthe data directory, and the number of loaded dataset manifests. Use this path for a\nhost's health check and the container ``HEALTHCHECK``: it does not depend on the\nscience datasets, so a missing download never makes the host restart the service.",
         "operationId": "health_health_get",
         "responses": {
           "200": {
@@ -5467,6 +5467,38 @@
           }
         },
         "summary": "Service status and version",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "Everything ``/health`` checks, plus whether the SPICE kernels and the LOLA DEM are on\ndisk. Returns 503 while either is missing, because site analysis would fail. Checks file\npresence only (no hashing; ``lunaris-data verify`` does that).",
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Not ready to analyse sites."
+          }
+        },
+        "summary": "Readiness: liveness checks plus the science datasets",
         "tags": [
           "health"
         ]

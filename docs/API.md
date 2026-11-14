@@ -44,8 +44,10 @@ Base URL in development: `http://localhost:8000`. Interactive documentation:
 
 ### `GET /health`
 
-Liveness and readiness. **200** when every check passes, **503** with the same body when
-degraded.
+Liveness. **200** when every check passes, **503** with the same body when degraded. It does
+not depend on the science datasets, so it is the path for a host's health check (for example
+Render's Health Check Path) and the container `HEALTHCHECK`: a missing download never makes the
+host restart the service.
 
 ```json
 {
@@ -63,6 +65,14 @@ degraded.
   ]
 }
 ```
+
+### `GET /health/ready`
+
+Readiness: everything `/health` checks, plus one `dataset:<id>` check for the SPICE kernels
+(`naif-generic-kernels-lunar`) and the LOLA DEM (`lola-ldem-75s-240m`). **200** when both are on
+disk, **503** with the same body while either is missing; the check's `detail` names the
+`lunaris-data acquire` command. File presence only: nothing is hashed or loaded
+(`lunaris-data verify` does that).
 
 ### `GET /api/v1/system/runtime`
 
