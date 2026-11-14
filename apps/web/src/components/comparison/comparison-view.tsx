@@ -10,9 +10,10 @@ import { ComparisonSummaryPanel, type SummaryState } from "@/components/comparis
 import { CatalogDemoTrio } from "@/components/mission/catalog-demo-trio";
 import { Button } from "@/components/ui/button";
 import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
-import type { MissionProfile, SiteComparison } from "@/lib/api/client";
+import type { MissionAnswers, SiteComparison } from "@/lib/api/client";
 import { useComparisonSummary, useSiteCatalog, useSiteComparisons, useSitesQuery } from "@/lib/api/queries";
 import { formatPeriodUtc, metricCopy, metricTitle } from "@/lib/comparison/labels";
+import { DEFAULT_MISSION } from "@/lib/comparison/mission";
 import { columnsFor, countProgress, progressMessage, rowStatus } from "@/lib/comparison/progress";
 import { directionNote, leadersByColumn } from "@/lib/comparison/summary";
 import { cn } from "@/lib/utils";
@@ -114,11 +115,11 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
 
   // The summary needs every site in one request; it is asked once every row is ready, after the
   // rows. The API recomputes the rows for it today; fast once the API's row cache lands.
-  const [profile, setProfile] = useState<MissionProfile | null>(null);
+  const [mission, setMission] = useState<MissionAnswers>(DEFAULT_MISSION);
   const allReady = progress.total > 0 && progress.ready === progress.total;
   const summaryQuery = useComparisonSummary(
     entries.map(({ site }) => site.id),
-    profile,
+    mission,
     allReady,
   );
   const summary = allReady ? summaryQuery.data?.summary : undefined;
@@ -157,8 +158,8 @@ function ComparisonTable({ entries }: { entries: Entry[] }) {
       <ComparisonSummaryPanel
         state={summaryState}
         columns={columns}
-        profile={profile}
-        onProfile={setProfile}
+        mission={mission}
+        onMission={setMission}
       />
       <HorizontalScroll label="Comparison table (scrolls sideways)" testId="compare-scroll">
         <table className="w-max min-w-full border-collapse text-left" data-testid="compare-table">

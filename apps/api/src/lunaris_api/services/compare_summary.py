@@ -10,9 +10,8 @@
 * Pareto dominance: site A dominates B when, on every directed column where both have a
   value, A is at least as good, and A is strictly better on at least one.
 * The verdict sentence is built only from these relations, never from weights.
-* An optional profile gives fixed, documented weights over directed columns, applied to
-  values min-max normalised within the compared sites. Weights and normalisation are
-  returned as ``assumption`` evidence. Without a profile there is no score at all.
+* The mission recommendation (``compare_recommend``) is separate: it scores sites against
+  the stated mission priorities and limits and is returned next to this verdict.
 """
 
 from __future__ import annotations
@@ -20,19 +19,17 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Literal
 
-from lunaris_api.schemas.common import EvidenceSchema
 from lunaris_api.schemas.compare import (
     ColumnLeaders,
     CompareColumn,
     CompareRow,
     ComparisonSummary,
-    ProfileScore,
-    ScoreEntry,
+    Mission,
     SiteStanding,
 )
+from lunaris_api.services.compare_recommend import recommend
 
 Better = Literal["higher", "lower"]
-Profile = Literal["power", "comms", "landing"]
 
 DIRECTIONS: dict[str, tuple[Better | None, str]] = {
     "surface_height_m": (
@@ -60,6 +57,10 @@ DIRECTIONS: dict[str, tuple[Better | None, str]] = {
     ),
     "sun_illuminated_fraction": ("higher", "More sunlit time means more power."),
     "sun_longest_hidden_s": ("lower", "Shorter darkness is easier to survive on batteries."),
+    "sun_longest_visible_s": (
+        "higher",
+        "A longer unbroken sunlit period supports a longer solar-powered surface stay.",
+    ),
     "earth_visible_fraction": (
         "higher",
         "More time with Earth in view means more direct-to-Earth comms.",
@@ -77,30 +78,16 @@ SHORT: dict[str, str] = {
     "sun_mean_visible_disk_fraction": "mean sunlight",
     "sun_illuminated_fraction": "sunlit time",
     "sun_longest_hidden_s": "longest darkness",
+    "sun_longest_visible_s": "longest sunlit period",
     "earth_visible_fraction": "Earth visibility",
     "earth_longest_outage_s": "longest Earth outage",
 }
 
-PROFILES: dict[Profile, dict[str, float]] = {
-    "power": {
-        "sun_mean_visible_disk_fraction": 0.4,
-        "sun_illuminated_fraction": 0.2,
-        "sun_longest_hidden_s": 0.4,
-    },
-    "comms": {"earth_visible_fraction": 0.6, "earth_longest_outage_s": 0.4},
-    "landing": {"slope_at_site_deg": 0.3, "slope_p95_deg": 0.4, "roughness_rms_m": 0.3},
-}
-
-NORMALISATION = (
-    "Min-max within the compared sites, per column: (v − min) / (max − min) when higher is "
-    "better, (max − v) / (max − min) when lower is better; 1 for every site when all values "
-    "are equal. Score = Σ weight × normalised value. A site with a null cell in a weighted "
-    "column has no score."
-)
 SUMMARY_METHOD = (
     "Directions are declared per column. Leaders: best non-null value, ties within a "
     "relative 1e-9. Pareto dominance over directed columns where both sites have values. "
-    "The verdict is generated from leads, trails and dominance only, never from weights."
+    "The verdict is generated from leads, trails and dominance only, never from weights; "
+    "the mission recommendation is computed separately and states its weights."
 )
 _REL_TOL = 1e-9
 
@@ -266,67 +253,14 @@ def _list(names: Sequence[str]) -> str:
     return ", ".join(names[:-1]) + " and " + names[-1]
 
 
-def _score(
-    rows: Sequence[CompareRow], columns: Sequence[CompareColumn], profile: Profile
-) -> ProfileScore:
-    weights = PROFILES[profile]
-    by_key = {c.key: c for c in columns}
-    normalised: dict[str, dict[str, float]] = {}
-    for key in weights:
-        better = by_key[key].better
-        assert better is not None  # noqa: S101
-        present = {r.site_id: v for r in rows if (v := _value(r, key)) is not None}
-        if not present:
-            continue
-        lo, hi = min(present.values()), max(present.values())
-        span = hi - lo
-        normalised[key] = {
-            sid: 1.0
-            if _equal(lo, hi)
-            else ((v - lo) / span if better == "higher" else (hi - v) / span)
-            for sid, v in present.items()
-        }
-    entries = []
-    for r in rows:
-        missing = [k for k in weights if r.site_id not in normalised.get(k, {})]
-        if missing:
-            entries.append(
-                ScoreEntry(
-                    site_id=r.site_id,
-                    name=r.name,
-                    score=None,
-                    reason=f"no value for {_phrase(missing)}",
-                )
-            )
-        else:
-            total = sum(w * normalised[k][r.site_id] for k, w in weights.items())
-            entries.append(ScoreEntry(site_id=r.site_id, name=r.name, score=round(total, 12)))
-    entries.sort(key=lambda e: (e.score is None, -(e.score or 0.0)))
-    return ProfileScore(
-        profile=profile,
-        weights=dict(weights),
-        normalisation=NORMALISATION,
-        scores=entries,
-        evidence=EvidenceSchema(
-            kind="assumption",
-            statement=(
-                f"'{profile}' profile score: fixed weights chosen by LUNARIS for this profile, "
-                "not a mission requirement. Scores rank only the compared sites."
-            ),
-            method=NORMALISATION,
-            assumptions=[f"weight {k} = {w:g}" for k, w in weights.items()]
-            + ["Normalisation is relative to the compared sites: adding a site can change scores."],
-        ),
-    )
-
-
 def summarize(
     rows: Sequence[CompareRow],
     columns: Sequence[CompareColumn],
     *,
-    profile: Profile | None = None,
+    mission: Mission | None = None,
 ) -> ComparisonSummary:
-    """Leaders, per-site standing, Pareto dominance, verdict and optional profile score."""
+    """Leaders, per-site standing, Pareto dominance, verdict and the mission recommendation
+    (for the default mission, every need "important" and no limits, when none is given)."""
     directed = directed_columns(columns)
     leaders = [_leaders(rows, c) for c in directed]
     losers = {c.key: _losers(rows, c, lead) for c, lead in zip(directed, leaders, strict=True)}
@@ -359,16 +293,13 @@ def summarize(
         sites=[standings[r.site_id] for r in rows],
         verdict=_verdict(rows, standings, len(ranked)),
         method=SUMMARY_METHOD,
-        score=_score(rows, directed, profile) if profile is not None else None,
+        recommendation=recommend(rows, columns, mission or Mission()),
     )
 
 
 __all__ = [
     "DIRECTIONS",
-    "NORMALISATION",
-    "PROFILES",
     "SUMMARY_METHOD",
-    "Profile",
     "directed_columns",
     "summarize",
     "with_directions",

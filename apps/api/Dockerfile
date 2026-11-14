@@ -38,7 +38,8 @@ USER lunaris
 
 ENV PATH="/app/.venv/bin:${PATH}" \
     LUNARIS_DATA_DIR=/data \
-    LUNARIS_ENVIRONMENT=production
+    LUNARIS_ENVIRONMENT=production \
+    LUNARIS_SEED_CATALOG=true
 
 # Optional, for hosts without a persistent disk (e.g. a Render free web service):
 #   LUNARIS_BAKE_DATASETS  space-separated manifest ids, acquired and checksum-verified

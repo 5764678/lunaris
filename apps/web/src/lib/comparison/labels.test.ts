@@ -15,6 +15,7 @@ describe("metricCopy", () => {
       "roughness_rms_m",
       "sun_illuminated_fraction",
       "sun_longest_hidden_s",
+      "sun_longest_visible_s",
       "earth_visible_fraction",
       "earth_longest_outage_s",
     ]) {
@@ -30,6 +31,7 @@ describe("metricCopy", () => {
 
   it("warns that a run touching the window edge is a minimum", () => {
     expect(metricCopy("sun_longest_hidden_s", "x").tip).toMatch(/treat it as a minimum/);
+    expect(metricCopy("sun_longest_visible_s", "x").tip).toMatch(/treat it as a minimum/);
     expect(metricCopy("earth_longest_outage_s", "x").tip).toMatch(/treat it as a minimum/);
   });
 

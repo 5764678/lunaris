@@ -32,7 +32,7 @@ sites, and the Sun, Earth, sunlight and line-of-sight lanes for the selected sit
 | **Overview** `/` | 3D globe in `MOON_ME`, lit by the Moon-centred apparent Sun direction (SPICE, CN+S) at the timeline epoch, with the sub-solar point; the cited south-pole sites (PGDA product 78); a LOLA south-pole terrain scene; timeline lanes for Sun and Earth elevation, terrain-aware sunlight and Earth line of sight |
 | **Illumination & Earth** `/illumination` | Sky chart per site: the terrain skyline (1440 azimuths, 200 km, curvature-corrected; truncated azimuths drawn as lower bounds) with the Sun and Earth tracks and their disk widths; sunlit and Earth-visible fractions and windows, with censored runs shown as "≥" |
 | **Terrain** `/terrain` | Height, slope at the site, footprint slope (p95) and roughness from the PGDA 20 m DEM, read remotely by HTTP range requests, each with its baseline; optional slope/roughness thresholds, labelled as your assumptions |
-| **Compare** `/compare` | Up to 10 sites over 2027, one column per measure. A summary with each measure's direction, the leaders, Pareto dominance and a verdict generated from them, never from hidden weights. Optional mission profiles (power, comms, landing) add a score whose weights are shown as assumptions |
+| **Compare** `/compare` | Up to 10 sites over 2027, one column per measure. A summary with each measure's direction, the leaders, Pareto dominance and a verdict generated from them, never from hidden weights. Mission questions (how much it needs power, comms and landing, plus optional hard limits) name one recommended site with reasons, confidence and what would change it; every weight is shown as an assumption. All 27 cited sites are available (the hosted image registers them at start-up) |
 | **Data Sources** `/data` | Every dataset with its provenance, SHA-256 and acquisition status |
 
 Behind it: a FastAPI service (OpenAPI contract, typed errors, evidence on every value) and a
@@ -133,9 +133,9 @@ after about 15 minutes idle, and the page says so while the server wakes.
    baselines. Enter a maximum slope to see hazard flags, labelled as your assumption.
 6. **Compare.** The demo trio over 2027. The summary answers "which site is best?" honestly:
    no single site wins every measure; Peak near Shackleton leads on slope, sunlight and Earth
-   visibility but is the roughest; Malapert massif is the smoothest. Pick a mission profile
-   (power, comms, landing) to see a weighted ordering with its weights shown. Under landing,
-   Malapert comes first. Click any number for its method, sources (with SHA-256) and limits.
+   visibility but is the roughest; Malapert massif is the smoothest. Answer the mission
+   questions (power, comms, landing, optional limits) to get one recommended site: Peak near
+   Shackleton by default, Malapert massif if only landing safety counts. Click any number for its method, sources (with SHA-256) and limits.
 7. **Where the numbers come from:** see "Checked against independent references" above.
    Shackleton's floor comes out at exactly 0 % sunlit.
 
@@ -176,6 +176,7 @@ npm run contracts:generate   # after changing API schemas
 | `LUNARIS_DATA_DIR` | `./data` | Local data store root |
 | `LUNARIS_DATABASE_URL` | SQLite in `<data>/state/` | SQLAlchemy URL |
 | `LUNARIS_DOCS_ENABLED` | `true` | Serve `/docs`, `/redoc`, `/openapi.json` |
+| `LUNARIS_SEED_CATALOG` | `false` (the API image sets `true`) | Register all 27 cited PGDA product 78 sites at start-up; idempotent |
 | `NEXT_PUBLIC_LUNARIS_API_URL` | `http://localhost:8000` | API base URL for the browser (inlined at build time) |
 
 No secrets are required. Never put secrets in `NEXT_PUBLIC_*` variables.

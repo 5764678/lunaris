@@ -17,6 +17,11 @@ export interface paths {
          *     manifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be
          *     computed is null with a `reason`, never 0. The default window is calendar year 2027
          *     at a 1 h step (8 761 samples, within the ephemeris sample cap).
+         *
+         *     The `summary.recommendation` names the best-fitting site for the stated mission: how
+         *     much it needs power, comms and landing safety (`none|low|medium|high`) and optional hard
+         *     limits. Sites that break a limit are excluded with the reason, never down-weighted;
+         *     every weight and scale is returned as assumption evidence.
          */
         get: operations["compare_sites_api_v1_analysis_site_comparison_get"];
         put?: never;
@@ -642,6 +647,7 @@ export interface components {
             slope_p95_deg: components["schemas"]["CompareCell"];
             sun_illuminated_fraction: components["schemas"]["CompareCell"];
             sun_longest_hidden_s: components["schemas"]["CompareCell"];
+            sun_longest_visible_s: components["schemas"]["CompareCell"];
             sun_mean_visible_disk_fraction: components["schemas"]["CompareCell"];
             surface_height_m: components["schemas"]["CompareCell"];
         };
@@ -651,8 +657,8 @@ export interface components {
             leaders: components["schemas"]["ColumnLeaders"][];
             /** Method */
             method: string;
-            /** @description Only when a `profile` is requested; there is no default score. */
-            score: components["schemas"]["ProfileScore"] | null;
+            /** @description The best-fitting site for the stated mission (priorities and limits); every weight and scale is returned as assumption evidence. */
+            recommendation: components["schemas"]["Recommendation"];
             /** Sites */
             sites: components["schemas"]["SiteStanding"][];
             /**
@@ -1283,25 +1289,128 @@ export interface components {
             /** Sunlit Windows */
             sunlit_windows: components["schemas"]["VisibilityWindow"][];
         };
-        /** ProfileScore */
-        ProfileScore: {
-            evidence: components["schemas"]["EvidenceSchema"];
-            /** Normalisation */
-            normalisation: string;
+        /**
+         * Mission
+         * @description The answers to the mission questions: how much each need matters, and the limits.
+         */
+        Mission: {
             /**
-             * Profile
+             * Comms
+             * @default medium
              * @enum {string}
              */
-            profile: "power" | "comms" | "landing";
+            comms: "none" | "low" | "medium" | "high";
             /**
-             * Scores
-             * @description Sorted by score, best first; null scores last.
+             * Landing
+             * @default medium
+             * @enum {string}
              */
-            scores: components["schemas"]["ScoreEntry"][];
-            /** Weights */
-            weights: {
+            landing: "none" | "low" | "medium" | "high";
+            /** @default {} */
+            limits: components["schemas"]["MissionLimits"];
+            /**
+             * Power
+             * @default medium
+             * @enum {string}
+             */
+            power: "none" | "low" | "medium" | "high";
+        };
+        /**
+         * MissionLimits
+         * @description Hard requirements. A site that breaks one is excluded, never down-weighted.
+         */
+        MissionLimits: {
+            /** Max Darkness D */
+            max_darkness_d: number | null;
+            /** Max Earth Outage D */
+            max_earth_outage_d: number | null;
+            /** Max Slope Deg */
+            max_slope_deg: number | null;
+            /** Min Sunlit D */
+            min_sunlit_d: number | null;
+        };
+        /** NeedInfo */
+        NeedInfo: {
+            /** Label */
+            label: string;
+            /**
+             * Need
+             * @enum {string}
+             */
+            need: "power" | "comms" | "landing";
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "none" | "low" | "medium" | "high";
+            /**
+             * Weight
+             * @description Share of the score, 0..1; the shares sum to 1.
+             */
+            weight: number;
+        };
+        /** RankedSite */
+        RankedSite: {
+            /** Name */
+            name: string;
+            /**
+             * Need Scores
+             * @description 0..1 per need, where every measure has a value.
+             */
+            need_scores: {
                 [key: string]: number;
             };
+            /** Rank */
+            rank: number | null;
+            /**
+             * Reasons
+             * @description Why the site is excluded or has no score.
+             */
+            reasons: string[];
+            /** Score */
+            score: number | null;
+            /** Site Id */
+            site_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "recommended" | "ranked" | "excluded" | "unscored";
+        };
+        /** Recommendation */
+        Recommendation: {
+            /** Caveats */
+            caveats: string[];
+            /**
+             * Confidence
+             * @enum {string}
+             */
+            confidence: "clear" | "moderate" | "narrow" | "tie" | "only_option" | "none";
+            evidence: components["schemas"]["EvidenceSchema"];
+            /** Headline */
+            headline: string;
+            /** Margin */
+            margin: number | null;
+            /** Method */
+            method: string;
+            mission: components["schemas"]["Mission"];
+            /** Name */
+            name: string | null;
+            /** Needs */
+            needs: components["schemas"]["NeedInfo"][];
+            /** Ranking */
+            ranking: components["schemas"]["RankedSite"][];
+            /** Reasons */
+            reasons: string[];
+            robustness: components["schemas"]["Robustness"] | null;
+            /** Runner Up Site Id */
+            runner_up_site_id: string | null;
+            /** Scales */
+            scales: components["schemas"]["ScaleInfo"][];
+            /** Site Id */
+            site_id: string | null;
+            /** Tradeoffs */
+            tradeoffs: string[];
         };
         /** RegisteredCatalogSites */
         RegisteredCatalogSites: {
@@ -1317,6 +1426,26 @@ export interface components {
             created: string[];
             /** Sites */
             sites: components["schemas"]["CandidateSite"][];
+        };
+        /** Robustness */
+        Robustness: {
+            /** Flips */
+            flips: components["schemas"]["RobustnessFlip"][];
+            /** Held */
+            held: number;
+            /** Statement */
+            statement: string;
+            /** Tested */
+            tested: number;
+        };
+        /** RobustnessFlip */
+        RobustnessFlip: {
+            /** Change */
+            change: string;
+            /** Name */
+            name: string;
+            /** Site Id */
+            site_id: string;
         };
         /** RuntimeComponentSchema */
         RuntimeComponentSchema: {
@@ -1342,6 +1471,34 @@ export interface components {
             environment: string;
             /** Service Version */
             service_version: string;
+        };
+        /**
+         * ScaleInfo
+         * @description Fixed reference scale of one scored measure: ``worst`` scores 0, ``best`` scores 1.
+         */
+        ScaleInfo: {
+            /** Best */
+            best: number;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Need
+             * @enum {string}
+             */
+            need: "power" | "comms" | "landing";
+            /** Rationale */
+            rationale: string;
+            /** Unit */
+            unit: string;
+            /**
+             * Weight
+             * @description Share of the score, 0..1.
+             */
+            weight: number;
+            /** Worst */
+            worst: number;
         };
         /**
          * SceneBinaryLayoutSchema
@@ -1387,20 +1544,6 @@ export interface components {
              * @constant
              */
             values_per_vertex: 4;
-        };
-        /** ScoreEntry */
-        ScoreEntry: {
-            /** Name */
-            name: string;
-            /** Reason */
-            reason: string | null;
-            /**
-             * Score
-             * @description Weighted sum of normalised values in [0, 1].
-             */
-            score: number | null;
-            /** Site Id */
-            site_id: string;
         };
         /** SelenographicCoordinateSchema */
         SelenographicCoordinateSchema: {
@@ -1990,8 +2133,20 @@ export interface operations {
                 step_s?: number;
                 observer_height_m?: number;
                 footprint_radius_m?: number;
-                /** @description Optional mission profile: adds a weighted ordering with its fixed weights and normalisation returned as assumption evidence. Without it, no score. */
-                profile?: ("power" | "comms" | "landing") | null;
+                /** @description How much the mission depends on sunlight (none = e.g. nuclear). */
+                power?: "none" | "low" | "medium" | "high";
+                /** @description How much it depends on direct line of sight to Earth (none = relay). */
+                comms?: "none" | "low" | "medium" | "high";
+                /** @description How much it needs gentle, smooth terrain. */
+                landing?: "none" | "low" | "medium" | "high";
+                /** @description Limit: steepest slope (at the site and footprint p95). */
+                max_slope_deg?: number | null;
+                /** @description Limit: longest darkness survivable, days. */
+                max_darkness_d?: number | null;
+                /** @description Limit: longest gap without Earth in view, days. */
+                max_earth_outage_d?: number | null;
+                /** @description Limit: continuous sunlight required, days. */
+                min_sunlit_d?: number | null;
             };
             header?: never;
             path?: never;
