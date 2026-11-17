@@ -13,14 +13,16 @@ import { UtcClock } from "./utc-clock";
 export function TopBar() {
   const t = useT();
   return (
-    <header className="col-span-2 flex h-11 items-center gap-3 border-b border-border bg-surface px-3">
+    <header className="col-span-2 flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
       <Link
         href="/"
         className="flex items-center gap-2.5 rounded-md pr-1 text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         aria-label={t.shell.homeLabel}
       >
         <BrandMark />
-        <span className="font-mono text-[13px] font-semibold tracking-[0.32em] text-foreground">LUNARIS</span>
+        <span className="text-base font-semibold tracking-[0.18em] text-foreground max-sm:sr-only">
+          LUNARIS
+        </span>
       </Link>
       <span className="hidden h-4 w-px bg-border sm:block" aria-hidden="true" />
       <div className="hidden min-w-0 items-center gap-2 sm:flex">

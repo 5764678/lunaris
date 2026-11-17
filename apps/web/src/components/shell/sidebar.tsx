@@ -16,10 +16,10 @@ export function Sidebar() {
     <nav
       data-testid="main-nav"
       aria-label={t.shell.modulesLabel}
-      className="flex w-[4.75rem] shrink-0 flex-col border-r border-border bg-surface xl:w-56"
+      className="flex w-[5rem] shrink-0 flex-col border-r border-border bg-surface xl:w-60"
     >
       <div className="label-caps hidden px-4 pt-4 pb-2 xl:block">LUNARIS</div>
-      <ul className="flex flex-col gap-0.5 p-1 pt-3 xl:p-2 xl:pt-0">
+      <ul className="flex flex-col gap-1 p-1.5 pt-3 xl:p-3 xl:pt-0">
         {NAV_ITEMS.map((item) => (
           <li key={item.id}>
             <NavLink item={item} active={item.href === pathname} />
@@ -46,7 +46,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           aria-current={active ? "page" : undefined}
           data-testid={`nav-${item.id}`}
           className={cn(
-            "relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1.5 text-3xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 xl:h-9 xl:min-h-0 xl:flex-row xl:justify-start xl:gap-2.5 xl:px-2.5 xl:py-0 xl:text-xs",
+            "relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1.5 text-3xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 xl:h-11 xl:min-h-0 xl:flex-row xl:justify-start xl:gap-2.5 xl:px-2.5 xl:py-0 xl:text-sm",
             active
               ? "bg-accent text-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary"
               : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",

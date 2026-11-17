@@ -5,11 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import type { ElevationSeries } from "@/lib/timeline/series";
 import { elevationRange } from "@/lib/timeline/series";
 
+import { readToken } from "@/lib/theme/tokens";
+
 import { loadPlotly } from "./plotly-loader";
 
-export const ELEVATION_LANE_HEIGHT_PX = 64;
+export const ELEVATION_LANE_HEIGHT_PX = 76;
 
-const COLORS = { sun: "#f0b54a", earth: "#7cb5ff" } as const;
+const TOKENS = { sun: "chart-sun", earth: "chart-earth" } as const;
 
 /**
  * Elevation of one body over the timeline window, drawn with Plotly as a static plot
@@ -34,7 +36,7 @@ export function ElevationLane({
     const node = ref.current;
     if (!node) return;
     let cancelled = false;
-    const color = COLORS[series.body];
+    const color = readToken(TOKENS[series.body], node);
     const [yMin, yMax] = elevationRange(series);
     const x = series.epochsMs.map((ms) => new Date(ms));
     const upper = series.elevationDeg.map((e, i) => e + series.angularRadiusDeg[i]!);
@@ -80,7 +82,7 @@ export function ElevationLane({
                 x1: 1,
                 y0: 0,
                 y1: 0,
-                line: { color: "rgba(160,174,192,0.55)", width: 1, dash: "dot" },
+                line: { color: readToken("chart-reference", node), width: 1, dash: "dot" },
               },
             ],
           },
@@ -123,7 +125,7 @@ export function ElevationLane({
         </>
       )}
       {state === "error" && (
-        <span className="absolute inset-0 flex items-center justify-center font-mono text-3xs text-warn">
+        <span className="absolute inset-0 flex items-center justify-center text-3xs text-warn">
           Plot unavailable (chart library failed to load)
         </span>
       )}

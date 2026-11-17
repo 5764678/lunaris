@@ -59,7 +59,7 @@ export function CellEvidence({
           )}
         >
           {value === null ? (
-            <span className="font-mono text-3xs [overflow-wrap:anywhere] text-dim italic">
+            <span className="text-3xs [overflow-wrap:anywhere] text-dim italic">
               N/C · <span className="not-italic">{cell.reason ?? "not computed"}</span>
             </span>
           ) : (
@@ -67,7 +67,7 @@ export function CellEvidence({
               {value}
             </span>
           )}
-          {baseline && <span className="font-mono text-3xs text-dim">{baseline}</span>}
+          {baseline && <span className="text-3xs text-dim">{baseline}</span>}
           {mapNote && value !== null && <span className="text-3xs text-dim">{mapNote}</span>}
         </button>
       </PopoverTrigger>
@@ -121,7 +121,7 @@ export function CellEvidence({
           <ul className="mt-2 space-y-1 border-t border-hairline pt-2">
             {limits.map((l) => (
               <li key={`l-${l}`} className="flex items-start gap-2 text-muted-foreground">
-                <span className="mt-px shrink-0 text-3xs font-medium uppercase text-warn">Limit</span>
+                <span className="mt-px shrink-0 text-3xs font-semibold text-warn">Limit</span>
                 {l}
               </li>
             ))}

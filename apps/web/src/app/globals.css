@@ -4,16 +4,86 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * LUNARIS design tokens. The application is dark-only: mission-control surfaces are
- * graphite/near-black, with a single restrained cool-blue accent. Status colours and
- * evidence colours are separate vocabularies and must not be mixed:
- *   status   — system state (ok / warn / critical / info)
- *   evidence — epistemic kind of a value (observation, calculation, assumption, …)
+ * LUNARIS design tokens (D14, light theme). The page is warm off-white with dark text and a
+ * terracotta accent. The Moon globe, the terrain scene and the sky chart are "windows into
+ * space": they sit inside a `.space` container that re-declares the same token names with dark
+ * values, so any component rendered inside one (overlays, labels, chart text) keeps using the
+ * ordinary utilities and stays readable. Status colours and evidence colours are separate
+ * vocabularies and must not be mixed:
+ *   status   - system state (ok / warn / critical / info)
+ *   evidence - epistemic kind of a value (observation, calculation, assumption, ...)
+ * Every pair of text and surface colour is checked against WCAG AA in globals.contrast.test.ts.
  */
 :root {
-  --radius: 0.375rem;
+  --radius: 0.625rem;
 
   /* Surfaces */
+  --background: #f6f3ec;
+  --surface: #fbfaf6;
+  --panel: #ffffff;
+  --panel-raised: #ffffff;
+  --panel-sunken: #efebe2;
+  --hairline: #ebe6da;
+  --border: #ddd6c7;
+  --border-strong: #b8af9c;
+
+  /* Text */
+  --foreground: #1f2328;
+  --muted-foreground: #4a4f57;
+  --dim: #5f5b52;
+
+  /* Accent: terracotta, with a deeper shade for hover and a gold for highlights */
+  --primary: #a8450f;
+  --primary-strong: #8f3a0e;
+  --primary-foreground: #ffffff;
+  --ring: #a8450f;
+  --highlight: #8a6200;
+  --highlight-soft: #f7e9bf;
+
+  /* Status */
+  --ok: #1a7447;
+  --warn: #8a5a00;
+  --critical: #b42318;
+  --info: #1d5fa8;
+
+  /* Evidence kinds (quiet badges: tinted fill, thin border, coloured text) */
+  --ev-observation: #1d5fa8;
+  --ev-derived: #4a4fb5;
+  --ev-model: #7a3fb0;
+  --ev-calculation: #0d6e66;
+  --ev-assumption: #8a5a00;
+  --ev-placeholder: #a8430e;
+  --ev-not-computed: #5f5b52;
+
+  /* shadcn/ui semantic tokens */
+  --card: var(--panel);
+  --card-foreground: var(--foreground);
+  --popover: #ffffff;
+  --popover-foreground: var(--foreground);
+  --secondary: #f1ede3;
+  --secondary-foreground: #2c3138;
+  --muted: #f1ede3;
+  --accent: #f3e6d6;
+  --accent-foreground: var(--foreground);
+  --destructive: var(--critical);
+  --input: #cfc7b6;
+
+  /* Chart colours (read by Plotly): the Sun is gold, Earth is blue, terrain is grey. Light-page values. */
+  --chart-sun: #a86f00;
+  --chart-earth: #1d5fa8;
+  --chart-terrain: #667283;
+  --chart-lower-bound: #b42318;
+  --chart-grid: rgba(95, 91, 82, 0.18);
+  --chart-reference: rgba(95, 91, 82, 0.65);
+  --chart-terrain-fill: rgba(102, 114, 131, 0.2);
+}
+
+/*
+ * Dark "window into space". Put `space` on the element that frames the Moon globe, the terrain
+ * scene or the sky chart. Same token names, dark values; the chart colours below also get
+ * brighter versions because they sit on near-black.
+ */
+.space {
   --background: #05070a;
   --surface: #080b0f;
   --panel: #0b0f14;
@@ -23,55 +93,70 @@
   --border: #1c232d;
   --border-strong: #2a3441;
 
-  /* Text */
   --foreground: #e6eaef;
-  --muted-foreground: #8d97a6;
-  --dim: #7e8999;
+  --muted-foreground: #98a2b1;
+  --dim: #8590a0;
 
-  /* Accent (cool blue) */
-  --primary: #7cb5ff;
-  --primary-strong: #4f93ec;
-  --primary-foreground: #031022;
-  --ring: #4f93ec;
+  --primary: #f0a35e;
+  --primary-strong: #e08a3c;
+  --primary-foreground: #1d0d02;
+  --ring: #f0a35e;
+  --highlight: #f0b54a;
 
-  /* Status */
   --ok: #46d19f;
   --warn: #e9b14f;
   --critical: #f0695d;
   --info: #7cb5ff;
 
-  /* Evidence kinds */
   --ev-observation: #7cb5ff;
   --ev-derived: #93a9ff;
   --ev-model: #b39dff;
   --ev-calculation: #5ad2c4;
   --ev-assumption: #e9b14f;
   --ev-placeholder: #ec8d5b;
-  --ev-not-computed: #7e8999;
+  --ev-not-computed: #8590a0;
 
-  /* shadcn/ui semantic tokens */
-  --card: var(--panel);
-  --card-foreground: var(--foreground);
   --popover: #0e1319;
-  --popover-foreground: var(--foreground);
   --secondary: #121820;
   --secondary-foreground: #c9d1db;
   --muted: #10151c;
   --accent: #152030;
-  --accent-foreground: var(--foreground);
-  --destructive: var(--critical);
   --input: #1f2731;
+
+  /* Chart and 3D colours on the dark background (Plotly in the sky chart, WebGL in the globe and terrain). */
+  --chart-sun: #f0b54a;
+  --chart-earth: #7cb5ff;
+  --chart-terrain: #a0aec0;
+  --chart-lower-bound: #ff7a6b;
+  --chart-grid: rgba(160, 174, 192, 0.12);
+  --chart-reference: rgba(160, 174, 192, 0.6);
+  --chart-terrain-fill: rgba(160, 174, 192, 0.22);
+  --chart-graticule: #8fc1ff;
+  --chart-label: #b9d7ff;
+  --chart-marker-idle: #e6eaef;
+  --scrim: rgba(5, 7, 10, 0.8);
+  --scrim-chip: rgba(0, 0, 0, 0.6);
+  --scrim-selected: rgba(7, 20, 37, 0.9);
+
+  color-scheme: dark;
+  color: var(--foreground);
 }
 
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
 
-  /* 12 px and 13 px: the smallest sizes used. Anything smaller is unreadable in a recorded demo. */
-  --text-3xs: 0.75rem;
-  --text-3xs--line-height: 1.0625rem;
-  --text-2xs: 0.8125rem;
-  --text-2xs--line-height: 1.1875rem;
+  /* Larger, roomier scale for a learning tool (D14): 13 px is the smallest size used. */
+  --text-3xs: 0.8125rem;
+  --text-3xs--line-height: 1.25rem;
+  --text-2xs: 0.875rem;
+  --text-2xs--line-height: 1.375rem;
+  --text-xs: 0.9375rem;
+  --text-xs--line-height: 1.5rem;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.5rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6rem;
 
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
@@ -96,6 +181,12 @@
   --color-warn: var(--warn);
   --color-critical: var(--critical);
   --color-info: var(--info);
+  --color-highlight: var(--highlight);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-chart-label: var(--chart-label);
+  --color-scrim: var(--scrim);
+  --color-scrim-chip: var(--scrim-chip);
+  --color-scrim-selected: var(--scrim-selected);
   --color-ev-observation: var(--ev-observation);
   --color-ev-derived: var(--ev-derived);
   --color-ev-model: var(--ev-model);
@@ -121,13 +212,13 @@
     @apply border-border outline-ring/50;
   }
   html {
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-size: 13px;
-    line-height: 1.45;
+    font-size: 15px;
+    line-height: 1.55;
     font-feature-settings: "ss01", "cv11";
   }
   ::selection {
@@ -136,9 +227,9 @@
 }
 
 @layer components {
-  /* Section headings only: small tracked caps in the sans face (numbers and codes stay mono). */
+  /* Section headings and labels: sentence case in the sans face (monospace is for numbers and codes). */
   .label-caps {
-    @apply text-3xs font-medium uppercase tracking-[0.1em] text-dim;
+    @apply text-2xs font-semibold text-muted-foreground;
   }
   .numeric {
     font-variant-numeric: tabular-nums;
@@ -156,7 +247,7 @@
   .hud-grid {
     background-color: var(--panel-sunken);
     background-image:
-      radial-gradient(ellipse at 50% 45%, #0e141c 0%, transparent 70%),
+      radial-gradient(ellipse at 50% 45%, var(--panel-raised) 0%, transparent 70%),
       linear-gradient(to right, color-mix(in oklab, var(--hairline) 70%, transparent) 1px, transparent 1px),
       linear-gradient(to bottom, color-mix(in oklab, var(--hairline) 70%, transparent) 1px, transparent 1px);
     background-size:

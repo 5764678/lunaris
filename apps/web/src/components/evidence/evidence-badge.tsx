@@ -16,44 +16,44 @@ export const EVIDENCE_TAGS: Record<
     short: "OBS",
     title: "Observation",
     description: "Measured by an instrument, as published by the team that ran it.",
-    className: "border-ev-observation/40 bg-ev-observation/10 text-ev-observation",
+    className: "border-ev-observation/25 bg-ev-observation/8 text-ev-observation",
   },
   derived_product: {
     short: "DERIVED",
     title: "Derived product",
     description: "Built from measurements by the team that produced the dataset.",
-    className: "border-ev-derived/40 bg-ev-derived/10 text-ev-derived",
+    className: "border-ev-derived/25 bg-ev-derived/8 text-ev-derived",
   },
   model: {
     short: "MODEL",
     title: "Model output",
     description: "Produced by a trusted physical model or planet-position table (ephemeris).",
-    className: "border-ev-model/40 bg-ev-model/10 text-ev-model",
+    className: "border-ev-model/25 bg-ev-model/8 text-ev-model",
   },
   calculation: {
     short: "CALC",
     title: "Calculation",
     description: "Worked out by LUNARIS from other evidence; the method is recorded.",
-    className: "border-ev-calculation/40 bg-ev-calculation/10 text-ev-calculation",
+    className: "border-ev-calculation/25 bg-ev-calculation/8 text-ev-calculation",
   },
   assumption: {
     short: "ASSUMED",
     title: "Assumption",
     description: "A value chosen by setting or convention, not backed by a measurement.",
-    className: "border-ev-assumption/40 bg-ev-assumption/10 text-ev-assumption",
+    className: "border-ev-assumption/25 bg-ev-assumption/8 text-ev-assumption",
   },
   placeholder: {
     short: "PLACEHOLDER",
     title: "Placeholder",
     description: "Stand-in content. Never valid evidence for a mission decision.",
-    className: "border-dashed border-ev-placeholder/60 bg-ev-placeholder/10 text-ev-placeholder",
+    className: "border-dashed border-ev-placeholder/45 bg-ev-placeholder/8 text-ev-placeholder",
   },
   not_computed: {
     short: "N/C",
     title: "Not computed",
     description:
       "No value to show: it is still loading or could not be computed. The reason is shown next to it.",
-    className: "hatch border-ev-not-computed/40 text-ev-not-computed",
+    className: "hatch border-ev-not-computed/30 text-ev-not-computed",
   },
 };
 
@@ -77,7 +77,7 @@ export function EvidenceBadge({
           tabIndex={0}
           data-evidence={kind}
           className={cn(
-            "inline-flex h-4 shrink-0 cursor-help items-center rounded-[3px] border px-1 font-mono text-3xs font-medium uppercase tracking-[0.08em] outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            "inline-flex h-5 shrink-0 cursor-help items-center rounded-md border px-1.5 font-mono text-3xs font-medium tracking-[0.04em] outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
             tag.className,
             className,
           )}

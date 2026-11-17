@@ -78,7 +78,10 @@ function Legend({ hasLowerBounds }: { hasLowerBounds: boolean }) {
     </li>
   );
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-3xs text-muted-foreground" data-testid="sky-legend">
+    <ul
+      className="space flex flex-wrap gap-x-4 gap-y-1 rounded-md bg-panel-sunken px-3 py-2 text-3xs text-muted-foreground"
+      data-testid="sky-legend"
+    >
       {item(SKY_COLORS.terrain, "Terrain skyline (LOLA 240 m)", "bar")}
       {hasLowerBounds &&
         item(SKY_COLORS.lowerBound, "Ray left DEM coverage: skyline is a lower bound", "tri")}

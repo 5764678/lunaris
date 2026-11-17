@@ -22,7 +22,7 @@ export function UtcClock() {
   return (
     <div className="flex items-baseline gap-2" aria-live="off">
       <time
-        className="numeric font-mono text-xs text-foreground"
+        className="numeric whitespace-nowrap font-mono text-2xs text-foreground"
         dateTime={now === null ? undefined : new Date(now).toISOString()}
         suppressHydrationWarning
         title="Coordinated Universal Time, the standard clock for space work"
@@ -39,10 +39,11 @@ export function UtcClock() {
       </time>
       {now !== null && (
         <span
-          className="numeric hidden font-mono text-xs text-muted-foreground lg:inline"
+          className="numeric hidden font-mono text-2xs text-muted-foreground 2xl:inline"
           suppressHydrationWarning
         >
-          {formatLocalTime(now, true)} <span className="text-dim">your time ({utcOffsetLabel(now)})</span>
+          {formatLocalTime(now, true)}{" "}
+          <span className="font-sans text-dim">your time ({utcOffsetLabel(now)})</span>
         </span>
       )}
     </div>

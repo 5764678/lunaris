@@ -10,7 +10,7 @@ import { isHttpsUrl, type TextureLoadState, type TextureManifest } from "./surfa
 function Row({ label, children, testId }: { label: string; children: React.ReactNode; testId?: string }) {
   return (
     <div className="grid grid-cols-[6.5rem_1fr] gap-x-2 py-0.5">
-      <dt className="font-mono text-3xs uppercase tracking-[0.1em] text-dim">{label}</dt>
+      <dt className="text-3xs text-dim">{label}</dt>
       <dd className="min-w-0 break-words text-foreground/90" data-testid={testId}>
         {children}
       </dd>
@@ -47,7 +47,7 @@ export function TextureProvenance({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex min-w-0 items-center gap-1 rounded-[3px] text-left font-mono text-3xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex min-w-0 items-center gap-1 rounded-[3px] text-left text-3xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
             aria-label="Globe texture source"
             data-testid="surface-provenance-trigger"
           >

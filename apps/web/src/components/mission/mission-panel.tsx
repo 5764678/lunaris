@@ -18,8 +18,8 @@ export function MissionPanel() {
       aria-label="Mission information"
       className="flex min-h-0 flex-col border-border bg-panel lg:border-l"
     >
-      <div className="flex h-10 shrink-0 items-center justify-between border-b border-border px-4">
-        <h1 className="text-xs font-medium uppercase tracking-[0.1em] text-foreground">Site workspace</h1>
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-5">
+        <h1 className="text-base font-semibold text-foreground">Site workspace</h1>
         <span className="text-3xs text-dim">Lunar south pole</span>
       </div>
       <ScrollArea className="min-h-0 flex-1">

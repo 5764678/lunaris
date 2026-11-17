@@ -7,6 +7,7 @@ import { DoubleSide, Quaternion, Vector3, type Group } from "three";
 
 import { useSitesQuery } from "@/lib/api/queries";
 import { selenographicToScene } from "@/lib/geo/selenographic";
+import { readToken } from "@/lib/theme/tokens";
 import { useMissionStore } from "@/store/mission-store";
 
 const Z_AXIS = new Vector3(0, 0, 1);
@@ -53,7 +54,7 @@ function SiteMarker({
     group.current.scale.setScalar(Math.min(Math.max(distance * 0.9, 0.05), 3));
   });
 
-  const color = selected ? "#7cb5ff" : "#e6eaef";
+  const color = selected ? readToken("primary") : readToken("chart-marker-idle");
   return (
     <group ref={group} position={position} quaternion={quaternion}>
       <mesh
@@ -75,7 +76,7 @@ function SiteMarker({
         <mesh>
           <ringGeometry args={[0.016, 0.0172, 48]} />
           <meshBasicMaterial
-            color="#7cb5ff"
+            color={readToken("primary")}
             side={DoubleSide}
             transparent
             opacity={0.55}

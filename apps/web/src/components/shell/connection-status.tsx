@@ -28,13 +28,13 @@ export function ConnectionStatus() {
           type="button"
           data-testid="api-status"
           data-state={state.kind}
-          className="flex h-7 items-center gap-2 rounded-md border border-border bg-panel px-2.5 outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex h-9 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-panel px-2.5 outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span className={cn("size-1.5 rounded-full", view.dot)} aria-hidden="true" />
-          <span className="label-caps text-muted-foreground">API</span>
-          <span className={cn("font-mono text-2xs uppercase tracking-wide", view.text)}>{view.label}</span>
+          <span className="text-2xs font-medium text-muted-foreground">API</span>
+          <span className={cn("text-2xs font-semibold", view.text)}>{view.label}</span>
           {"health" in state && (
-            <span className="numeric hidden font-mono text-2xs text-dim sm:inline">
+            <span className="numeric hidden font-mono text-2xs text-dim 2xl:inline">
               v{state.health.version} · {Math.round(state.latencyMs)} ms
             </span>
           )}

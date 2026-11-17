@@ -20,7 +20,7 @@ import type { TerrainSun } from "./use-terrain-sun";
 function Row({ label, children, testId }: { label: string; children: ReactNode; testId?: string }) {
   return (
     <div className="grid grid-cols-[6.5rem_1fr] gap-x-2 py-0.5">
-      <dt className="font-mono text-3xs uppercase tracking-[0.1em] text-dim">{label}</dt>
+      <dt className="text-3xs text-dim">{label}</dt>
       <dd className="min-w-0 break-words text-foreground/90" data-testid={testId}>
         {children}
       </dd>
@@ -39,7 +39,7 @@ function HeightLegend({ minM, maxM }: { minM: number; maxM: number }) {
     })
     .join(", ");
   return (
-    <div className="flex items-center gap-2 font-mono text-3xs text-muted-foreground">
+    <div className="flex items-center gap-2 text-3xs text-muted-foreground">
       <span className="numeric">{km(minM)}</span>
       <span
         aria-hidden="true"
@@ -63,7 +63,7 @@ export function TerrainDisclosures({ scene, sun }: { scene: TerrainScene; sun: T
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex min-w-0 items-center gap-1 rounded-[3px] text-left font-mono text-3xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="flex min-w-0 items-center gap-1 rounded-[3px] text-left text-3xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
               aria-label="Terrain source"
               data-testid="terrain-provenance-trigger"
             >
@@ -173,11 +173,11 @@ function LightingDisclosure({ sun }: { sun: TerrainSun }) {
             label="Display light"
             detail="Shading follows the camera for legibility. It is not the computed solar direction and shows no computed shadows; quantitative illumination comes only from the API."
           />
-          <span className="font-mono text-3xs text-muted-foreground">
+          <span className="text-3xs text-muted-foreground">
             Illustrative shading — not the computed Sun, not illumination data
           </span>
         </div>
-        <span className="font-mono text-3xs text-dim">{sun.reason}</span>
+        <span className="text-3xs text-dim">{sun.reason}</span>
       </div>
     );
   }
@@ -189,7 +189,7 @@ function LightingDisclosure({ sun }: { sun: TerrainSun }) {
           label="SPICE Sun"
           detail={`${sun.evidence.statement} Light direction: C2 direction_moon_me (CN+S) for ${sun.siteName}, interpolated between hourly samples.`}
         />
-        <span className="truncate font-mono text-3xs text-muted-foreground">
+        <span className="truncate text-3xs text-muted-foreground">
           Sun el.{" "}
           <span className="numeric text-foreground" data-testid="terrain-sun-elevation">
             {signed(sun.elevationDeg)}
@@ -203,7 +203,7 @@ function LightingDisclosure({ sun }: { sun: TerrainSun }) {
           label="Illustrative"
           detail="Shadows are rendered by the 3D engine from a point-source Sun over the 240 m mesh (shadow map, no penumbra from the 0.53° disk). They are an illustration, not an illumination result."
         />
-        <span className="font-mono text-3xs text-muted-foreground">Rendered shadows are illustrative</span>
+        <span className="text-3xs text-muted-foreground">Rendered shadows are illustrative</span>
       </div>
       <SiteIllumination siteName={sun.siteName} />
     </div>
@@ -238,7 +238,7 @@ function SiteIllumination({ siteName }: { siteName: string }) {
         data-state="not-computed"
       >
         <EvidenceBadge kind="not_computed" label="N/C" detail={reason} />
-        <span className="truncate font-mono text-3xs text-dim">
+        <span className="truncate text-3xs text-dim">
           {siteName}: illumination not computed — {reason}
         </span>
       </div>
@@ -254,7 +254,7 @@ function SiteIllumination({ siteName }: { siteName: string }) {
         detail={`${ev.statement} ${query.data.illumination.limitations.join(" ")}`.trim()}
         className="mt-px"
       />
-      <span className="min-w-0 font-mono text-3xs text-muted-foreground">
+      <span className="min-w-0 text-3xs text-muted-foreground">
         <span className="text-foreground">{siteName}</span> · Sun disk visible{" "}
         {value.terrain === null ? (
           <span data-testid="terrain-site-illumination-terrain">terrain horizon not available</span>

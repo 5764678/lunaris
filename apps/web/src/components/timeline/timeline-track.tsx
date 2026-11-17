@@ -113,7 +113,7 @@ export function TimelineTrack({
   }
 
   return (
-    <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-x-3">
+    <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[13rem_minmax(0,1fr)] sm:gap-x-3">
       {/* Axis */}
       <div className="label-caps flex h-6 items-end pb-1">Window · 30 d UTC</div>
       <div
@@ -188,7 +188,7 @@ export function TimelineTrack({
               className="hatch relative mt-1 flex items-center justify-center rounded-[3px] border border-hairline"
               style={{ height: EMPTY_LANE_HEIGHT_PX }}
             >
-              <span className="max-w-full truncate rounded-sm bg-panel-sunken/90 px-1.5 font-mono text-3xs uppercase tracking-[0.12em] text-dim">
+              <span className="max-w-full truncate rounded-sm bg-panel-sunken/90 px-1.5 text-3xs text-dim">
                 {(lane.id === "sun" || lane.id === "earth") && geometryNote
                   ? geometryNote
                   : (lane.id === "illumination" || lane.id === "los") && fractionNote
@@ -225,7 +225,7 @@ export function TimelineTrack({
                 />
               </span>
               <span
-                className="numeric font-mono text-xs text-foreground"
+                className="numeric font-mono text-2xs text-foreground"
                 data-testid={`lane-readout-${lane.id}`}
               >
                 {formatElevation(elevationAt(series, epochMs))}
@@ -250,14 +250,11 @@ export function TimelineTrack({
                 />
               </span>
               {lane.id === "los" && (
-                <span className="font-mono text-3xs text-foreground" data-testid="lane-los-state">
+                <span className="text-2xs font-medium text-foreground" data-testid="lane-los-state">
                   {value?.state ? LINE_OF_SIGHT_LABEL[value.state] : "—"}
                 </span>
               )}
-              <span
-                className="numeric font-mono text-3xs text-foreground"
-                data-testid={`lane-readout-${lane.id}`}
-              >
+              <span className="numeric text-2xs text-foreground" data-testid={`lane-readout-${lane.id}`}>
                 {formatFractionReadout(fraction, value)}
               </span>
             </div>

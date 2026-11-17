@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { DoubleSide, Quaternion, Vector3 } from "three";
 
 import { selenographicToScene } from "@/lib/geo/selenographic";
+import { readToken } from "@/lib/theme/tokens";
 
 const Z = new Vector3(0, 0, 1);
 
@@ -18,11 +19,17 @@ export function SubsolarMarker({ latDeg, lonDeg }: { latDeg: number; lonDeg: num
     <group position={position} quaternion={quaternion} name="subsolar-point">
       <mesh>
         <ringGeometry args={[0.012, 0.016, 40]} />
-        <meshBasicMaterial color="#f0b54a" side={DoubleSide} transparent opacity={0.95} depthWrite={false} />
+        <meshBasicMaterial
+          color={readToken("chart-sun")}
+          side={DoubleSide}
+          transparent
+          opacity={0.95}
+          depthWrite={false}
+        />
       </mesh>
       <mesh>
         <circleGeometry args={[0.005, 24]} />
-        <meshBasicMaterial color="#f0b54a" side={DoubleSide} depthWrite={false} />
+        <meshBasicMaterial color={readToken("chart-sun")} side={DoubleSide} depthWrite={false} />
       </mesh>
     </group>
   );

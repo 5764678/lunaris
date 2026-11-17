@@ -10,7 +10,7 @@ export function LanguageSwitch() {
     <div
       role="group"
       aria-label={t.language.label}
-      className="flex h-7 items-center rounded-md border border-border bg-panel p-0.5"
+      className="flex h-9 items-center rounded-full border border-border bg-panel p-0.5"
     >
       {(["th", "en"] as const).map((code) => (
         <button
@@ -21,8 +21,10 @@ export function LanguageSwitch() {
           aria-pressed={lang === code}
           onClick={() => setLang(code)}
           className={cn(
-            "h-full rounded-sm px-2 text-2xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-            lang === code ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
+            "h-full whitespace-nowrap rounded-full px-3 text-2xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            lang === code
+              ? "bg-accent font-semibold text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {t.language[code]}
