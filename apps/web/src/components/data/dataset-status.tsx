@@ -65,11 +65,7 @@ function Pill({
     <span
       title={view.hint}
       data-status={status}
-      className={cn(
-        "inline-flex items-center gap-1.5 font-mono text-3xs uppercase tracking-[0.08em]",
-        view.text,
-        className,
-      )}
+      className={cn("inline-flex items-center gap-1.5 text-3xs font-semibold", view.text, className)}
     >
       <span className={cn("size-1.5 rounded-full", view.dot)} aria-hidden="true" />
       {view.label}

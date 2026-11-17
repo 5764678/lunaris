@@ -118,7 +118,7 @@ export function FractionLane({
         </>
       )}
       {state === "error" && (
-        <span className="absolute inset-0 flex items-center justify-center font-mono text-3xs text-warn">
+        <span className="absolute inset-0 flex items-center justify-center text-3xs text-warn">
           Plot unavailable (chart library failed to load)
         </span>
       )}

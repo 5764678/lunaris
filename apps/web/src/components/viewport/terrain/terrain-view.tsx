@@ -22,9 +22,9 @@ export const TERRAIN_SCENE_ID = "south-pole";
 const TerrainCanvas = dynamic(() => import("./terrain-canvas"), { ssr: false });
 
 const SITE_CLASS =
-  "rounded-[3px] border border-white/15 bg-scrim-chip px-1.5 py-px font-mono text-[12px] text-foreground backdrop-blur-sm";
+  "rounded-[3px] border border-foreground/15 bg-scrim-chip px-2 py-0.5 text-[13px] text-foreground backdrop-blur-sm";
 const SITE_SELECTED_CLASS =
-  "rounded-[3px] border border-primary/60 bg-scrim-selected px-1.5 py-px font-mono text-[12px] text-primary";
+  "rounded-[3px] border border-primary/60 bg-scrim-selected px-2 py-0.5 text-[13px] text-primary";
 
 /**
  * Vertex grid requested from C3: 1024² (≈245 m spacing, close to the DEM's 240 m) on
@@ -59,7 +59,7 @@ function Message({ title, detail, children }: { title: string; detail: string; c
   return (
     <div className="absolute inset-0 flex items-center justify-center p-6">
       <div className="max-w-sm text-center">
-        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground">{title}</p>
+        <p className="text-xs font-medium text-muted-foreground">{title}</p>
         <p className="mt-1 text-3xs text-dim">{detail}</p>
         {children}
       </div>
@@ -138,10 +138,8 @@ export function TerrainView({ labelRegistry }: { labelRegistry: LabelRegistry })
       <div className="pointer-events-none absolute inset-0">
         <div className="pointer-events-auto absolute top-4 left-4 flex flex-col gap-2 sm:top-5 sm:left-6">
           <div className="w-fit rounded-md border border-hairline bg-scrim px-2.5 py-1.5 backdrop-blur-sm">
-            <p className="font-mono text-2xs font-medium uppercase tracking-[0.2em] text-foreground">
-              South-pole terrain
-            </p>
-            <p className="hidden font-mono text-3xs text-dim sm:block">
+            <p className="text-xs font-semibold text-foreground">South-pole terrain</p>
+            <p className="hidden text-3xs text-dim sm:block">
               MOON_ME, origin at the pole · camera up = local radial · true vertical scale
             </p>
           </div>

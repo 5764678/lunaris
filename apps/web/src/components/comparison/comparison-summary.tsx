@@ -310,7 +310,7 @@ function RecommendationCard({
           {rec.name ?? "No site qualifies"}
         </span>
         {top && <span className="numeric font-mono text-xs text-foreground">{points(top.score)} / 100</span>}
-        <span className="rounded-[4px] border border-hairline px-1.5 py-px font-mono text-3xs uppercase text-muted-foreground">
+        <span className="rounded-[4px] border border-hairline px-1.5 py-px text-3xs font-medium text-muted-foreground">
           {CONFIDENCE[rec.confidence]}
         </span>
       </div>

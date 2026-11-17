@@ -23,7 +23,7 @@ export function WakingBanner() {
       {state.kind === "waking" && (
         <p
           data-testid="waking-banner"
-          className="pointer-events-auto flex max-w-xl items-start gap-2.5 rounded-md border border-warn/40 bg-surface px-3.5 py-2.5 text-2xs leading-relaxed text-foreground shadow-lg shadow-black/40"
+          className="pointer-events-auto flex max-w-xl items-start gap-2.5 rounded-md border border-warn/40 bg-surface px-3.5 py-2.5 text-2xs leading-relaxed text-foreground shadow-lg shadow-foreground/15"
         >
           <span className="mt-1 size-1.5 shrink-0 animate-pulse rounded-full bg-warn" aria-hidden="true" />
           <span>

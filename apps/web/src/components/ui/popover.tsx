@@ -32,7 +32,7 @@ function PopoverContent({
         collisionPadding={16}
         avoidCollisions
         className={cn(
-          "z-50 w-[min(26rem,calc(100vw-1.5rem))] rounded-md border border-border-strong bg-popover p-3 text-2xs leading-relaxed text-popover-foreground shadow-lg shadow-black/40 outline-none",
+          "z-50 w-[min(26rem,calc(100vw-1.5rem))] rounded-md border border-border-strong bg-popover p-3 text-2xs leading-relaxed text-popover-foreground shadow-lg shadow-foreground/15 outline-none",
           "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           className,
         )}

@@ -52,7 +52,7 @@ function HazardPanel({ result }: { result: SiteTerrain }) {
         <EvidenceBadge kind="assumption" label="User assumption" detail={hazard.evidence.statement} />
         Hazard flags against your thresholds
       </p>
-      <ul className="space-y-1 font-mono text-2xs text-muted-foreground">
+      <ul className="space-y-1 text-2xs text-muted-foreground">
         {hazard.max_slope_deg !== null && (
           <>
             <li data-testid="hazard-slope">

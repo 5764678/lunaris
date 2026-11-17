@@ -59,7 +59,7 @@ export function CellEvidence({
           )}
         >
           {value === null ? (
-            <span className="font-mono text-3xs [overflow-wrap:anywhere] text-dim italic">
+            <span className="text-3xs [overflow-wrap:anywhere] text-dim italic">
               N/C · <span className="not-italic">{cell.reason ?? "not computed"}</span>
             </span>
           ) : (
@@ -67,7 +67,7 @@ export function CellEvidence({
               {value}
             </span>
           )}
-          {baseline && <span className="font-mono text-3xs text-dim">{baseline}</span>}
+          {baseline && <span className="text-3xs text-dim">{baseline}</span>}
           {mapNote && value !== null && <span className="text-3xs text-dim">{mapNote}</span>}
         </button>
       </PopoverTrigger>
