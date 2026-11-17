@@ -1,29 +1,34 @@
+"use client";
+
 import Link from "next/link";
+
+import { useT } from "@/lib/i18n";
 
 import { BrandMark } from "./brand-mark";
 import { ConnectionStatus } from "./connection-status";
 import { DataStatusIndicator } from "./data-status";
+import { LanguageSwitch } from "./language-switch";
 import { UtcClock } from "./utc-clock";
 
 export function TopBar() {
+  const t = useT();
   return (
     <header className="col-span-2 flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
       <Link
         href="/"
         className="flex items-center gap-2.5 rounded-md pr-1 text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-        aria-label="LUNARIS home"
+        aria-label={t.shell.homeLabel}
       >
         <BrandMark />
         <span className="text-base font-semibold tracking-[0.18em] text-foreground">LUNARIS</span>
       </Link>
       <span className="hidden h-4 w-px bg-border sm:block" aria-hidden="true" />
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
-        <span className="truncate text-2xs text-muted-foreground max-xl:hidden">
-          Compare lunar south-pole landing sites by sunlight, Earth contact and terrain
-        </span>
+        <span className="truncate text-2xs text-muted-foreground max-xl:hidden">{t.shell.tagline}</span>
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <LanguageSwitch />
         <DataStatusIndicator />
         <ConnectionStatus />
         <span className="hidden h-4 w-px bg-border md:block" aria-hidden="true" />

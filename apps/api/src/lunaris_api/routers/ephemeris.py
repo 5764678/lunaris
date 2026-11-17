@@ -12,6 +12,7 @@ from lunaris_api.schemas.common import ERROR_RESPONSES, ErrorResponse, ResponseD
 from lunaris_api.schemas.ephemeris import (
     MAX_STEP_S,
     MIN_STEP_S,
+    MoonPhaseSeries,
     SiteEphemeris,
     SunDirectionSeries,
 )
@@ -84,3 +85,27 @@ def get_sun_direction(
     sub-solar point and the solar angular radius at every step. Same window rules,
     10 000-sample cap and error codes as the site ephemeris."""
     return service.sun_direction(start_utc, end_utc, step_s)
+
+
+@sun_router.get(
+    "/moon-phase",
+    response_model=MoonPhaseSeries,
+    summary="Moon phase as seen from the Earth's centre",
+    responses=SUN_RESPONSES,
+)
+def get_moon_phase(
+    start_utc: Annotated[AwareDatetime, Query(description="Window start, ISO 8601 UTC.")],
+    end_utc: Annotated[
+        AwareDatetime,
+        Query(description="Window end (inclusive when on a step); start = end gives one epoch."),
+    ],
+    step_s: Annotated[
+        float, Query(ge=MIN_STEP_S, le=MAX_STEP_S, description="Sample spacing in seconds.")
+    ],
+    service: EphemerisServiceDep,
+) -> MoonPhaseSeries:
+    """Geocentric phase angle, illuminated fraction, elongation and waxing flag, with the
+    apparent Moon-centred Earth direction in MOON_ME and the sub-Earth point, at every step
+    (contract L1). Computed with NAIF SPICE (DE440, CN+S) and validated against JPL
+    Horizons. Same window rules, 10 000-sample cap and error codes as the Sun direction."""
+    return service.moon_phase(start_utc, end_utc, step_s)

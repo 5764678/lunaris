@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryKeys } from "@/lib/api/queries";
+import { LanguageSync } from "@/lib/i18n";
 import { retryWhileWaking } from "@/lib/api/waking";
 
 let browserQueryClient: QueryClient | undefined;
@@ -38,7 +39,10 @@ function getQueryClient() {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={getQueryClient()}>
-      <TooltipProvider>{children}</TooltipProvider>
+      <TooltipProvider>
+        <LanguageSync />
+        {children}
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

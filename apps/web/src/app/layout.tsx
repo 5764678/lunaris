@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from "next";
 
 import { AppShell } from "@/components/shell/app-shell";
 import { config } from "@/lib/config";
+import "@/lib/i18n/thai-font.css";
 
 import { Providers } from "./providers";
 import "./globals.css";
@@ -45,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="th" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
         <Providers>
           <AppShell>{children}</AppShell>

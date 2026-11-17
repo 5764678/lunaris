@@ -2238,6 +2238,151 @@
         "title": "MissionLimits",
         "type": "object"
       },
+      "MoonPhaseSample": {
+        "description": "Geocentric Moon phase at one epoch (K-01, contract L1).",
+        "properties": {
+          "earth_direction_moon_me": {
+            "description": "Apparent unit vector [x, y, z] from the Moon's centre to the Earth's centre, MOON_ME (CN+S, as the Sun direction series).",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Earth Direction Moon Me",
+            "type": "array"
+          },
+          "elongation_deg": {
+            "description": "Sun–Earth–Moon angle at the Earth's centre.",
+            "title": "Elongation Deg",
+            "type": "number"
+          },
+          "epoch_utc": {
+            "format": "date-time",
+            "title": "Epoch Utc",
+            "type": "string"
+          },
+          "illuminated_fraction": {
+            "description": "Lit fraction of the disk seen from the Earth's centre, (1 + cos(phase angle)) / 2, in [0, 1].",
+            "title": "Illuminated Fraction",
+            "type": "number"
+          },
+          "phase_angle_deg": {
+            "description": "Sun–Moon–Earth angle at the Moon's centre, [0, 180].",
+            "title": "Phase Angle Deg",
+            "type": "number"
+          },
+          "subearth_latitude_deg": {
+            "description": "Planetocentric latitude of the sub-Earth point (1737.4 km sphere).",
+            "title": "Subearth Latitude Deg",
+            "type": "number"
+          },
+          "subearth_longitude_deg": {
+            "description": "East longitude, [0, 360).",
+            "title": "Subearth Longitude Deg",
+            "type": "number"
+          },
+          "waxing": {
+            "description": "True while the Moon's geocentric ecliptic longitude leads the Sun's by 0–180°.",
+            "title": "Waxing",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "epoch_utc",
+          "earth_direction_moon_me",
+          "subearth_latitude_deg",
+          "subearth_longitude_deg",
+          "phase_angle_deg",
+          "illuminated_fraction",
+          "elongation_deg",
+          "waxing"
+        ],
+        "title": "MoonPhaseSample",
+        "type": "object"
+      },
+      "MoonPhaseSeries": {
+        "description": "Moon phases as seen from the Earth's centre (K-01, contract L1).",
+        "properties": {
+          "aberration_correction": {
+            "const": "CN+S",
+            "title": "Aberration Correction",
+            "type": "string"
+          },
+          "end_utc": {
+            "format": "date-time",
+            "title": "End Utc",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "frame": {
+            "const": "MOON_ME",
+            "title": "Frame",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "max_samples": {
+            "description": "Cap on samples per request.",
+            "title": "Max Samples",
+            "type": "integer"
+          },
+          "origin": {
+            "const": "MOON",
+            "description": "Earth directions are from the Moon's centre.",
+            "title": "Origin",
+            "type": "string"
+          },
+          "sample_count": {
+            "title": "Sample Count",
+            "type": "integer"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/MoonPhaseSample"
+            },
+            "title": "Samples",
+            "type": "array"
+          },
+          "start_utc": {
+            "format": "date-time",
+            "title": "Start Utc",
+            "type": "string"
+          },
+          "step_s": {
+            "title": "Step S",
+            "type": "number"
+          },
+          "viewpoint": {
+            "const": "geocentric",
+            "description": "Phases are as seen from the Earth's centre, not a site on Earth (D12).",
+            "title": "Viewpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_utc",
+          "end_utc",
+          "step_s",
+          "sample_count",
+          "max_samples",
+          "frame",
+          "origin",
+          "viewpoint",
+          "aberration_correction",
+          "samples",
+          "evidence",
+          "limitations"
+        ],
+        "title": "MoonPhaseSeries",
+        "type": "object"
+      },
       "NeedInfo": {
         "properties": {
           "label": {
@@ -4529,6 +4674,97 @@
         "summary": "One registered dataset",
         "tags": [
           "datasets"
+        ]
+      }
+    },
+    "/api/v1/ephemeris/moon-phase": {
+      "get": {
+        "description": "Geocentric phase angle, illuminated fraction, elongation and waxing flag, with the\napparent Moon-centred Earth direction in MOON_ME and the sub-Earth point, at every step\n(contract L1). Computed with NAIF SPICE (DE440, CN+S) and validated against JPL\nHorizons. Same window rules, 10 000-sample cap and error codes as the Sun direction.",
+        "operationId": "get_moon_phase_api_v1_ephemeris_moon_phase_get",
+        "parameters": [
+          {
+            "description": "Window start, ISO 8601 UTC.",
+            "in": "query",
+            "name": "start_utc",
+            "required": true,
+            "schema": {
+              "description": "Window start, ISO 8601 UTC.",
+              "format": "date-time",
+              "title": "Start Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window end (inclusive when on a step); start = end gives one epoch.",
+            "in": "query",
+            "name": "end_utc",
+            "required": true,
+            "schema": {
+              "description": "Window end (inclusive when on a step); start = end gives one epoch.",
+              "format": "date-time",
+              "title": "End Utc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sample spacing in seconds.",
+            "in": "query",
+            "name": "step_s",
+            "required": true,
+            "schema": {
+              "description": "Sample spacing in seconds.",
+              "maximum": 2592000.0,
+              "minimum": 1.0,
+              "title": "Step S",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoonPhaseSeries"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request validation failed."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "SPICE kernels not acquired or failing verification on this server."
+          }
+        },
+        "summary": "Moon phase as seen from the Earth's centre",
+        "tags": [
+          "ephemeris"
         ]
       }
     },

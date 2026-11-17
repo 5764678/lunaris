@@ -11,31 +11,44 @@ The working rules in `docs/TASKS.md` section 1 apply to every session here: your
 branch and draft PR, edit only the paths you own, `npm run check` green before you ask
 for review, and the PR body lists each acceptance criterion with its evidence.
 
-## Status: paused on 12 November 2026
+## Status: resumed on 17 November 2026
 
-The user paused this build to save usage for the NASA Space Apps weekend (14–15
-November). Nothing here is merged except the plan and the submission pack. To resume,
-start from this list; do not rely on any session's memory.
+The build was paused from 12 to 16 November. Ten days remain to the deadline; the team
+submits on the 26th.
 
-| PR | Task | State when paused |
+**What changed on `main` during the pause.** PR #51 (14 November) ported features from the
+team's separate NASA Space Apps repository: a mission recommendation on the Compare page in
+place of the profile score (D9 amended), all 27 cited sites, `/health/ready`, and pre-baked
+timelines. Consequences here:
+
+- Compare has no "profiles" any more. Contract L2 and the period 5 activity use mission
+  answers instead (see L2).
+- A recommendation now appears by default. In the lesson, teams set their mission's needs
+  themselves and treat the recommendation as a claim to examine; the decision memo is their
+  own argument.
+
+**Cut from this round, to fit the deadline:**
+
+- K-13, Thai for the Explorer pages. Thai covers the shell, the navigation and the lesson
+  route. The Explorer pages stay English until after submission.
+- Expert validation (IOC) and a class try-out before submission. The entry says the kit has
+  not been tried with students. A one-to-one try-out happens only if the team arranges it.
+
+**Open pull requests when work resumed:**
+
+| PR | Task | State |
 |---|---|---|
-| #46 | K-12 stage 1, light theme samples | Draft. Samples sent to the team for the advisor's yes or no; **no answer yet**. Contains a throwaway page, `apps/web/src/app/design-sample/`, that must be deleted before merge. Full check and Playwright not run. Stage 2 not started. |
-| #47 | K-01, Moon phase series | Draft, told to push and stop. Not reviewed by the TD. Check its body for the validation status. |
-| #50 | K-03 part 1, message catalogue and translated shell | Draft, told to push and stop. Not reviewed by the TD. |
-| #48 | K-06, teaching kit | Draft, in progress, told to push and stop. Not reviewed by the TD or the team. |
+| #47 | K-01, Moon phase series | Reviewed by the TD: method sound; spot-checked against the 2 August 2027 solar eclipse (new Moon computed at 10:05:14 UTC). Needs `main` merged in and contracts regenerated, then merge. |
+| #50 | K-03 part 1, message catalogue | Reviewed by the TD: accepted. Needs `main` merged in, then merge. |
+| #46 | K-12, light theme | Stage 2 started without the advisor's explicit answer; her request was larger text and a lighter interface, which the samples deliver. |
+| #48 | K-06, teaching kit | In progress. |
 
-Not started: K-02 (lesson pack), the `/learn` route and K-04, K-05, K-09, K-12 stage 2,
-K-13.
+**Working rules learned on day one:** push after every step; sessions report by message when
+a PR is ready; at most one PR in flight per session.
 
-Lessons from the first day, for whoever resumes:
-
-- Four sessions at once exhausted the account's five-hour usage limit within minutes and
-  every session lost its unpushed work. Run at most two, give each one PR per turn, and
-  have them push after every step.
-- The entry form the team first drafted described a different product. The agreed entry is
-  the Moon classroom kit; the matching form text is in `submission/entry-form-part2.md`.
-- 27 November 16:30 is the deadline. With the build paused until 16 November, the P0 list
-  in section 4 will need cutting; decide what to drop before restarting anything.
+**Target dates:** lesson pack and `/learn` shell by the 19th; interactive steps by the 21st;
+tests and real-device checks on the 22nd; screenshots, poster and video from the 23rd;
+submission on the 26th.
 
 ## 1. What is being built
 
@@ -90,7 +103,8 @@ science core were written largely with AI assistance; the entry says so.
 ### L1: Moon phase series (science core + API)
 
 New in the science core, mirroring the existing Sun direction series, then exposed as
-`GET /api/v1/ephemeris/moon-phase?start=…&end=…&step_s=…`.
+`GET /api/v1/ephemeris/moon-phase?start_utc=…&end_utc=…&step_s=…` (the same parameter
+names as `/ephemeris/sun`). The response also carries a constant `viewpoint: "geocentric"`.
 
 Each sample:
 
@@ -130,8 +144,9 @@ the API would return.
     hourly. The pack names the lunation.
   - For the demo trio (Peak near Shackleton, Connecting ridge, Malapert massif): site
     record, horizon mask, illumination and Earth-visibility result over the same
-    lunation, and the 2027 comparison with its summary (no profile, and each of the three
-    profiles).
+    lunation, and the 2027 comparison with its summary in four variants: the default
+    request, and power, communications and landing each "critical" with the other two
+    needs "none".
   - One permanently shadowed example if the catalogue has a site whose computed sunlit
     fraction is 0 % over the window; otherwise leave it out and say so in the PR.
 - Budget: the whole pack **under 3 MB uncompressed** if possible; report the measured
