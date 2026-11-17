@@ -5,8 +5,3 @@ export type StepKey = `p${Period}`;
 
 export const stepKey = (period: Period): StepKey => `p${period}`;
 export const stepHref = (period: Period) => `/learn/${period}`;
-
-export function parsePeriod(value: string): Period | null {
-  const n = Number(value);
-  return /^[1-6]$/.test(value) ? (n as Period) : null;
-}
