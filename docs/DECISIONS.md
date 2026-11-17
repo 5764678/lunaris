@@ -199,6 +199,19 @@ Status values: `Proposed`, `Accepted`, `Superseded by D<n>`.
     profile there is no score.
 - **Rejected:** a default "suitability score". It is easy to read, and nobody can defend
   its weights.
+- **Amended (2026-11-14, at the owner's request; ported from the `lunarseye` repository):** the
+  optional profile score is replaced by a mission recommendation. The Compare page asks what the
+  mission needs (power, comms, landing: not needed / nice to have / important / critical) and
+  four optional hard limits (steepest slope, longest darkness, longest Earth outage, unbroken
+  sunlight). `summary.recommendation` names one site, with reasons, what it gives up, a lead-based
+  confidence and the priority changes that would flip it. Sites that break a limit are excluded
+  with the reason, never down-weighted. Scores use fixed reference scales, so adding or removing a
+  site never changes another site's score. The verdict and standings above are unchanged and
+  still use no weights. What stays true from this decision: every weight, scale and limit is
+  returned and shown as `assumption` evidence, and a missing value means "no score", never 0.
+  What does not: there is now a recommendation without the user choosing a profile (every need
+  "important", no limits), so the weights are LUNARIS's assumptions, not mission requirements.
+  Thermal, dust, resource and trajectory constraints are not scored.
 
 ## D10–D14 — Classroom mode (Chulalongkorn Innovative Award entry)
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections import Counter
+
 from lunaris_api.errors import ConflictError, NotFoundError
 from lunaris_api.schemas.catalog import (
     CatalogReferencePointSchema,
@@ -34,6 +36,15 @@ class CatalogService:
     def __init__(self, catalog: SiteCatalog, sites: SiteService) -> None:
         self._catalog = catalog
         self._sites = sites
+        # PGDA labels two tiles "de Gerlache rim"; registry names are unique, so a repeated
+        # name carries its PGDA tile id.
+        counts = Counter(" ".join(e.name.split()).casefold() for e in catalog.sites)
+        self._names = {
+            e.id: e.name
+            if counts[" ".join(e.name.split()).casefold()] == 1
+            else f"{e.name} ({e.pgda_site_id})"
+            for e in catalog.sites
+        }
 
     def catalog(self) -> SiteCatalogResponse:
         c = self._catalog
@@ -70,7 +81,7 @@ class CatalogService:
 
     def _register(self, entry: CatalogSite) -> CandidateSite:
         return self._sites.create_published_site(
-            name=entry.name,
+            name=self._names[entry.id],
             latitude_deg=entry.reference_point.latitude_deg,
             longitude_deg=entry.reference_point.longitude_deg,
             reference=f"{self._catalog.citation}; tile {entry.pgda_site_id}",
@@ -82,15 +93,23 @@ class CatalogService:
             entry = self._catalog.site(catalog_site_id)
         except KeyError:
             raise NotFoundError(f"Catalogue site {catalog_site_id!r} does not exist.") from None
-        if self._sites.find_by_name(entry.name) is not None:
-            raise ConflictError(f"A site named {entry.name!r} is already registered.")
+        name = self._names[entry.id]
+        if self._sites.find_by_name(name) is not None:
+            raise ConflictError(f"A site named {name!r} is already registered.")
         return self._register(entry)
 
     def register_demo_trio(self) -> RegisteredCatalogSites:
         """Register the three demo sites; ones already present (same name) are reused."""
+        return self._register_entries([e for e in self._catalog.sites if e.demo_trio])
+
+    def register_all(self) -> RegisteredCatalogSites:
+        """Register every catalogue site (the 27 PGDA product 78 sites); idempotent."""
+        return self._register_entries(list(self._catalog.sites))
+
+    def _register_entries(self, entries: list[CatalogSite]) -> RegisteredCatalogSites:
         sites, created, existing = [], [], []
-        for entry in (e for e in self._catalog.sites if e.demo_trio):
-            found = self._sites.find_by_name(entry.name)
+        for entry in entries:
+            found = self._sites.find_by_name(self._names[entry.id])
             if found is not None:
                 sites.append(found)
                 existing.append(entry.id)

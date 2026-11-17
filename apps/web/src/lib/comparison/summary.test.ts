@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ComparisonSummary } from "@/lib/api/client";
 
 import type { CompareColumn } from "./progress";
-import { directionNote, leaderLabel, leadersByColumn, weightLines } from "./summary";
+import { directionNote, leaderLabel, leadersByColumn } from "./summary";
 
 const col = (key: string, label: string, better: CompareColumn["better"] = null): CompareColumn => ({
   key,
@@ -19,7 +19,21 @@ const summary = (leaders: ComparisonSummary["leaders"]): ComparisonSummary => ({
   sites: [],
   verdict: "",
   method: "",
-  score: null,
+  recommendation: {
+    mission: { power: "medium", comms: "medium", landing: "medium", limits: {} },
+    site_id: null,
+    name: null,
+    confidence: "none",
+    headline: "",
+    reasons: [],
+    tradeoffs: [],
+    caveats: [],
+    needs: [],
+    scales: [],
+    ranking: [],
+    method: "",
+    evidence: { kind: "assumption", statement: "", sources: [], assumptions: [] },
+  } as unknown as ComparisonSummary["recommendation"],
 });
 
 describe("comparison summary helpers", () => {
@@ -42,13 +56,6 @@ describe("comparison summary helpers", () => {
     const columns = [col("roughness_rms_m", "Roughness")];
     expect(leaderLabel("roughness_rms_m", columns)).toBe("Bumpiness");
     expect(leaderLabel("unknown_key", columns)).toBe("unknown_key");
-  });
-
-  it("shows weights largest first, to two decimals", () => {
-    expect(weightLines({ x: 0.2, y: 0.4 }, [])).toEqual([
-      { key: "y", label: "y", weight: "0.40" },
-      { key: "x", label: "x", weight: "0.20" },
-    ]);
   });
 
   it("states the ranking direction, or that a column is not ranked", () => {

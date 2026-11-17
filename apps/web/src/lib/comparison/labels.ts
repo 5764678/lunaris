@@ -70,6 +70,10 @@ const METRIC_COPY: Record<string, MetricCopy> = {
     label: "Longest dark spell",
     tip: `The longest unbroken stretch with the whole Sun hidden. ${CENSORED}`,
   },
+  sun_longest_visible_s: {
+    label: "Longest sunlit spell",
+    tip: `The longest unbroken stretch with at least part of the Sun above the skyline. A long one supports a long solar-powered stay. ${CENSORED}`,
+  },
   earth_visible_fraction: {
     label: "Earth visible",
     tip: "The share of the chosen dates when at least part of Earth is above the skyline. Geometry only: it does not promise a working radio link.",
