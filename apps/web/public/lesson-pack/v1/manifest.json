@@ -1,0 +1,637 @@
+{
+ "pack_version": "1",
+ "generated_at_utc": "2026-11-17T13:37:53Z",
+ "generator": "scripts/build_lesson_pack.py",
+ "code": {
+  "commit": "0c00138d3620c6af93e0220ee6fb8b82263edffe",
+  "dirty_outside_web": false
+ },
+ "lunation": {
+  "name": "Lunation from the new Moon of 07 January 2027",
+  "new_moon_utc": "2027-01-07T20:24:24Z",
+  "next_new_moon_utc": "2027-02-06T15:56:07Z",
+  "principal_phases": [
+   {
+    "phase": "new_moon",
+    "epoch_utc": "2027-01-07T20:24:24Z"
+   },
+   {
+    "phase": "first_quarter",
+    "epoch_utc": "2027-01-15T20:34:29Z"
+   },
+   {
+    "phase": "full_moon",
+    "epoch_utc": "2027-01-22T12:17:23Z"
+   },
+   {
+    "phase": "last_quarter",
+    "epoch_utc": "2027-01-29T10:55:26Z"
+   },
+   {
+    "phase": "new_moon",
+    "epoch_utc": "2027-02-06T15:56:07Z"
+   }
+  ],
+  "method": "lunaris_science.geometry.moon_phase.principal_phases (K-01, validated against JPL Horizons, docs/SCIENCE.md \u00a75.2); instants rounded to the second.",
+  "window": {
+   "start_utc": "2027-01-07T20:00:00Z",
+   "end_utc": "2027-02-06T16:00:00Z",
+   "step_s": 3600.0
+  }
+ },
+ "series_step_s": 3600.0,
+ "demo_trio": [
+  {
+   "catalog_site_id": "pgda78-site01",
+   "site_id": "50807cdb-811d-47fa-8adb-44d0d3e9ab7a",
+   "name": "Connecting ridge",
+   "files": [
+    "sites/pgda78-site01/site.json",
+    "sites/pgda78-site01/horizon.json",
+    "sites/pgda78-site01/timeline.json"
+   ],
+   "terrain_sunlit_fraction": 0.9148044692737352
+  },
+  {
+   "catalog_site_id": "pgda78-site23",
+   "site_id": "ad7f90fc-52e7-48b1-81fe-013d22e9d772",
+   "name": "Malapert massif",
+   "files": [
+    "sites/pgda78-site23/site.json",
+    "sites/pgda78-site23/horizon.json",
+    "sites/pgda78-site23/timeline.json"
+   ],
+   "terrain_sunlit_fraction": 0.6578212290503401
+  },
+  {
+   "catalog_site_id": "pgda78-site07",
+   "site_id": "69e2d498-39a4-4c62-8ff5-10665dc865a0",
+   "name": "Peak near Shackleton",
+   "files": [
+    "sites/pgda78-site07/site.json",
+    "sites/pgda78-site07/horizon.json",
+    "sites/pgda78-site07/timeline.json"
+   ],
+   "terrain_sunlit_fraction": 0.9622905027932926
+  }
+ ],
+ "comparisons": [
+  {
+   "variant": "default",
+   "mission_answers": {},
+   "file": "compare/default.json"
+  },
+  {
+   "variant": "power-critical",
+   "mission_answers": {
+    "power": "high",
+    "comms": "none",
+    "landing": "none"
+   },
+   "file": "compare/power-critical.json"
+  },
+  {
+   "variant": "comms-critical",
+   "mission_answers": {
+    "power": "none",
+    "comms": "high",
+    "landing": "none"
+   },
+   "file": "compare/comms-critical.json"
+  },
+  {
+   "variant": "landing-critical",
+   "mission_answers": {
+    "power": "none",
+    "comms": "none",
+    "landing": "high"
+   },
+   "file": "compare/landing-critical.json"
+  }
+ ],
+ "permanently_shadowed_example": null,
+ "shadowed_scan": {
+  "ran": true,
+  "window": {
+   "start_utc": "2027-01-07T20:00:00Z",
+   "end_utc": "2027-02-06T16:00:00Z",
+   "step_s": 3600.0
+  },
+  "criterion": "TimelineAnalysis.illumination.terrain.illuminated_fraction == 0",
+  "sites": [
+   {
+    "catalog_site_id": "pgda78-dm1",
+    "sunlit_fraction": 0.43575418994417436
+   },
+   {
+    "catalog_site_id": "pgda78-dm2",
+    "sunlit_fraction": 0.4343575418994815
+   },
+   {
+    "catalog_site_id": "pgda78-haworth",
+    "sunlit_fraction": 0.11871508379889366
+   },
+   {
+    "catalog_site_id": "pgda78-lm1",
+    "sunlit_fraction": 0.5377094972067537
+   },
+   {
+    "catalog_site_id": "pgda78-lm2",
+    "sunlit_fraction": 0.2751396648044947
+   },
+   {
+    "catalog_site_id": "pgda78-lm3",
+    "sunlit_fraction": 0.26955307262572326
+   },
+   {
+    "catalog_site_id": "pgda78-lm4",
+    "sunlit_fraction": 0.3086592178771235
+   },
+   {
+    "catalog_site_id": "pgda78-lm5",
+    "sunlit_fraction": 0.48743016759781044
+   },
+   {
+    "catalog_site_id": "pgda78-lm6",
+    "sunlit_fraction": 0.24441340782125165
+   },
+   {
+    "catalog_site_id": "pgda78-lm7",
+    "sunlit_fraction": 0.43854748603356014
+   },
+   {
+    "catalog_site_id": "pgda78-lm8",
+    "sunlit_fraction": 0.3254189944134379
+   },
+   {
+    "catalog_site_id": "pgda78-npa",
+    "sunlit_fraction": 0.2974860335195806
+   },
+   {
+    "catalog_site_id": "pgda78-npb",
+    "sunlit_fraction": 0.013966480446928666
+   },
+   {
+    "catalog_site_id": "pgda78-npc",
+    "sunlit_fraction": 0.38687150837983153
+   },
+   {
+    "catalog_site_id": "pgda78-npd",
+    "sunlit_fraction": 0.13128491620112948
+   },
+   {
+    "catalog_site_id": "pgda78-sl2",
+    "sunlit_fraction": 0.42597765363132434
+   },
+   {
+    "catalog_site_id": "pgda78-sl3",
+    "sunlit_fraction": 0.4106145251396103
+   },
+   {
+    "catalog_site_id": "pgda78-shoemaker",
+    "sunlit_fraction": 0.4064245810056242
+   },
+   {
+    "catalog_site_id": "pgda78-site04",
+    "sunlit_fraction": 0.21508379888270146
+   },
+   {
+    "catalog_site_id": "pgda78-site06",
+    "sunlit_fraction": 0.3128491620112021
+   },
+   {
+    "catalog_site_id": "pgda78-site11",
+    "sunlit_fraction": 0.8547486033519419
+   },
+   {
+    "catalog_site_id": "pgda78-site20",
+    "sunlit_fraction": 0.539106145251354
+   },
+   {
+    "catalog_site_id": "pgda78-site20v2",
+    "sunlit_fraction": 0.539106145251354
+   },
+   {
+    "catalog_site_id": "pgda78-site42",
+    "sunlit_fraction": 0.8840782122904921
+   }
+  ]
+ },
+ "notes": [
+  "Each file is the unmodified API response body; site ids and created_at_utc are assigned by the API at registration and differ between builds.",
+  "Lessons find files through this manifest (catalog_site_id \u2192 files), not by site id."
+ ],
+ "sources": [
+  {
+   "source_id": "constant:lola-reference-sphere-radius",
+   "title": "LOLA reference sphere radius (1737.4 km)",
+   "version": null,
+   "sha256": null,
+   "url": null,
+   "cited_by": [
+    "sites/pgda78-site01/site.json",
+    "sites/pgda78-site23/site.json",
+    "sites/pgda78-site07/site.json"
+   ]
+  },
+  {
+   "source_id": "lola-ldem-75s-240m",
+   "title": "LOLA GDR south-polar stereographic DEM, 75\u00b0S\u201390\u00b0S, 240 m/pixel",
+   "version": null,
+   "sha256": "d031efe2611b17dfbf3c158f5e15dc04cd5719349dcbf6384bb21fd97697c490",
+   "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldem_75s_240m.img",
+   "cited_by": [
+    "sites/pgda78-site01/horizon.json",
+    "sites/pgda78-site23/horizon.json",
+    "sites/pgda78-site07/horizon.json",
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  },
+  {
+   "source_id": "lola-ldem-75s-240m/LDEM_75S_240M.IMG",
+   "title": "Gridded topography raster described by the label. The server publishes lower-case file names but the label's ^IMAGE pointer names 'LDEM_75S_240M.IMG'; it is stored under that upper-case name so the pointer resolves on case-sensitive file systems.",
+   "version": null,
+   "sha256": "d031efe2611b17dfbf3c158f5e15dc04cd5719349dcbf6384bb21fd97697c490",
+   "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldem_75s_240m.img",
+   "cited_by": [
+    "sites/pgda78-site01/timeline.json",
+    "sites/pgda78-site23/timeline.json",
+    "sites/pgda78-site07/timeline.json",
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  },
+  {
+   "source_id": "naif-generic-kernels-lunar/de440s.bsp",
+   "title": "Planetary and lunar ephemeris DE440, short time span (SPK).",
+   "version": null,
+   "sha256": "c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp",
+   "cited_by": [
+    "ephemeris/sun.json",
+    "ephemeris/moon-phase.json",
+    "sites/pgda78-site01/timeline.json",
+    "sites/pgda78-site23/timeline.json",
+    "sites/pgda78-site07/timeline.json",
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  },
+  {
+   "source_id": "naif-generic-kernels-lunar/moon_de440_250416.tf",
+   "title": "Lunar frames kernel (FK) defining MOON_PA_DE440, MOON_ME_DE440_ME421 and the generic MOON_PA / MOON_ME aliases.",
+   "version": null,
+   "sha256": "a47c71e9c9f33796bdafb2c9d69a7ee447b6016ecad80f71cd6f3e479f9cf768",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_de440_250416.tf",
+   "cited_by": [
+    "ephemeris/sun.json",
+    "ephemeris/moon-phase.json",
+    "sites/pgda78-site01/timeline.json",
+    "sites/pgda78-site23/timeline.json",
+    "sites/pgda78-site07/timeline.json",
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  },
+  {
+   "source_id": "naif-generic-kernels-lunar/moon_pa_de440_200625.bpc",
+   "title": "High-accuracy lunar orientation (principal-axis frame) consistent with DE440 (binary PCK).",
+   "version": null,
+   "sha256": "60cd55aa401ea2ea97360636f567554bfe4e37bb829f901b4460a455dfaf783f",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/moon_pa_de440_200625.bpc",
+   "cited_by": [
+    "ephemeris/sun.json",
+    "ephemeris/moon-phase.json",
+    "sites/pgda78-site01/timeline.json",
+    "sites/pgda78-site23/timeline.json",
+    "sites/pgda78-site07/timeline.json",
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  },
+  {
+   "source_id": "naif-generic-kernels-lunar/naif0012.tls",
+   "title": "Leap seconds kernel (LSK): UTC \u2194 ephemeris time.",
+   "version": null,
+   "sha256": "678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+   "cited_by": [
+    "ephemeris/sun.json",
+    "ephemeris/moon-phase.json",
+    "sites/pgda78-site01/timeline.json",
+    "sites/pgda78-site23/timeline.json",
+    "sites/pgda78-site07/timeline.json",
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  },
+  {
+   "source_id": "naif-generic-kernels-lunar/pck00011.tpc",
+   "title": "Generic text PCK: IAU body radii and orientation models.",
+   "version": null,
+   "sha256": "3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+   "cited_by": [
+    "ephemeris/sun.json",
+    "ephemeris/moon-phase.json",
+    "sites/pgda78-site01/timeline.json",
+    "sites/pgda78-site23/timeline.json",
+    "sites/pgda78-site07/timeline.json",
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  },
+  {
+   "source_id": "pgda-lola-20mpp-80s",
+   "title": "PGDA LOLA south-pole DEM, 80\u00b0S\u201390\u00b0S, 20 m/pixel (LDEM_80S_20MPP_ADJ)",
+   "version": "ETag W/\"a0b2f283-189327867b8\"; Last-Modified Fri, 07 Jul 2023 22:28:19 GMT",
+   "sha256": null,
+   "url": "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+   "cited_by": [
+    "compare/default.json",
+    "compare/power-critical.json",
+    "compare/comms-critical.json",
+    "compare/landing-critical.json"
+   ]
+  }
+ ],
+ "files": [
+  {
+   "path": "ephemeris/sun.json",
+   "endpoint": "/api/v1/ephemeris/sun",
+   "method": "GET",
+   "request": {
+    "query": {
+     "start_utc": "2027-01-07T20:00:00Z",
+     "end_utc": "2027-02-06T16:00:00Z",
+     "step_s": 3600.0
+    }
+   },
+   "model": "SunDirectionSeries",
+   "window": {
+    "start_utc": "2027-01-07T20:00:00Z",
+    "end_utc": "2027-02-06T16:00:00Z",
+    "step_s": 3600.0
+   },
+   "bytes": 203596,
+   "sha256": "6c900a25231e0970ef4aa7225dbffc85eff5531cbbccb2933aecd337cc66c9da"
+  },
+  {
+   "path": "ephemeris/moon-phase.json",
+   "endpoint": "/api/v1/ephemeris/moon-phase",
+   "method": "GET",
+   "request": {
+    "query": {
+     "start_utc": "2027-01-07T20:00:00Z",
+     "end_utc": "2027-02-06T16:00:00Z",
+     "step_s": 3600.0
+    }
+   },
+   "model": "MoonPhaseSeries",
+   "window": {
+    "start_utc": "2027-01-07T20:00:00Z",
+    "end_utc": "2027-02-06T16:00:00Z",
+    "step_s": 3600.0
+   },
+   "bytes": 249202,
+   "sha256": "cd4c71038993176856522084a26a94113c0da70a10efa1a3c98e0eb7bc1c2fb1"
+  },
+  {
+   "path": "sites/pgda78-site01/site.json",
+   "endpoint": "/api/v1/sites/50807cdb-811d-47fa-8adb-44d0d3e9ab7a",
+   "method": "GET",
+   "request": {
+    "query": {}
+   },
+   "model": "CandidateSite",
+   "window": null,
+   "bytes": 1911,
+   "sha256": "4977c331bed014142cfd9f3e40e0bf3f3443a6a78e3523f9602363f51a44959c"
+  },
+  {
+   "path": "sites/pgda78-site01/horizon.json",
+   "endpoint": "/api/v1/sites/50807cdb-811d-47fa-8adb-44d0d3e9ab7a/horizon",
+   "method": "GET",
+   "request": {
+    "query": {}
+   },
+   "model": "HorizonMaskResponse",
+   "window": null,
+   "bytes": 48712,
+   "sha256": "53c51d5a845d41ff71f3e6d2979a68463611c144abfc796455ec0953c32f258c"
+  },
+  {
+   "path": "sites/pgda78-site01/timeline.json",
+   "endpoint": "/api/v1/analysis/timeline",
+   "method": "POST",
+   "request": {
+    "json": {
+     "site_id": "50807cdb-811d-47fa-8adb-44d0d3e9ab7a",
+     "start_utc": "2027-01-07T20:00:00Z",
+     "end_utc": "2027-02-06T16:00:00Z",
+     "step_s": 3600.0
+    }
+   },
+   "model": "TimelineAnalysis",
+   "window": {
+    "start_utc": "2027-01-07T20:00:00Z",
+    "end_utc": "2027-02-06T16:00:00Z",
+    "step_s": 3600.0
+   },
+   "bytes": 456841,
+   "sha256": "352fe89e3ea9322c99371398665b20e08d9aea72e1952b77077b7b350b6300d2"
+  },
+  {
+   "path": "sites/pgda78-site23/site.json",
+   "endpoint": "/api/v1/sites/ad7f90fc-52e7-48b1-81fe-013d22e9d772",
+   "method": "GET",
+   "request": {
+    "query": {}
+   },
+   "model": "CandidateSite",
+   "window": null,
+   "bytes": 1909,
+   "sha256": "e5151e7b61bc2fc5bcd8b872de4780568551932e932050aaecd660a380bb663d"
+  },
+  {
+   "path": "sites/pgda78-site23/horizon.json",
+   "endpoint": "/api/v1/sites/ad7f90fc-52e7-48b1-81fe-013d22e9d772/horizon",
+   "method": "GET",
+   "request": {
+    "query": {}
+   },
+   "model": "HorizonMaskResponse",
+   "window": null,
+   "bytes": 47361,
+   "sha256": "1c1e6fe443a79e2d538b05a0792cba50ee46e8ca7bcf5d1630190b8d4df5aaf5"
+  },
+  {
+   "path": "sites/pgda78-site23/timeline.json",
+   "endpoint": "/api/v1/analysis/timeline",
+   "method": "POST",
+   "request": {
+    "json": {
+     "site_id": "ad7f90fc-52e7-48b1-81fe-013d22e9d772",
+     "start_utc": "2027-01-07T20:00:00Z",
+     "end_utc": "2027-02-06T16:00:00Z",
+     "step_s": 3600.0
+    }
+   },
+   "model": "TimelineAnalysis",
+   "window": {
+    "start_utc": "2027-01-07T20:00:00Z",
+    "end_utc": "2027-02-06T16:00:00Z",
+    "step_s": 3600.0
+   },
+   "bytes": 453118,
+   "sha256": "8b3307c3017f2a2c191ed79971bfabfc78e625a5cf897abf9feabdbde1809a7e"
+  },
+  {
+   "path": "sites/pgda78-site07/site.json",
+   "endpoint": "/api/v1/sites/69e2d498-39a4-4c62-8ff5-10665dc865a0",
+   "method": "GET",
+   "request": {
+    "query": {}
+   },
+   "model": "CandidateSite",
+   "window": null,
+   "bytes": 1917,
+   "sha256": "20d331ae5f06fbc2b939ecb315b65e99a3b2b4a1181dab316dfc258273d88d0b"
+  },
+  {
+   "path": "sites/pgda78-site07/horizon.json",
+   "endpoint": "/api/v1/sites/69e2d498-39a4-4c62-8ff5-10665dc865a0/horizon",
+   "method": "GET",
+   "request": {
+    "query": {}
+   },
+   "model": "HorizonMaskResponse",
+   "window": null,
+   "bytes": 48863,
+   "sha256": "135dc8b755ee3e6a9b01786c6a6dad50fdc48a5db87ca1d4123adc01a018edec"
+  },
+  {
+   "path": "sites/pgda78-site07/timeline.json",
+   "endpoint": "/api/v1/analysis/timeline",
+   "method": "POST",
+   "request": {
+    "json": {
+     "site_id": "69e2d498-39a4-4c62-8ff5-10665dc865a0",
+     "start_utc": "2027-01-07T20:00:00Z",
+     "end_utc": "2027-02-06T16:00:00Z",
+     "step_s": 3600.0
+    }
+   },
+   "model": "TimelineAnalysis",
+   "window": {
+    "start_utc": "2027-01-07T20:00:00Z",
+    "end_utc": "2027-02-06T16:00:00Z",
+    "step_s": 3600.0
+   },
+   "bytes": 454620,
+   "sha256": "82f2360be49b90f64bb597762c19c040a942f9893e1b72569f5a1473d805063c"
+  },
+  {
+   "path": "compare/default.json",
+   "endpoint": "/api/v1/analysis/site-comparison",
+   "method": "GET",
+   "request": {
+    "query": {
+     "site_ids": "50807cdb-811d-47fa-8adb-44d0d3e9ab7a,ad7f90fc-52e7-48b1-81fe-013d22e9d772,69e2d498-39a4-4c62-8ff5-10665dc865a0"
+    }
+   },
+   "model": "SiteComparison",
+   "window": {
+    "start_utc": "2027-01-01T00:00:00Z",
+    "end_utc": "2028-01-01T00:00:00Z",
+    "step_s": 3600.0,
+    "source": "API default window (calendar 2027)"
+   },
+   "bytes": 147252,
+   "sha256": "dc03fe4e4d5147fd9e998a85bbfe3fbc1b3fa094a1f8faee25941f87af0c956c"
+  },
+  {
+   "path": "compare/power-critical.json",
+   "endpoint": "/api/v1/analysis/site-comparison",
+   "method": "GET",
+   "request": {
+    "query": {
+     "site_ids": "50807cdb-811d-47fa-8adb-44d0d3e9ab7a,ad7f90fc-52e7-48b1-81fe-013d22e9d772,69e2d498-39a4-4c62-8ff5-10665dc865a0",
+     "power": "high",
+     "comms": "none",
+     "landing": "none"
+    }
+   },
+   "model": "SiteComparison",
+   "window": {
+    "start_utc": "2027-01-01T00:00:00Z",
+    "end_utc": "2028-01-01T00:00:00Z",
+    "step_s": 3600.0,
+    "source": "API default window (calendar 2027)"
+   },
+   "bytes": 146732,
+   "sha256": "d870cdc24ca7769f0ebf93dbf42c8c34e2192bdc3db235b2743bfb41f036cdaf"
+  },
+  {
+   "path": "compare/comms-critical.json",
+   "endpoint": "/api/v1/analysis/site-comparison",
+   "method": "GET",
+   "request": {
+    "query": {
+     "site_ids": "50807cdb-811d-47fa-8adb-44d0d3e9ab7a,ad7f90fc-52e7-48b1-81fe-013d22e9d772,69e2d498-39a4-4c62-8ff5-10665dc865a0",
+     "power": "none",
+     "comms": "high",
+     "landing": "none"
+    }
+   },
+   "model": "SiteComparison",
+   "window": {
+    "start_utc": "2027-01-01T00:00:00Z",
+    "end_utc": "2028-01-01T00:00:00Z",
+    "step_s": 3600.0,
+    "source": "API default window (calendar 2027)"
+   },
+   "bytes": 146715,
+   "sha256": "1581e63b31351b8999c89e620089a81244f112acf7ee11691c26df00ed4c2827"
+  },
+  {
+   "path": "compare/landing-critical.json",
+   "endpoint": "/api/v1/analysis/site-comparison",
+   "method": "GET",
+   "request": {
+    "query": {
+     "site_ids": "50807cdb-811d-47fa-8adb-44d0d3e9ab7a,ad7f90fc-52e7-48b1-81fe-013d22e9d772,69e2d498-39a4-4c62-8ff5-10665dc865a0",
+     "power": "none",
+     "comms": "none",
+     "landing": "high"
+    }
+   },
+   "model": "SiteComparison",
+   "window": {
+    "start_utc": "2027-01-01T00:00:00Z",
+    "end_utc": "2028-01-01T00:00:00Z",
+    "step_s": 3600.0,
+    "source": "API default window (calendar 2027)"
+   },
+   "bytes": 147166,
+   "sha256": "9abf560d547aaaf8b8472f6302eece250413562a43d5587877f5843409bc7ecb"
+  }
+ ],
+ "total_bytes": 2555915,
+ "size_budget_bytes": 3000000
+}
