@@ -1,13 +1,26 @@
 "use client";
 
 import { LoaderCircle, RotateCcw, TriangleAlert } from "lucide-react";
+import { useState } from "react";
 
 import { EvidenceBadge } from "@/components/evidence/evidence-badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { ComparisonSummary, MissionProfile } from "@/lib/api/client";
+import type { ComparisonSummary, MissionAnswers, Recommendation } from "@/lib/api/client";
+import {
+  clampLimit,
+  DEFAULT_MISSION,
+  isDefaultMission,
+  LIMIT_QUESTIONS,
+  NEED_QUESTIONS,
+  parseLimit,
+  points,
+  PRIORITY_OPTIONS,
+  type LimitId,
+} from "@/lib/comparison/mission";
 import { describeRowError, type CompareColumn } from "@/lib/comparison/progress";
-import { leaderLabel, PROFILES, profileName, weightLines } from "@/lib/comparison/summary";
+import { leaderLabel } from "@/lib/comparison/summary";
 
 export type SummaryState =
   | { kind: "too-few" }
@@ -18,20 +31,20 @@ export type SummaryState =
   | { kind: "ready"; summary: ComparisonSummary; scoring: boolean };
 
 /**
- * T-18 summary above the table: the verdict (from leads, trails and dominance only), each
- * site's standing, and, only when the visitor picks a mission profile, a weighted ordering whose
- * weights are shown as assumptions. There is no default score.
+ * T-18 summary above the table: the mission questions, the recommended site for the answers
+ * (every weight, scale and limit shown as an assumption), the verdict (from leads, trails and
+ * dominance only, never from weights) and each site's standing.
  */
 export function ComparisonSummaryPanel({
   state,
   columns,
-  profile,
-  onProfile,
+  mission,
+  onMission,
 }: {
   state: SummaryState;
   columns: readonly CompareColumn[];
-  profile: MissionProfile | null;
-  onProfile: (profile: MissionProfile | null) => void;
+  mission: MissionAnswers;
+  onMission: (mission: MissionAnswers) => void;
 }) {
   return (
     <section
@@ -41,16 +54,11 @@ export function ComparisonSummaryPanel({
       data-state={state.kind}
     >
       <p className="label-caps">Summary</p>
-      <SummaryBody state={state} columns={columns} />
+      {state.kind !== "too-few" && <MissionQuestions mission={mission} onMission={onMission} />}
       {state.kind === "ready" && (
-        <ProfileSection
-          summary={state.summary}
-          scoring={state.scoring}
-          columns={columns}
-          profile={profile}
-          onProfile={onProfile}
-        />
+        <RecommendationCard recommendation={state.summary.recommendation} scoring={state.scoring} />
       )}
+      <SummaryBody state={state} columns={columns} />
     </section>
   );
 }
@@ -141,97 +149,288 @@ function SummaryBody({ state, columns }: { state: SummaryState; columns: readonl
   }
 }
 
-function ProfileSection({
-  summary,
-  scoring,
-  columns,
-  profile,
-  onProfile,
+function MissionQuestions({
+  mission,
+  onMission,
 }: {
-  summary: ComparisonSummary;
-  scoring: boolean;
-  columns: readonly CompareColumn[];
-  profile: MissionProfile | null;
-  onProfile: (profile: MissionProfile | null) => void;
+  mission: MissionAnswers;
+  onMission: (mission: MissionAnswers) => void;
 }) {
-  const score = summary.score && summary.score.profile === profile ? summary.score : null;
   return (
-    <div className="space-y-1.5 border-t border-hairline pt-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="label-caps" id="compare-profile-label">
-          Mission profile (optional)
-        </span>
-        <ToggleGroup
-          type="single"
-          aria-labelledby="compare-profile-label"
-          value={profile ?? "none"}
-          onValueChange={(v) => {
-            if (!v) return; // clicking the active item keeps it
-            onProfile(v === "none" ? null : (v as MissionProfile));
-          }}
-          data-testid="compare-profile"
-        >
-          <ToggleGroupItem value="none" data-testid="compare-profile-none">
-            None
-          </ToggleGroupItem>
-          {PROFILES.map((p) => (
-            <ToggleGroupItem key={p} value={p} data-testid={`compare-profile-${p}`}>
-              {profileName(p)}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+    <div className="space-y-2 border-b border-hairline pb-2" data-testid="compare-mission">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="label-caps">What does this mission need?</p>
+        {isDefaultMission(mission) ? (
+          <span className="text-3xs text-dim" data-testid="compare-mission-default">
+            Unanswered: every need counts as important, no limits
+          </span>
+        ) : (
+          <Button
+            type="button"
+            size="xs"
+            variant="ghost"
+            onClick={() => onMission(DEFAULT_MISSION)}
+            data-testid="compare-mission-reset"
+          >
+            <RotateCcw /> Reset answers
+          </Button>
+        )}
       </div>
-      {profile === null ? (
-        <p className="text-3xs text-dim" data-testid="compare-no-score">
-          No score is shown without a profile. A profile ranks the sites with fixed weights, which are
-          assumptions, not mission requirements.
-        </p>
-      ) : !score ? (
-        <p className="inline-flex items-center gap-1.5 text-3xs text-dim" role="status">
-          <LoaderCircle aria-hidden="true" className="size-3 animate-spin motion-reduce:animate-none" />
-          {scoring ? `Scoring for ${profileName(profile).toLowerCase()}…` : "No score in the answer."}
-        </p>
-      ) : (
-        <div className="space-y-1.5" data-testid="compare-score" data-profile={score.profile}>
-          <p className="flex items-start gap-2 text-3xs text-muted-foreground">
-            <EvidenceBadge kind={score.evidence.kind} className="mt-px" />
-            <span>{score.evidence.statement}</span>
-          </p>
+      <div className="grid gap-2 lg:grid-cols-3">
+        {NEED_QUESTIONS.map((q) => (
+          <div key={q.id} className="space-y-1" data-testid={`compare-need-${q.id}`}>
+            <p id={`compare-need-label-${q.id}`} className="text-2xs text-foreground">
+              {q.question}
+            </p>
+            <p className="text-3xs text-dim">{q.hint}</p>
+            <ToggleGroup
+              type="single"
+              aria-labelledby={`compare-need-label-${q.id}`}
+              value={mission[q.id]}
+              onValueChange={(v) => {
+                if (v) onMission({ ...mission, [q.id]: v as MissionAnswers["power"] });
+              }}
+              className="flex-wrap"
+            >
+              {PRIORITY_OPTIONS.map((o) => (
+                <ToggleGroupItem key={o.id} value={o.id} data-testid={`compare-need-${q.id}-${o.id}`}>
+                  {o.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+        ))}
+      </div>
+      <details open={LIMIT_QUESTIONS.some((l) => mission[l.id] !== null)}>
+        <summary className="cursor-pointer select-none text-3xs text-dim hover:text-foreground">
+          Hard limits (optional): a site that breaks one is excluded, never just scored lower
+        </summary>
+        <div className="mt-1.5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {LIMIT_QUESTIONS.map((limit) => (
+            <LimitInput
+              key={limit.id}
+              id={limit.id}
+              label={limit.question}
+              unit={limit.unit}
+              placeholder={limit.placeholder}
+              value={mission[limit.id]}
+              onCommit={(value) => onMission({ ...mission, [limit.id]: value })}
+            />
+          ))}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+/** A limit is committed on blur or Enter, so a half-typed number does not refetch. */
+function LimitInput({
+  id,
+  label,
+  unit,
+  placeholder,
+  value,
+  onCommit,
+}: {
+  id: LimitId;
+  label: string;
+  unit: string;
+  placeholder: string;
+  value: number | null;
+  onCommit: (value: number | null) => void;
+}) {
+  const text = value === null ? "" : String(value);
+  const [draft, setDraft] = useState(text);
+  const [seen, setSeen] = useState(value);
+  if (seen !== value) {
+    setSeen(value);
+    setDraft(text);
+  }
+  const commit = () => {
+    const parsed = clampLimit(id, parseLimit(draft));
+    if (parsed === value) setDraft(text);
+    else onCommit(parsed);
+  };
+  return (
+    <label className="block space-y-1">
+      <span className="block text-3xs text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1.5">
+        <Input
+          inputMode="decimal"
+          value={draft}
+          placeholder={placeholder}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={commit}
+          onKeyDown={(event) => event.key === "Enter" && commit()}
+          data-testid={`compare-limit-${id}`}
+        />
+        <span className="text-3xs text-dim">{unit}</span>
+      </span>
+    </label>
+  );
+}
+
+const CONFIDENCE: Record<Recommendation["confidence"], string> = {
+  clear: "Clear lead",
+  moderate: "Moderate lead",
+  narrow: "Narrow lead",
+  tie: "Tie",
+  only_option: "Only option",
+  none: "No pick",
+};
+
+function RecommendationCard({
+  recommendation: rec,
+  scoring,
+}: {
+  recommendation: Recommendation;
+  scoring: boolean;
+}) {
+  const top = rec.ranking.find((e) => e.site_id === rec.site_id);
+  return (
+    <div
+      className="space-y-2 rounded-md border border-primary-strong/40 bg-accent/20 p-2.5"
+      data-testid="compare-recommendation"
+      data-confidence={rec.confidence}
+      data-site-id={rec.site_id ?? ""}
+      aria-busy={scoring}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="label-caps">Recommended site for this mission</p>
+        <span className="inline-flex items-center gap-1.5 text-3xs text-dim">
+          {scoring && (
+            <LoaderCircle aria-hidden="true" className="size-3 animate-spin motion-reduce:animate-none" />
+          )}
+          weights and scales are assumptions
+          <EvidenceBadge kind={rec.evidence.kind} />
+        </span>
+      </div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="text-sm font-medium text-foreground" data-testid="compare-recommendation-name">
+          {rec.name ?? "No site qualifies"}
+        </span>
+        {top && <span className="numeric font-mono text-xs text-foreground">{points(top.score)} / 100</span>}
+        <span className="rounded-[4px] border border-hairline px-1.5 py-px font-mono text-3xs uppercase text-muted-foreground">
+          {CONFIDENCE[rec.confidence]}
+        </span>
+      </div>
+      <p className="text-xs text-foreground" data-testid="compare-recommendation-headline">
+        {rec.headline}
+      </p>
+      {rec.reasons.length + rec.tradeoffs.length > 0 && (
+        <div className="grid gap-2 md:grid-cols-2">
           <div>
-            <p className="label-caps">Weights (assumed)</p>
-            <ul className="flex flex-wrap gap-x-3 text-3xs text-muted-foreground">
-              {weightLines(score.weights, columns).map((w) => (
-                <li key={w.key} data-testid="compare-weight">
-                  {w.label} × {w.weight}
-                </li>
+            <p className="label-caps">Why</p>
+            <ul className="list-disc space-y-0.5 pl-4 text-3xs text-muted-foreground">
+              {rec.reasons.map((r) => (
+                <li key={r}>{r}</li>
               ))}
             </ul>
           </div>
-          <p className="text-3xs text-dim" data-testid="compare-normalisation">
-            {score.normalisation}
-          </p>
-          <ol className="space-y-0.5">
-            {score.scores.map((e, i) => (
-              <li
-                key={e.site_id}
-                className="flex flex-wrap items-baseline gap-x-2 text-2xs"
-                data-testid="compare-score-entry"
-                data-null={e.score === null ? "true" : "false"}
-              >
-                <span className="w-4 font-mono text-3xs text-dim">{e.score === null ? "–" : i + 1}</span>
-                <span className="text-foreground">{e.name}</span>
-                {e.score === null ? (
-                  <span className="font-mono text-3xs text-dim italic">
-                    no score · {e.reason ?? "not given"}
-                  </span>
-                ) : (
-                  <span className="numeric font-mono text-3xs text-foreground">{e.score.toFixed(2)}</span>
-                )}
-              </li>
-            ))}
-          </ol>
+          <div>
+            <p className="label-caps">What it gives up</p>
+            {rec.tradeoffs.length > 0 ? (
+              <ul className="list-disc space-y-0.5 pl-4 text-3xs text-muted-foreground">
+                {rec.tradeoffs.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-3xs text-dim">Nothing among the needs this mission weights.</p>
+            )}
+          </div>
         </div>
       )}
+      {rec.robustness && (
+        <p
+          className="text-3xs text-muted-foreground"
+          data-testid="compare-robustness"
+          data-stable={rec.robustness.flips.length === 0 ? "true" : "false"}
+        >
+          {rec.robustness.statement}
+        </p>
+      )}
+      {rec.caveats.map((c) => (
+        <p key={c} className="text-3xs text-dim">
+          {c}
+        </p>
+      ))}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-max text-left text-3xs" data-testid="compare-ranking">
+          <thead>
+            <tr className="border-b border-hairline text-dim">
+              <th scope="col" className="px-1.5 py-1 font-medium">
+                #
+              </th>
+              <th scope="col" className="px-1.5 py-1 font-medium">
+                Site
+              </th>
+              <th scope="col" className="px-1.5 py-1 font-medium">
+                Mission fit (0–100)
+              </th>
+              {rec.needs.map((n) => (
+                <th
+                  key={n.need}
+                  scope="col"
+                  className={`px-1.5 py-1 font-medium ${n.weight === 0 ? "opacity-50" : ""}`}
+                >
+                  {n.label}
+                  <span className="block font-normal">
+                    {n.weight === 0 ? "not counted" : `${(n.weight * 100).toFixed(0)} % of the score`}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rec.ranking.map((e) => (
+              <tr
+                key={e.site_id}
+                className="border-b border-hairline last:border-b-0"
+                data-testid="compare-ranking-entry"
+                data-status={e.status}
+              >
+                <td className="px-1.5 py-1 font-mono text-dim">{e.rank ?? "–"}</td>
+                <th scope="row" className="px-1.5 py-1 font-normal text-foreground">
+                  {e.name}
+                </th>
+                <td className="px-1.5 py-1">
+                  {e.score === null || e.score === undefined ? (
+                    <span className="text-dim italic">
+                      {e.status === "excluded" ? "Excluded: " : "No score: "}
+                      {e.reasons.join("; ")}
+                    </span>
+                  ) : (
+                    <span className="numeric font-mono text-foreground">{points(e.score)}</span>
+                  )}
+                </td>
+                {rec.needs.map((n) => (
+                  <td
+                    key={n.need}
+                    className={`numeric px-1.5 py-1 font-mono ${n.weight === 0 ? "opacity-50" : ""}`}
+                  >
+                    {points(e.need_scores[n.need])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <details className="text-3xs text-dim">
+        <summary className="cursor-pointer select-none hover:text-foreground">
+          Every weight, scale and limit used (assumptions)
+        </summary>
+        <p className="mt-1">{rec.evidence.statement}</p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-4" data-testid="compare-assumptions">
+          {rec.evidence.assumptions.map((a) => (
+            <li key={a}>{a}</li>
+          ))}
+        </ul>
+        <p className="mt-1" data-testid="compare-recommendation-method">
+          {rec.method}
+        </p>
+      </details>
     </div>
   );
 }

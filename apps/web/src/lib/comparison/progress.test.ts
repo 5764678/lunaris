@@ -101,7 +101,7 @@ describe("shouldRetryComparison", () => {
 describe("columnsFor", () => {
   it("draws the expected columns until an answer arrives", () => {
     const columns = columnsFor(undefined);
-    expect(columns).toHaveLength(12);
+    expect(columns).toHaveLength(13);
     expect(columns[0]).toMatchObject({ key: "surface_height_m", unit: "m" });
   });
 

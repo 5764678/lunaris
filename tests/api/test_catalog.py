@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
+from lunaris_api.app import create_app
+from lunaris_api.settings import Settings
 from lunaris_data.catalogs.sites import load_site_catalog
 
 DEMO = {"pgda78-site01", "pgda78-site23", "pgda78-site07"}
@@ -68,3 +72,39 @@ def test_user_defined_sites_keep_their_origin(client: TestClient) -> None:
     assert site["origin"] == "user_defined"
     assumptions = site["body_fixed_position"]["evidence"]["assumptions"]
     assert any("user-defined" in a for a in assumptions)
+
+
+def test_seeding_registers_all_27_cited_sites_once(tmp_path: Path) -> None:
+    settings = Settings(
+        environment="test",
+        data_dir=tmp_path / "data",
+        log_level="WARNING",
+        seed_catalog=True,
+    )
+    with TestClient(create_app(settings)) as seeded:
+        sites = seeded.get("/api/v1/sites").json()["sites"]
+        assert len(sites) == 27
+        assert {s["origin"] for s in sites} == {"published"}
+        names = [s["name"] for s in sites]
+        assert len(set(names)) == 27
+        # PGDA labels two tiles "de Gerlache rim": each carries its tile id so both register.
+        assert {n for n in names if n.startswith("de Gerlache rim")} == {
+            "de Gerlache rim (SL2)",
+            "de Gerlache rim (Site11)",
+        }
+        assert {"Malapert massif", "Peak near Shackleton", "Connecting ridge"} <= set(names)
+        # Registering again (the demo trio, or a restart) adds nothing.
+        again = seeded.post("/api/v1/catalog/demo-trio/register").json()
+        assert again["created"] == []
+        assert len(again["already_registered"]) == 3
+        assert len(seeded.get("/api/v1/sites").json()["sites"]) == 27
+    with TestClient(create_app(settings)) as restarted:
+        assert len(restarted.get("/api/v1/sites").json()["sites"]) == 27
+
+
+def test_every_catalogue_site_can_be_registered_one_by_one(client: TestClient) -> None:
+    """The two tiles PGDA both calls "de Gerlache rim" no longer collide."""
+    for entry in load_site_catalog().sites:
+        response = client.post(f"/api/v1/catalog/sites/{entry.id}/register")
+        assert response.status_code == 201, (entry.id, response.text)
+    assert len(client.get("/api/v1/sites").json()["sites"]) == 27
