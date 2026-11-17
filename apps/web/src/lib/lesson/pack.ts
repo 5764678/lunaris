@@ -1,26 +1,41 @@
-import { buildSyntheticPack } from "./fixtures/synthetic-pack";
 import type { LessonPack, MoonPhaseSeries, SunDirectionSeries } from "./types";
 
 /**
  * The only door to the numbers the lesson route shows (contract L3, decision D10).
  *
  * It reads the committed lesson pack, static files served with the web app
- * (`/lesson-pack/v1/`, contract L2). It never calls the API, and lesson code must not import
- * `lib/api/client` or `lib/api/queries`; an end-to-end test checks that no request leaves for
- * the API host.
+ * (`/lesson-pack/v1/`, contract L2; `manifest.json` lists every file with its model name).
+ * It never calls the API, and lesson code must not import `lib/api/client` or
+ * `lib/api/queries`; an end-to-end test checks that no request leaves for the API host.
  *
- * File names below follow the order of contract L2 but are ASSUMED until K-02 lands: confirm
- * them against the real `manifest.json` and fix `PACK_FILES` if they differ. While the pack
- * is absent (the manifest answers 404) the loader returns a SYNTHETIC fixture whose provenance
- * says so; the UI shows that label wherever a number appears. A pack that is present but
- * unreadable is an error, never a silent fall back to synthetic numbers.
+ * A pack that is missing or unreadable is an error the page reports, never a silent fall
+ * back to made-up numbers. (`fixtures/synthetic-pack.ts` is a labelled stand-in for unit
+ * tests only; nothing in the shipped route imports it.)
  */
 export const PACK_BASE = "/lesson-pack/v1";
 export const PACK_FILES = {
   manifest: "manifest.json",
-  sun: "sun-direction.json",
-  phase: "moon-phase.json",
+  /** Defaults, used only when the manifest does not name a file for the model. */
+  sun: "ephemeris/sun.json",
+  phase: "ephemeris/moon-phase.json",
 } as const;
+
+/** The path of the manifest file whose `model` is `model`, else the default. */
+export function packPathFor(manifest: unknown, model: string, fallback: string): string {
+  const files = isObject(manifest) && Array.isArray(manifest.files) ? manifest.files : [];
+  for (const f of files) {
+    if (
+      isObject(f) &&
+      f.model === model &&
+      typeof f.path === "string" &&
+      /^[A-Za-z0-9._/-]+$/.test(f.path) &&
+      !f.path.includes("..")
+    ) {
+      return f.path;
+    }
+  }
+  return fallback;
+}
 
 export class LessonPackError extends Error {
   constructor(message: string) {
@@ -78,28 +93,21 @@ export function isMoonPhaseSeries(v: unknown): v is MoonPhaseSeries {
 
 export async function loadLessonPack(fetchImpl: Fetch = (url) => fetch(url)): Promise<LessonPack> {
   const manifest = await getJson(fetchImpl, PACK_FILES.manifest);
-  if (!manifest.ok) {
-    if (manifest.status === 404) {
-      return buildSyntheticPack("The lesson pack is not in this build yet (manifest.json answered 404).");
-    }
-    throw new LessonPackError(`manifest.json answered HTTP ${manifest.status}.`);
-  }
+  if (!manifest.ok) throw new LessonPackError(`${PACK_FILES.manifest} answered HTTP ${manifest.status}.`);
   const m = isObject(manifest.body) ? manifest.body : {};
-  const [sun, phase] = await Promise.all([
-    getJson(fetchImpl, PACK_FILES.sun),
-    getJson(fetchImpl, PACK_FILES.phase),
-  ]);
-  if (!sun.ok) throw new LessonPackError(`${PACK_FILES.sun} answered HTTP ${sun.status}.`);
-  if (!phase.ok) throw new LessonPackError(`${PACK_FILES.phase} answered HTTP ${phase.status}.`);
-  if (!isSunSeries(sun.body)) throw new LessonPackError(`${PACK_FILES.sun} is not a Sun direction series.`);
-  if (!isMoonPhaseSeries(phase.body))
-    throw new LessonPackError(`${PACK_FILES.phase} is not a Moon phase series.`);
+  const sunPath = packPathFor(manifest.body, "SunDirectionSeries", PACK_FILES.sun);
+  const phasePath = packPathFor(manifest.body, "MoonPhaseSeries", PACK_FILES.phase);
+  const [sun, phase] = await Promise.all([getJson(fetchImpl, sunPath), getJson(fetchImpl, phasePath)]);
+  if (!sun.ok) throw new LessonPackError(`${sunPath} answered HTTP ${sun.status}.`);
+  if (!phase.ok) throw new LessonPackError(`${phasePath} answered HTTP ${phase.status}.`);
+  if (!isSunSeries(sun.body)) throw new LessonPackError(`${sunPath} is not a Sun direction series.`);
+  if (!isMoonPhaseSeries(phase.body)) throw new LessonPackError(`${phasePath} is not a Moon phase series.`);
   return {
     provenance: {
       kind: "pack",
-      version: typeof m.pack_version === "string" ? m.pack_version : "v1",
+      version: typeof m.pack_version === "string" ? m.pack_version : "1",
       generatedAtUtc: typeof m.generated_at_utc === "string" ? m.generated_at_utc : null,
-      codeCommit: typeof m.code_commit === "string" ? m.code_commit : null,
+      codeCommit: isObject(m.code) && typeof m.code.commit === "string" ? m.code.commit : null,
     },
     sun: sun.body,
     phase: phase.body,

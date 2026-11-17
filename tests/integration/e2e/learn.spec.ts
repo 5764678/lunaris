@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * The /learn route (K-03, K-04). It reads static data only (decision D10, contract L3).
- *
- * Until the real lesson pack is committed, the route shows a labelled SYNTHETIC fixture; these
- * tests assert the label as well as the numbers. They do not depend on real ephemeris values.
+ * The /learn route (K-03, K-04). It reads the committed lesson pack, static files served with
+ * the web app (decision D10, contract L3). Expected values come from the pack's own manifest
+ * (new Moon 7 Jan 2027 20:24 UTC to 6 Feb 2027 15:56 UTC), not from a calculation here.
  */
 
 const API_ORIGIN = "http://localhost:8100";
@@ -56,15 +55,15 @@ test("a step number that is not one of the six is a 404", async ({ page }) => {
   expect(response?.status()).toBe(404);
 });
 
-test("period 2: synthetic label, Earth view, phase readout stepping through the lunation", async ({
-  page,
-}) => {
+test("period 2: pack label, Earth view, phase readout stepping through the lunation", async ({ page }) => {
   await watchRequests(page);
   await page.goto("/learn/2");
 
-  // Labelled synthetic until the real pack lands; never an unlabelled number.
-  await expect(page.getByTestId("synthetic-banner")).toBeVisible();
-  await expect(page.getByTestId("evidence-kind")).toHaveText("placeholder");
+  // The real pack: its label shows, and no synthetic-data banner.
+  await expect(page.getByTestId("pack-label")).toBeVisible();
+  await expect(page.getByTestId("synthetic-banner")).toHaveCount(0);
+  await expect(page.getByTestId("evidence-kind")).toHaveText("model");
+  await expect(page.getByTestId("epoch")).toHaveText("2027-01-07 20:00");
   await expect(page.getByTestId("earth-view-canvas")).toBeVisible();
 
   // Day 1 is the new Moon.
@@ -76,16 +75,16 @@ test("period 2: synthetic label, Earth view, phase readout stepping through the 
   await expect(page.getByTestId("geocentric-note")).toContainText("จุดศูนย์กลางโลก");
   await expect(page.getByTestId("geocentric-note")).toContainText("ประเทศไทย");
 
-  // One week in: waxing, about a half.
-  for (let i = 0; i < 7; i++) await page.getByTestId("step-forward").click();
-  await expect(page.getByTestId("day-label")).toContainText("8");
+  // Eight days in (the first quarter is 7 Jan + 8 d 0 h 10 min): waxing, a half.
+  for (let i = 0; i < 8; i++) await page.getByTestId("step-forward").click();
+  await expect(page.getByTestId("day-label")).toContainText("9");
   await expect(page.getByTestId("waxing-waning")).toHaveAttribute("data-waxing", "true");
   await expect(page.getByTestId("phase-name")).toHaveAttribute("data-phase", "firstQuarter");
 
-  // Two weeks in: full. Then past it: waning.
+  // Day 16 (the full Moon is 22 Jan 12:17 UTC): full. Day 23 (last quarter 29 Jan 10:55): waning, a half.
   for (let i = 0; i < 7; i++) await page.getByTestId("step-forward").click();
   await expect(page.getByTestId("phase-name")).toHaveAttribute("data-phase", "full");
-  for (let i = 0; i < 8; i++) await page.getByTestId("step-forward").click();
+  for (let i = 0; i < 7; i++) await page.getByTestId("step-forward").click();
   await expect(page.getByTestId("waxing-waning")).toHaveAttribute("data-waxing", "false");
   await expect(page.getByTestId("phase-name")).toHaveAttribute("data-phase", "lastQuarter");
 
@@ -108,6 +107,17 @@ test("the language switch changes the lesson text and the readout names", async 
   await expect(page.getByTestId("phase-name")).toHaveText("New Moon");
   await expect(page.getByTestId("geocentric-note")).toContainText("centre of the Earth");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("One lunation of phases");
+});
+
+test("when the pack cannot be loaded the lesson says so and shows no numbers", async ({ page }) => {
+  await watchRequests(page);
+  await page.route("**/lesson-pack/v1/manifest.json", (route) =>
+    route.fulfill({ status: 404, body: "gone" }),
+  );
+  await page.goto("/learn/2");
+  await expect(page.getByTestId("learn-step").getByRole("alert")).toContainText("โหลดข้อมูลบทเรียนไม่สำเร็จ");
+  await expect(page.getByTestId("percent-lit")).toHaveCount(0);
+  await expect(page.getByTestId("earth-view-canvas")).toHaveCount(0);
 });
 
 test("periods 4 and 5 say they are not built yet and link to the Explorer page", async ({ page }) => {

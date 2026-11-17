@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -7,7 +8,14 @@ import { bodyFixedToScene } from "@/lib/geo/selenographic";
 
 import { earthViewPose } from "./earth-view";
 import { buildSyntheticPack, SYNODIC_DAYS } from "./fixtures/synthetic-pack";
-import { LessonPackError, loadLessonPack, PACK_BASE, PACK_FILES, resetLessonPackCache } from "./pack";
+import {
+  LessonPackError,
+  loadLessonPack,
+  PACK_BASE,
+  PACK_FILES,
+  packPathFor,
+  resetLessonPackCache,
+} from "./pack";
 import { phaseName, PHASE_BANDS, readoutFor, type PhaseName } from "./phase";
 import { frameAt, indexSunByEpoch, samplesPerDay, totalDays } from "./series";
 
@@ -131,51 +139,146 @@ describe("pack loader", () => {
     const r = table[file];
     return r ? r.clone() : new Response("nope", { status: 404 });
   };
+  const manifest = {
+    pack_version: "1",
+    generated_at_utc: "2026-11-17T13:37:53Z",
+    code: { commit: "abc" },
+    files: [
+      { path: "ephemeris/sun.json", model: "SunDirectionSeries" },
+      { path: "ephemeris/moon-phase.json", model: "MoonPhaseSeries" },
+    ],
+  };
 
-  it("falls back to a labelled synthetic pack only when the manifest is absent", async () => {
-    const pack = await loadLessonPack(route({}));
-    expect(pack.provenance.kind).toBe("synthetic");
-    if (pack.provenance.kind === "synthetic") expect(pack.provenance.reason).toMatch(/404/);
-  });
-
-  it("reads the committed pack when present", async () => {
+  it("reads the pack, finding each file by the model name in the manifest", async () => {
     const pack = await loadLessonPack(
       route({
-        [PACK_FILES.manifest]: jsonResponse({
-          pack_version: "v1",
-          generated_at_utc: "2026-11-20T00:00:00Z",
-          code_commit: "abc",
-        }),
-        [PACK_FILES.sun]: jsonResponse(good.sun),
-        [PACK_FILES.phase]: jsonResponse(good.phase),
+        [PACK_FILES.manifest]: jsonResponse(manifest),
+        "ephemeris/sun.json": jsonResponse(good.sun),
+        "ephemeris/moon-phase.json": jsonResponse(good.phase),
       }),
     );
     expect(pack.provenance).toEqual({
       kind: "pack",
-      version: "v1",
-      generatedAtUtc: "2026-11-20T00:00:00Z",
+      version: "1",
+      generatedAtUtc: "2026-11-17T13:37:53Z",
       codeCommit: "abc",
     });
+    const moved = {
+      ...manifest,
+      files: [
+        { path: "x/phase.json", model: "MoonPhaseSeries" },
+        { path: "x/sun.json", model: "SunDirectionSeries" },
+      ],
+    };
+    const again = await loadLessonPack(
+      route({
+        [PACK_FILES.manifest]: jsonResponse(moved),
+        "x/sun.json": jsonResponse(good.sun),
+        "x/phase.json": jsonResponse(good.phase),
+      }),
+    );
+    expect(again.phase.samples.length).toBe(good.phase.samples.length);
   });
 
-  it("is an error, not synthetic numbers, when the pack exists but a file is missing or malformed", async () => {
-    await expect(
-      loadLessonPack(
-        route({ [PACK_FILES.manifest]: jsonResponse({}), [PACK_FILES.sun]: jsonResponse(good.sun) }),
-      ),
-    ).rejects.toBeInstanceOf(LessonPackError);
-    await expect(
-      loadLessonPack(
-        route({
-          [PACK_FILES.manifest]: jsonResponse({}),
-          [PACK_FILES.sun]: jsonResponse(good.sun),
-          [PACK_FILES.phase]: jsonResponse({ frame: "MOON_ME" }),
-        }),
-      ),
-    ).rejects.toThrow(/Moon phase series/);
+  it("ignores a manifest path that could leave the pack folder", () => {
+    const bad = { files: [{ path: "../../secret.json", model: "MoonPhaseSeries" }] };
+    expect(packPathFor(bad, "MoonPhaseSeries", "ephemeris/moon-phase.json")).toBe(
+      "ephemeris/moon-phase.json",
+    );
+  });
+
+  it("is an error, never made-up numbers, when the pack is absent, a file is missing, or a file is malformed", async () => {
+    await expect(loadLessonPack(route({}))).rejects.toBeInstanceOf(LessonPackError);
     await expect(
       loadLessonPack(route({ [PACK_FILES.manifest]: new Response("x", { status: 500 }) })),
     ).rejects.toThrow(/500/);
+    await expect(
+      loadLessonPack(
+        route({
+          [PACK_FILES.manifest]: jsonResponse(manifest),
+          "ephemeris/sun.json": jsonResponse(good.sun),
+        }),
+      ),
+    ).rejects.toThrow(/moon-phase.json answered HTTP 404/);
+    await expect(
+      loadLessonPack(
+        route({
+          [PACK_FILES.manifest]: jsonResponse(manifest),
+          "ephemeris/sun.json": jsonResponse(good.sun),
+          "ephemeris/moon-phase.json": jsonResponse({ frame: "MOON_ME" }),
+        }),
+      ),
+    ).rejects.toThrow(/Moon phase series/);
+  });
+});
+
+describe("the committed lesson pack (apps/web/public/lesson-pack/v1)", () => {
+  const dir = join(__dirname, "../../../public/lesson-pack/v1");
+  const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
+  const fromDisk = async (url: string) => {
+    try {
+      return new Response(readFileSync(join(dir, url.replace(`${PACK_BASE}/`, ""))));
+    } catch {
+      return new Response("nope", { status: 404 });
+    }
+  };
+
+  it("matches the hashes in its manifest for the files the lesson reads", () => {
+    for (const model of ["SunDirectionSeries", "MoonPhaseSeries"]) {
+      const entry = manifest.files.find((f: { model: string }) => f.model === model);
+      expect(entry, model).toBeTruthy();
+      const bytes = readFileSync(join(dir, entry.path));
+      expect(createHash("sha256").update(bytes).digest("hex"), entry.path).toBe(entry.sha256);
+    }
+  });
+
+  it("loads, lines the Sun and phase series up by epoch, and names all eight phases in order", async () => {
+    const pack = await loadLessonPack(fromDisk);
+    expect(pack.provenance.kind).toBe("pack");
+    expect(pack.phase.viewpoint).toBe("geocentric");
+    expect(pack.phase.samples[0]!.epoch_utc).toBe("2027-01-07T20:00:00Z");
+    expect(pack.phase.sample_count).toBe(pack.phase.samples.length);
+    const byEpoch = indexSunByEpoch(pack);
+    for (let i = 0; i < pack.phase.samples.length; i++) {
+      expect(frameAt(pack, i, byEpoch), `frame ${i}`).not.toBeNull();
+    }
+    const names: PhaseName[] = [];
+    for (const sample of pack.phase.samples) {
+      const n = readoutFor(sample).name;
+      if (names[names.length - 1] !== n) names.push(n);
+    }
+    expect(names).toEqual([
+      "new",
+      "waxingCrescent",
+      "firstQuarter",
+      "waxingGibbous",
+      "full",
+      "waningGibbous",
+      "lastQuarter",
+      "waningCrescent",
+      "new",
+    ]);
+    expect(totalDays(pack)).toBe(30);
+  });
+
+  it("agrees with the manifest's principal phases to within the teaching bands", async () => {
+    const pack = await loadLessonPack(fromDisk);
+    const at = (epoch: string) =>
+      pack.phase.samples.reduce((best, s) =>
+        Math.abs(Date.parse(s.epoch_utc) - Date.parse(epoch)) <
+        Math.abs(Date.parse(best.epoch_utc) - Date.parse(epoch))
+          ? s
+          : best,
+      );
+    const expected: Record<string, PhaseName> = {
+      new_moon: "new",
+      first_quarter: "firstQuarter",
+      full_moon: "full",
+      last_quarter: "lastQuarter",
+    };
+    for (const p of manifest.lunation.principal_phases as { phase: string; epoch_utc: string }[]) {
+      expect(readoutFor(at(p.epoch_utc)).name, p.phase).toBe(expected[p.phase]);
+    }
   });
 });
 
