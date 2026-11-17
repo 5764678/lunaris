@@ -1,14 +1,18 @@
 """Warm the caches of a baked demo image (run once at image build, see apps/api/Dockerfile).
 
-Starts the API on a loopback port, registers the cited demo trio and requests the site
-comparison once. That computes and caches the trio's horizon masks and PGDA 20 m windows
-under LUNARIS_DATA_DIR, so the first visitor doesn't pay for them. A failed comparison is
-reported but doesn't fail the build: uncached values are then computed on first request.
+Starts the API on a loopback port with timeline baking switched on, makes sure the cited sites
+are registered (the demo trio, plus all 27 when ``LUNARIS_SEED_CATALOG`` is set) and requests the
+site comparison for each site once. That computes and caches each site's horizon mask and PGDA
+20 m window under LUNARIS_DATA_DIR and bakes its default-window (calendar 2027, hourly) timeline
+to ``<data>/processed/timelines/``, where the running API serves it without computing. A site that
+fails is reported and skipped, and a failed prewarm never fails the build: whatever is missing is
+computed on first request instead.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -26,7 +30,10 @@ def call(method: str, path: str, timeout: float = 600.0) -> object:
 
 def main() -> int:
     command = [sys.executable, "-m", "uvicorn", "lunaris_api.main:app", "--port", "8001"]
-    server = subprocess.Popen(command)  # noqa: S603  (fixed argv, no external input)
+    # Only this process bakes timelines; the service that runs from the image never writes them.
+    server = subprocess.Popen(  # noqa: S603  (fixed argv, no external input)
+        command, env={**os.environ, "LUNARIS_BAKE_TIMELINES": "true"}
+    )
     try:
         for _ in range(60):
             try:
@@ -37,20 +44,26 @@ def main() -> int:
         else:
             print("prewarm: API did not start", file=sys.stderr)
             return 1
-        trio = call("POST", "/api/v1/catalog/demo-trio/register")
-        ids = ",".join(site["id"] for site in trio["sites"])  # type: ignore[index]
-        print(f"prewarm: demo trio registered ({ids})")
+        call("POST", "/api/v1/catalog/demo-trio/register")  # no-op when the catalogue is seeded
+        sites = call("GET", "/api/v1/sites")["sites"]  # type: ignore[index]
+        print(f"prewarm: {len(sites)} sites registered")
         started = time.monotonic()
-        try:
-            table = call("GET", f"/api/v1/analysis/site-comparison?site_ids={ids}")
-        except OSError as error:
-            print(f"prewarm: site comparison failed ({error}); computed on first request instead")
-            return 0
-        rows = table["rows"]  # type: ignore[index]
-        cells = [cell for row in rows for cell in row.values() if isinstance(cell, dict)]
-        nulls = sum(1 for cell in cells if cell.get("value") is None)
-        elapsed = time.monotonic() - started
-        print(f"prewarm: comparison for {len(rows)} sites in {elapsed:.1f} s, {nulls} null cells")
+        done = 0
+        for site in sites:
+            site_started = time.monotonic()
+            try:
+                table = call("GET", f"/api/v1/analysis/site-comparison?site_ids={site['id']}")
+            except OSError as error:
+                print(f"prewarm: skip {site['name']} ({error}); computed on first request instead")
+                continue
+            done += 1
+            row = table["rows"][0]  # type: ignore[index]
+            nulls = sum(
+                1 for cell in row.values() if isinstance(cell, dict) and cell.get("value") is None
+            )
+            seconds = time.monotonic() - site_started
+            print(f"prewarm: {site['name']} in {seconds:.1f} s, {nulls} null cells")
+        print(f"prewarm: {done}/{len(sites)} sites in {time.monotonic() - started:.0f} s")
         return 0
     finally:
         server.terminate()

@@ -19,12 +19,16 @@ def test_committed_contract_matches_application() -> None:
     )
 
 
+# Their 503 carries the health report itself, not the error envelope.
+HEALTH_PATHS = ("/health", "/health/ready")
+
+
 def test_every_error_response_uses_the_envelope() -> None:
     document = json.loads(CONTRACT.read_text(encoding="utf-8"))
     assert "HTTPValidationError" not in document["components"]["schemas"]
     for path, operations in document["paths"].items():
         for method, operation in operations.items():
             for code, response in operation["responses"].items():
-                if int(code) >= 400 and path != "/health":
+                if int(code) >= 400 and path not in HEALTH_PATHS:
                     ref = response["content"]["application/json"]["schema"]["$ref"]
                     assert ref.endswith("/ErrorResponse"), (method, path, code)

@@ -151,16 +151,14 @@ def test_deterministic_nulls_are_cached(client: TestClient, provider: CountingPr
     assert provider.calls == 1
 
 
-def test_profile_toggle_reuses_rows(client: TestClient, provider: CountingProvider) -> None:
+def test_mission_answers_reuse_rows(client: TestClient, provider: CountingProvider) -> None:
     ids = _sites(client)
     plain = _get(client, ids)
-    assert plain["summary"]["score"] is None
-    scores = {}
-    for profile in ("power", "comms", "landing"):
-        body = _get(client, ids, profile=profile)
+    assert plain["summary"]["recommendation"]["mission"]["power"] == "medium"
+    for power, comms, landing in (("high", "none", "none"), ("none", "high", "none")):
+        body = _get(client, ids, power=power, comms=comms, landing=landing)
         assert body["rows"] == plain["rows"]
-        assert body["summary"]["score"] is not None
-        scores[profile] = body["summary"]["score"]
+        assert body["summary"]["recommendation"]["mission"]["power"] == power
     assert provider.calls == 3  # only the first request computed rows
     assert _get(client, ids)["summary"] == plain["summary"]
 

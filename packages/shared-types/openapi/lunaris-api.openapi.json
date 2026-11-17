@@ -607,6 +607,9 @@
           "sun_longest_hidden_s": {
             "$ref": "#/components/schemas/CompareCell"
           },
+          "sun_longest_visible_s": {
+            "$ref": "#/components/schemas/CompareCell"
+          },
           "sun_mean_visible_disk_fraction": {
             "$ref": "#/components/schemas/CompareCell"
           },
@@ -630,6 +633,7 @@
           "sun_mean_visible_disk_fraction",
           "sun_illuminated_fraction",
           "sun_longest_hidden_s",
+          "sun_longest_visible_s",
           "earth_visible_fraction",
           "earth_longest_outage_s"
         ],
@@ -649,16 +653,9 @@
             "title": "Method",
             "type": "string"
           },
-          "score": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ProfileScore"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Only when a `profile` is requested; there is no default score."
+          "recommendation": {
+            "$ref": "#/components/schemas/Recommendation",
+            "description": "The best-fitting site for the stated mission (priorities and limits); every weight and scale is returned as assumption evidence."
           },
           "sites": {
             "items": {
@@ -678,7 +675,7 @@
           "sites",
           "verdict",
           "method",
-          "score"
+          "recommendation"
         ],
         "title": "ComparisonSummary",
         "type": "object"
@@ -2134,48 +2131,368 @@
         "title": "IlluminationSummary",
         "type": "object"
       },
-      "ProfileScore": {
+      "Mission": {
+        "description": "The answers to the mission questions: how much each need matters, and the limits.",
         "properties": {
-          "evidence": {
-            "$ref": "#/components/schemas/EvidenceSchema"
-          },
-          "normalisation": {
-            "title": "Normalisation",
+          "comms": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Comms",
             "type": "string"
           },
-          "profile": {
+          "landing": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Landing",
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/MissionLimits",
+            "default": {}
+          },
+          "power": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Power",
+            "type": "string"
+          }
+        },
+        "required": [
+          "power",
+          "comms",
+          "landing",
+          "limits"
+        ],
+        "title": "Mission",
+        "type": "object"
+      },
+      "MissionLimits": {
+        "description": "Hard requirements. A site that breaks one is excluded, never down-weighted.",
+        "properties": {
+          "max_darkness_d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Darkness D"
+          },
+          "max_earth_outage_d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Earth Outage D"
+          },
+          "max_slope_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Slope Deg"
+          },
+          "min_sunlit_d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Sunlit D"
+          }
+        },
+        "required": [
+          "max_slope_deg",
+          "max_darkness_d",
+          "max_earth_outage_d",
+          "min_sunlit_d"
+        ],
+        "title": "MissionLimits",
+        "type": "object"
+      },
+      "NeedInfo": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "need": {
             "enum": [
               "power",
               "comms",
               "landing"
             ],
-            "title": "Profile",
+            "title": "Need",
             "type": "string"
           },
-          "scores": {
-            "description": "Sorted by score, best first; null scores last.",
-            "items": {
-              "$ref": "#/components/schemas/ScoreEntry"
-            },
-            "title": "Scores",
-            "type": "array"
+          "priority": {
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Priority",
+            "type": "string"
           },
-          "weights": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "title": "Weights",
-            "type": "object"
+          "weight": {
+            "description": "Share of the score, 0..1; the shares sum to 1.",
+            "title": "Weight",
+            "type": "number"
           }
         },
         "required": [
-          "profile",
-          "weights",
-          "normalisation",
-          "scores",
+          "need",
+          "label",
+          "priority",
+          "weight"
+        ],
+        "title": "NeedInfo",
+        "type": "object"
+      },
+      "RankedSite": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "need_scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "0..1 per need, where every measure has a value.",
+            "title": "Need Scores",
+            "type": "object"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "reasons": {
+            "description": "Why the site is excluded or has no score.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "recommended",
+              "ranked",
+              "excluded",
+              "unscored"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_id",
+          "name",
+          "status",
+          "rank",
+          "score",
+          "need_scores",
+          "reasons"
+        ],
+        "title": "RankedSite",
+        "type": "object"
+      },
+      "Recommendation": {
+        "properties": {
+          "caveats": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "confidence": {
+            "enum": [
+              "clear",
+              "moderate",
+              "narrow",
+              "tie",
+              "only_option",
+              "none"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSchema"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "mission": {
+            "$ref": "#/components/schemas/Mission"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "needs": {
+            "items": {
+              "$ref": "#/components/schemas/NeedInfo"
+            },
+            "title": "Needs",
+            "type": "array"
+          },
+          "ranking": {
+            "items": {
+              "$ref": "#/components/schemas/RankedSite"
+            },
+            "title": "Ranking",
+            "type": "array"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "robustness": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Robustness"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runner_up_site_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runner Up Site Id"
+          },
+          "scales": {
+            "items": {
+              "$ref": "#/components/schemas/ScaleInfo"
+            },
+            "title": "Scales",
+            "type": "array"
+          },
+          "site_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Id"
+          },
+          "tradeoffs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tradeoffs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mission",
+          "site_id",
+          "name",
+          "runner_up_site_id",
+          "margin",
+          "confidence",
+          "headline",
+          "reasons",
+          "tradeoffs",
+          "caveats",
+          "robustness",
+          "needs",
+          "scales",
+          "ranking",
+          "method",
           "evidence"
         ],
-        "title": "ProfileScore",
+        "title": "Recommendation",
         "type": "object"
       },
       "RegisteredCatalogSites": {
@@ -2210,6 +2527,60 @@
           "already_registered"
         ],
         "title": "RegisteredCatalogSites",
+        "type": "object"
+      },
+      "Robustness": {
+        "properties": {
+          "flips": {
+            "items": {
+              "$ref": "#/components/schemas/RobustnessFlip"
+            },
+            "title": "Flips",
+            "type": "array"
+          },
+          "held": {
+            "title": "Held",
+            "type": "integer"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "tested": {
+            "title": "Tested",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tested",
+          "held",
+          "flips",
+          "statement"
+        ],
+        "title": "Robustness",
+        "type": "object"
+      },
+      "RobustnessFlip": {
+        "properties": {
+          "change": {
+            "title": "Change",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "change",
+          "site_id",
+          "name"
+        ],
+        "title": "RobustnessFlip",
         "type": "object"
       },
       "RuntimeComponentSchema": {
@@ -2279,6 +2650,61 @@
         "title": "RuntimeReport",
         "type": "object"
       },
+      "ScaleInfo": {
+        "description": "Fixed reference scale of one scored measure: ``worst`` scores 0, ``best`` scores 1.",
+        "properties": {
+          "best": {
+            "title": "Best",
+            "type": "number"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "need": {
+            "enum": [
+              "power",
+              "comms",
+              "landing"
+            ],
+            "title": "Need",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "weight": {
+            "description": "Share of the score, 0..1.",
+            "title": "Weight",
+            "type": "number"
+          },
+          "worst": {
+            "title": "Worst",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "need",
+          "weight",
+          "worst",
+          "best",
+          "unit",
+          "rationale"
+        ],
+        "title": "ScaleInfo",
+        "type": "object"
+      },
       "SceneBinaryLayoutSchema": {
         "description": "How to decode the bytes returned by ``data_url``.",
         "properties": {
@@ -2335,49 +2761,6 @@
           "byte_length"
         ],
         "title": "SceneBinaryLayoutSchema",
-        "type": "object"
-      },
-      "ScoreEntry": {
-        "properties": {
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Weighted sum of normalised values in [0, 1].",
-            "title": "Score"
-          },
-          "site_id": {
-            "title": "Site Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "site_id",
-          "name",
-          "score",
-          "reason"
-        ],
-        "title": "ScoreEntry",
         "type": "object"
       },
       "SelenographicCoordinateSchema": {
@@ -3578,7 +3961,7 @@
   "paths": {
     "/api/v1/analysis/site-comparison": {
       "get": {
-        "description": "One row per site; every cell carries its own evidence (kind, method, sources with\nmanifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be\ncomputed is null with a `reason`, never 0. The default window is calendar year 2027\nat a 1 h step (8 761 samples, within the ephemeris sample cap).",
+        "description": "One row per site; every cell carries its own evidence (kind, method, sources with\nmanifest id and SHA-256 or URL/ETag, units, limitations). A cell that cannot be\ncomputed is null with a `reason`, never 0. The default window is calendar year 2027\nat a 1 h step (8 761 samples, within the ephemeris sample cap).\n\nThe `summary.recommendation` names the best-fitting site for the stated mission: how\nmuch it needs power, comms and landing safety (`none|low|medium|high`) and optional hard\nlimits. Sites that break a limit are excluded with the reason, never down-weighted;\nevery weight and scale is returned as assumption evidence.",
         "operationId": "compare_sites_api_v1_analysis_site_comparison_get",
         "parameters": [
           {
@@ -3656,26 +4039,134 @@
             }
           },
           {
-            "description": "Optional mission profile: adds a weighted ordering with its fixed weights and normalisation returned as assumption evidence. Without it, no score.",
+            "description": "How much the mission depends on sunlight (none = e.g. nuclear).",
             "in": "query",
-            "name": "profile",
+            "name": "power",
+            "required": false,
+            "schema": {
+              "default": "medium",
+              "description": "How much the mission depends on sunlight (none = e.g. nuclear).",
+              "enum": [
+                "none",
+                "low",
+                "medium",
+                "high"
+              ],
+              "title": "Power",
+              "type": "string"
+            }
+          },
+          {
+            "description": "How much it depends on direct line of sight to Earth (none = relay).",
+            "in": "query",
+            "name": "comms",
+            "required": false,
+            "schema": {
+              "default": "medium",
+              "description": "How much it depends on direct line of sight to Earth (none = relay).",
+              "enum": [
+                "none",
+                "low",
+                "medium",
+                "high"
+              ],
+              "title": "Comms",
+              "type": "string"
+            }
+          },
+          {
+            "description": "How much it needs gentle, smooth terrain.",
+            "in": "query",
+            "name": "landing",
+            "required": false,
+            "schema": {
+              "default": "medium",
+              "description": "How much it needs gentle, smooth terrain.",
+              "enum": [
+                "none",
+                "low",
+                "medium",
+                "high"
+              ],
+              "title": "Landing",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Limit: steepest slope (at the site and footprint p95).",
+            "in": "query",
+            "name": "max_slope_deg",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "power",
-                    "comms",
-                    "landing"
-                  ],
-                  "type": "string"
+                  "exclusiveMinimum": 0,
+                  "maximum": 90,
+                  "type": "number"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Optional mission profile: adds a weighted ordering with its fixed weights and normalisation returned as assumption evidence. Without it, no score.",
-              "title": "Profile"
+              "description": "Limit: steepest slope (at the site and footprint p95).",
+              "title": "Max Slope Deg"
+            }
+          },
+          {
+            "description": "Limit: longest darkness survivable, days.",
+            "in": "query",
+            "name": "max_darkness_d",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Limit: longest darkness survivable, days.",
+              "title": "Max Darkness D"
+            }
+          },
+          {
+            "description": "Limit: longest gap without Earth in view, days.",
+            "in": "query",
+            "name": "max_earth_outage_d",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Limit: longest gap without Earth in view, days.",
+              "title": "Max Earth Outage D"
+            }
+          },
+          {
+            "description": "Limit: continuous sunlight required, days.",
+            "in": "query",
+            "name": "min_sunlit_d",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Limit: continuous sunlight required, days.",
+              "title": "Min Sunlit D"
             }
           }
         ],
@@ -4951,7 +5442,7 @@
     },
     "/health": {
       "get": {
-        "description": "Liveness/readiness of the API. Returns 200 when every check passes, 503 otherwise.\n\nChecks are cheap and side-effect free: a ``SELECT 1`` on the database, presence of\nthe data directory, and the number of loaded dataset manifests.",
+        "description": "Liveness of the API. Returns 200 when every check passes, 503 otherwise.\n\nChecks are cheap and side-effect free: a ``SELECT 1`` on the database, presence of\nthe data directory, and the number of loaded dataset manifests. Use this path for a\nhost's health check and the container ``HEALTHCHECK``: it does not depend on the\nscience datasets, so a missing download never makes the host restart the service.",
         "operationId": "health_health_get",
         "responses": {
           "200": {
@@ -4976,6 +5467,38 @@
           }
         },
         "summary": "Service status and version",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "Everything ``/health`` checks, plus whether the SPICE kernels and the LOLA DEM are on\ndisk. Returns 503 while either is missing, because site analysis would fail. Checks file\npresence only (no hashing; ``lunaris-data verify`` does that).",
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Not ready to analyse sites."
+          }
+        },
+        "summary": "Readiness: liveness checks plus the science datasets",
         "tags": [
           "health"
         ]
