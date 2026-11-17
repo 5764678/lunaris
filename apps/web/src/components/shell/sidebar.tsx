@@ -8,6 +8,11 @@ import { useT } from "@/lib/i18n";
 import { NAV_ITEMS, type NavItem } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 
+/** The page itself, or any page under it (/learn/2 keeps "Learn" highlighted). */
+function isActive(href: string, pathname: string): boolean {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const t = useT();
@@ -22,7 +27,7 @@ export function Sidebar() {
       <ul className="flex flex-col gap-0.5 p-1 pt-3 xl:p-2 xl:pt-0">
         {NAV_ITEMS.map((item) => (
           <li key={item.id}>
-            <NavLink item={item} active={item.href === pathname} />
+            <NavLink item={item} active={isActive(item.href, pathname)} />
           </li>
         ))}
       </ul>
