@@ -165,3 +165,20 @@ for (const size of [
     }
   });
 }
+
+for (const lang of ["th", "en"] as const) {
+  test(`narrow navigation rail at 1100x720 (${lang}): no short title is cut off`, async ({ page }) => {
+    await page.addInitScript((l) => window.localStorage.setItem("lunaris.lang", l), lang);
+    await page.setViewportSize({ width: 1100, height: 720 });
+    await watchRequests(page);
+    await page.goto("/learn");
+    await expect(page.locator("html")).toHaveAttribute("lang", lang);
+    await page.evaluate(() => document.fonts.ready);
+    const cut = await page.evaluate(() =>
+      [...document.querySelectorAll("nav[data-testid=main-nav] a span.truncate")]
+        .filter((s) => s.scrollWidth > s.clientWidth)
+        .map((s) => s.textContent),
+    );
+    expect(cut, "short titles wider than the rail").toEqual([]);
+  });
+}

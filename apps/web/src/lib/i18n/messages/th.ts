@@ -144,7 +144,7 @@ export const th = {
     },
     illumination: {
       title: "แสงอาทิตย์และโลก",
-      shortTitle: "ดวงอาทิตย์/โลก",
+      shortTitle: "แสง/โลก",
       description: "ตำแหน่งของดวงอาทิตย์และโลก แสงสว่าง และแนวสายตาตรงถึงโลกของแต่ละจุด",
     },
     terrain: {
@@ -154,7 +154,7 @@ export const th = {
     },
     compare: {
       title: "เปรียบเทียบ",
-      shortTitle: "เปรียบเทียบ",
+      shortTitle: "เทียบ",
       description: "เปรียบเทียบจุดลงจอดเคียงข้างกัน ทุกค่าเปิดดูหลักฐานได้",
     },
     data: {
