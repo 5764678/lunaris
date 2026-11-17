@@ -354,6 +354,35 @@ Same query rules, 10 000-sample cap and error codes as `/sites/{site_id}/ephemer
 - Lighting the globe from this direction shows a smooth sphere. Terrain shadows need the
   terrain horizon.
 
+### `GET /api/v1/ephemeris/moon-phase`
+
+Moon phase as seen from the Earth's centre (K-01, contract L1, `docs/SCIENCE.md` §5.2).
+Same query rules (`start_utc`, `end_utc`, `step_s`), 10 000-sample cap and error codes as
+`/ephemeris/sun`; `start_utc = end_utc` gives one epoch.
+
+```json
+{
+  "start_utc": "2027-01-22T12:00:00Z", "end_utc": "2027-01-22T12:00:00Z", "step_s": 60.0,
+  "sample_count": 1, "max_samples": 10000, "frame": "MOON_ME", "origin": "MOON",
+  "viewpoint": "geocentric", "aberration_correction": "CN+S",
+  "samples": [ { "epoch_utc": "2027-01-22T12:00:00Z", "earth_direction_moon_me": [0.999, 0.025, -0.038],
+                 "subearth_latitude_deg": -2.1775, "subearth_longitude_deg": 1.4311,
+                 "phase_angle_deg": 1.6793, "illuminated_fraction": 0.99979,
+                 "elongation_deg": 178.3165, "waxing": true } ],
+  "evidence": { "kind": "model", "method": "… phaseq(et, 'MOON', 'SUN', 'EARTH', 'CN+S') …", "…": "…" },
+  "limitations": [ "Geocentric: the Moon as seen from the Earth's centre, north up (D12). …", "…" ]
+}
+```
+
+- `earth_direction_moon_me`: apparent unit vector from the Moon's centre to the Earth's
+  centre (CN+S). Point the Earth-view camera along it to see the phase.
+- `subearth_*`: planetocentric latitude and east longitude of that direction. It includes
+  stellar aberration, so it differs from the Horizons sub-observer point by up to ≈ 21″.
+- `phase_angle_deg`: Sun–Moon–Earth angle; `illuminated_fraction` = (1 + cos i) / 2.
+- `elongation_deg`: Sun–Earth–Moon angle.
+- `waxing`: the Moon's geocentric ecliptic longitude leads the Sun's by 0–180°.
+- Geocentric, not the view from Thailand; no earthshine or brightness model.
+
 ### `POST /api/v1/analysis/timeline`
 
 Illumination and Earth-visibility timelines for a registered site (contract C4,
