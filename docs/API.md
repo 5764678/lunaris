@@ -44,8 +44,10 @@ Base URL in development: `http://localhost:8000`. Interactive documentation:
 
 ### `GET /health`
 
-Liveness and readiness. **200** when every check passes, **503** with the same body when
-degraded.
+Liveness. **200** when every check passes, **503** with the same body when degraded. It does
+not depend on the science datasets, so it is the path for a host's health check (for example
+Render's Health Check Path) and the container `HEALTHCHECK`: a missing download never makes the
+host restart the service.
 
 ```json
 {
@@ -63,6 +65,14 @@ degraded.
   ]
 }
 ```
+
+### `GET /health/ready`
+
+Readiness: everything `/health` checks, plus one `dataset:<id>` check for the SPICE kernels
+(`naif-generic-kernels-lunar`) and the LOLA DEM (`lola-ldem-75s-240m`). **200** when both are on
+disk, **503** with the same body while either is missing; the check's `detail` names the
+`lunaris-data acquire` command. File presence only: nothing is hashed or loaded
+(`lunaris-data verify` does that).
 
 ### `GET /api/v1/system/runtime`
 
@@ -442,14 +452,17 @@ Response **200** (`TimelineAnalysis`, abridged):
 The demo comparison table (T-17; owner S-TERRAIN). Query: `site_ids` (comma-separated,
 1–10), `start_utc` / `end_utc` (default: calendar year 2027), `step_s` (default 3600),
 `observer_height_m` (default 2) and `footprint_radius_m` (default 50). The window obeys
-the ephemeris sample cap (10 000); the default gives 8 761 samples.
+the ephemeris sample cap (10 000); the default gives 8 761 samples. The mission answers
+(all optional) are `power`, `comms` and `landing` (`none|low|medium|high`, default `medium`)
+and the limits `max_slope_deg`, `max_darkness_d`, `max_earth_outage_d` and `min_sunlit_d`.
 
 The response holds one row per site with these cells:
 - `surface_height_m` (LDEM_75S_240M);
 - `slope_at_site_deg`, `slope_p95_deg` and `roughness_rms_m`, each with `baseline_m`
   (PGDA 20 m, T-14);
 - `horizon_min_deg`, `horizon_max_deg` and `horizon_truncated_azimuths` (T-16 mask);
-- `sun_mean_visible_disk_fraction`, `sun_illuminated_fraction` and `sun_longest_hidden_s`;
+- `sun_mean_visible_disk_fraction`, `sun_illuminated_fraction`, `sun_longest_hidden_s` and
+  `sun_longest_visible_s` (longest sunlit period);
 - `earth_visible_fraction` and `earth_longest_outage_s` (T-24, terrain horizon).
 
 Every cell is `{value, unit, baseline_m, reason, evidence, limitations}`. The evidence
@@ -470,15 +483,26 @@ min/max and the truncation count are `null` and are not ranked. `summary` holds:
 - `verdict`: generated from dominance only. When there is no clear winner it begins
   "No single site is best on every directed metric."
 - `method`.
-- `score`: only with `profile=power|comms|landing`, a weighted ordering over fixed
-  documented weights and min-max normalisation within the compared sites, returned as
-  `assumption` evidence. Without `profile` it is `null`: there is no default score.
+- `recommendation`: the best-fitting site for the mission answers (D9, amended). It has
+  `site_id`/`name` (null when no site qualifies), `confidence` (`clear`, `moderate`,
+  `narrow`, `tie`, `only_option` or `none`, from the lead over the runner-up), a `headline`,
+  `reasons`, `tradeoffs`, `caveats`, `robustness` (the pick recomputed with each priority one
+  step up and down, listing the changes that flip it), `needs` and `scales` (every weight and
+  fixed reference scale used), `ranking` (per site: `status` of `recommended`, `ranked`,
+  `unscored` or `excluded`, `rank`, `score`, `need_scores`, `reasons`) and `evidence` of kind
+  `assumption`. A site that breaks a limit is excluded with the reason, never down-weighted; a
+  site with a null value in a weighted measure has no score, never 0. Scores use fixed scales,
+  so they do not change when other sites are added. Without answers every need counts as
+  important and there are no limits. The earlier `profile` parameter and `score` field are gone.
 
-The demo trio over 2027 gives: "No single site is best on every directed metric. Peak near
+The demo trio over 2027 gives the verdict "No single site is best on every measure. Peak near
 Shackleton leads on slope, sunlight and darkness and Earth visibility; trade-off: worst on
-roughness. Malapert massif leads on roughness; trade-off: worst on sunlight and darkness
-and Earth visibility. Connecting ridge leads on no metric but is not dominated; worst on
-slope."
+bumpiness. Connecting ridge leads on longest sunlit period; trade-off: worst on slope. Malapert
+massif leads on bumpiness; trade-off: worst on sunlight and darkness, Earth visibility and
+longest sunlit period." With no answers the recommendation is Peak near Shackleton (71.3/100
+against 58.2 for Connecting ridge and 50.4 for Malapert massif, a clear lead); with only landing
+safety counted (`power=none&comms=none&landing=high`) it is Malapert massif, narrowly (70.5 /
+69.2 / 63.8); `max_slope_deg=5` leaves Peak near Shackleton as the only site that meets the limit.
 
 ## Changing the contract
 

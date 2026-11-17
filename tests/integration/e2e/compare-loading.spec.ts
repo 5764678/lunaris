@@ -117,8 +117,8 @@ test("rows of spinners appear at once and fill in site by site, with a progress 
     // Nothing has been answered yet, and the page already shows what is coming.
     await expect(page.getByTestId("compare-row-pending")).toHaveCount(3);
     await expect(page.getByTestId("compare-row")).toHaveCount(0);
-    await expect(headerCells(page)).toHaveCount(13); // the site column and 12 metrics
-    await expect(page.getByTestId("cell-pending")).toHaveCount(3 * 12);
+    await expect(headerCells(page)).toHaveCount(14); // the site column and 13 metrics
+    await expect(page.getByTestId("cell-pending")).toHaveCount(3 * 13);
     const progress = page.getByTestId("compare-progress");
     await expect(progress).toContainText("Computing 0 of 3 sites");
     await expect(progress).toContainText("20 to 40 seconds");

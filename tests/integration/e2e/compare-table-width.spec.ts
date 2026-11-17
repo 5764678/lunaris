@@ -1,9 +1,9 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
 /**
- * The Compare table has 12 metric columns. It must use the whole width of the page, and when the
+ * The Compare table has 13 metric columns. It must use the whole width of the page, and when the
  * columns still do not fit it must say so (faded right edge and a "More columns" button) instead of
- * quietly cutting off the last column. Serves a SYNTHETIC comparison with the same 12 columns as the
+ * quietly cutting off the last column. Serves a SYNTHETIC comparison with the same 13 columns as the
  * real API for the real registered demo trio; the values are invented, not lunar results.
  */
 
@@ -22,6 +22,7 @@ const COLUMNS = [
   ["sun_mean_visible_disk_fraction", "Sun: mean visible disk", "fraction"],
   ["sun_illuminated_fraction", "Sun: illuminated", "fraction"],
   ["sun_longest_hidden_s", "Sun: longest darkness", "s"],
+  ["sun_longest_visible_s", "Sun: longest sunlit period", "s"],
   ["earth_visible_fraction", "Earth: visible", "fraction"],
   ["earth_longest_outage_s", "Earth: longest outage", "s"],
 ] as const;
@@ -155,7 +156,7 @@ test.describe("desktop width", () => {
 test.describe("wide screen", () => {
   test.use({ viewport: { width: 2240, height: 1000 } });
 
-  test("shows all 12 columns at once, with no scroll button", async ({ page, request }) => {
+  test("shows all 13 columns at once, with no scroll button", async ({ page, request }) => {
     const ids = await registerTrio(request);
     try {
       await page.route(COMPARE, (route) =>

@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     # On a public demo, set LUNARIS_PROTECT_PUBLISHED_SITES=true so visitors cannot delete the cited
     # (published) sites: the API answers 403, and they stay registered until the service restarts.
     protect_published_sites: bool = False
+    # Register all 27 cited catalogue sites (PGDA product 78) when the API starts. Idempotent: sites
+    # already registered, or deleted by a visitor, are only re-added on the next start.
+    seed_catalog: bool = False
+    # Write every timeline the API computes to <data>/processed/timelines/, where later requests
+    # for the same site, window and step read it instead of recomputing. Only the image-build
+    # prewarm sets this; a running service never writes there.
+    bake_timelines: bool = False
 
     @field_validator("cors_origins", mode="before")
     @classmethod

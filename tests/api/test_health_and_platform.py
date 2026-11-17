@@ -123,3 +123,35 @@ def test_docs_can_be_disabled(settings: Settings) -> None:
     with TestClient(create_app(locked)) as test_client:
         assert test_client.get("/docs").status_code == 404
         assert test_client.get("/openapi.json").status_code == 404
+
+
+def test_readiness_reports_missing_science_datasets(client: TestClient) -> None:
+    # The test data directory is empty, so liveness is fine but analysis is not possible.
+    assert client.get("/health").status_code == 200
+    response = client.get("/health/ready")
+    assert response.status_code == 503
+    body = response.json()
+    assert body["status"] == "degraded"
+    checks = {c["name"]: c for c in body["checks"]}
+    assert checks["database"]["status"] == "ok"
+    for dataset in ("naif-generic-kernels-lunar", "lola-ldem-75s-240m"):
+        check = checks[f"dataset:{dataset}"]
+        assert check["status"] == "unavailable"
+        assert f"lunaris-data acquire {dataset}" in check["detail"]
+
+
+def test_readiness_is_ok_once_the_datasets_are_acquired(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from lunaris_api.routers import health as health_router  # noqa: PLC0415
+    from lunaris_data.store import DatasetStatus  # noqa: PLC0415
+
+    class Acquired:
+        status = DatasetStatus.ACQUIRED
+
+    monkeypatch.setattr(health_router, "inspect_dataset", lambda manifest, layout: Acquired())
+    response = client.get("/health/ready")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert [c["status"] for c in body["checks"]] == ["ok"] * 5
