@@ -20,7 +20,9 @@ export function TopBar() {
         aria-label={t.shell.homeLabel}
       >
         <BrandMark />
-        <span className="text-base font-semibold tracking-[0.18em] text-foreground">LUNARIS</span>
+        <span className="text-base font-semibold tracking-[0.18em] text-foreground max-sm:sr-only">
+          LUNARIS
+        </span>
       </Link>
       <span className="hidden h-4 w-px bg-border sm:block" aria-hidden="true" />
       <div className="hidden min-w-0 items-center gap-2 sm:flex">

@@ -92,7 +92,7 @@ export function SkyChart({ profile, tracks }: { profile: HorizonProfile | null; 
           node,
           data,
           {
-            margin: { l: 40, r: 8, t: 8, b: 32 },
+            margin: { l: 40, r: 8, t: 8, b: 46 },
             height: CHART_HEIGHT_PX,
             paper_bgcolor: "rgba(0,0,0,0)",
             plot_bgcolor: "rgba(0,0,0,0)",

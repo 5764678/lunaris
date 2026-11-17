@@ -21,7 +21,7 @@ export function LanguageSwitch() {
           aria-pressed={lang === code}
           onClick={() => setLang(code)}
           className={cn(
-            "h-full rounded-full px-3 text-2xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            "h-full whitespace-nowrap rounded-full px-3 text-2xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
             lang === code
               ? "bg-accent font-semibold text-foreground"
               : "text-muted-foreground hover:text-foreground",

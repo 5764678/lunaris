@@ -10,7 +10,7 @@ function ToggleGroup({ className, ...props }: React.ComponentProps<typeof Toggle
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-lg border border-border bg-panel-sunken/90 p-0.5 backdrop-blur-sm",
+        "inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-lg border border-border bg-panel-sunken/90 p-0.5 backdrop-blur-sm",
         className,
       )}
       {...props}
