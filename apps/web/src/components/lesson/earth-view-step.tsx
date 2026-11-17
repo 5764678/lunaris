@@ -79,7 +79,7 @@ function EarthViewLesson({ pack }: { pack: LessonPack }) {
     <div className="space-y-4">
       <PackBanner provenance={pack.provenance} />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <div className="space-y-3">
           <div
             data-testid="earth-view"

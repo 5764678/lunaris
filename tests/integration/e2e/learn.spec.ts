@@ -131,6 +131,8 @@ for (const size of [
       await page.goto(`/learn/${period}`);
       await expect(page.getByTestId("learn-step")).toBeVisible();
       if (period === 2) await expect(page.getByTestId("phase-readout")).toBeVisible();
+      // Measure after the Thai web font has loaded: it is wider than the fallback.
+      await page.evaluate(() => document.fonts.ready);
       const report = await page.evaluate(() => {
         const main = document.querySelector("[data-testid=learn-step]")!;
         const small: string[] = [];
