@@ -10,16 +10,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { Messages } from "@/lib/i18n";
+
 /**
  * Navigation: every item is a real page. Pages whose content another session is still
  * building show an explicit "in progress" page, never a fake view.
  */
 export interface NavItem {
-  id: string;
-  title: string;
-  /** Label under the icon where the full title does not fit (narrow screens, small laptops). */
-  shortTitle: string;
-  description: string;
+  /** Also the key of the item's text in the message catalogue: `t.nav[id]` has `title`,
+   *  `shortTitle` (the label under the icon where the title does not fit) and `description`. */
+  id: keyof Messages["nav"];
   href: string;
   icon: LucideIcon;
 }
@@ -27,49 +27,31 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: "overview",
-    title: "Overview",
-    shortTitle: "Overview",
-    description: "Lunar globe and south-pole terrain, candidate sites, timeline and system status.",
     href: "/",
     icon: LayoutDashboard,
   },
   {
     id: "illumination",
-    title: "Illumination & Earth",
-    shortTitle: "Sun/Earth",
-    description: "Sun and Earth geometry, illumination and direct-to-Earth line of sight per site.",
     href: "/illumination",
     icon: Sun,
   },
   {
     id: "terrain",
-    title: "Terrain",
-    shortTitle: "Terrain",
-    description: "LOLA elevation, slope, bumpiness and horizon per site.",
     href: "/terrain",
     icon: Mountain,
   },
   {
     id: "compare",
-    title: "Compare",
-    shortTitle: "Compare",
-    description: "Side-by-side site comparison; every value opens its evidence.",
     href: "/compare",
     icon: Scale,
   },
   {
     id: "data",
-    title: "Data Sources",
-    shortTitle: "Data",
-    description: "Dataset registry, provenance and acquisition status.",
     href: "/data",
     icon: Database,
   },
   {
     id: "about",
-    title: "About",
-    shortTitle: "About",
-    description: "What LUNARIS is, who it is for, how it was built, and a glossary.",
     href: "/about",
     icon: Info,
   },

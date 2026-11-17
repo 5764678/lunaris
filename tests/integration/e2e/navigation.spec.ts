@@ -13,8 +13,8 @@ const NAV = [
 
 test("every nav item is a link to a page that renders", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("nav[aria-label=Modules] a")).toHaveCount(NAV.length);
-  await expect(page.locator("nav[aria-label=Modules] [aria-disabled=true]")).toHaveCount(0);
+  await expect(page.locator("[data-testid=main-nav] a")).toHaveCount(NAV.length);
+  await expect(page.locator("[data-testid=main-nav] [aria-disabled=true]")).toHaveCount(0);
   for (const [id, href] of NAV) {
     const link = page.getByTestId(`nav-${id}`);
     await expect(link).toHaveAttribute("href", href);
@@ -24,7 +24,7 @@ test("every nav item is a link to a page that renders", async ({ page }) => {
     await expect(page.getByRole("heading", { name: /404|not found/i })).toHaveCount(0);
   }
   // Merged into pages: no nav item of their own.
-  const nav = page.locator("nav[aria-label=Modules]");
+  const nav = page.locator("[data-testid=main-nav]");
   await expect(nav.getByText("Celestial Geometry")).toHaveCount(0);
   await expect(nav.getByText("Mission Intelligence")).toHaveCount(0);
 });

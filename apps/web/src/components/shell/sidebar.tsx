@@ -4,15 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n";
 import { NAV_ITEMS, type NavItem } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav
-      aria-label="Modules"
+      data-testid="main-nav"
+      aria-label={t.shell.modulesLabel}
       className="flex w-[4.75rem] shrink-0 flex-col border-r border-border bg-surface xl:w-56"
     >
       <div className="label-caps hidden px-4 pt-4 pb-2 xl:block">LUNARIS</div>
@@ -25,10 +28,8 @@ export function Sidebar() {
       </ul>
 
       <div className="mt-auto hidden border-t border-hairline p-4 xl:block">
-        <p className="label-caps mb-1.5">Scope</p>
-        <p className="text-2xs leading-relaxed text-dim">
-          Preliminary mission-planning and research tool. Not a certified spacecraft landing system.
-        </p>
+        <p className="label-caps mb-1.5">{t.shell.scopeHeading}</p>
+        <p className="text-2xs leading-relaxed text-dim">{t.shell.scopeNote}</p>
       </div>
     </nav>
   );
@@ -36,6 +37,7 @@ export function Sidebar() {
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   const Icon = item.icon;
+  const text = useT().nav[item.id];
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -51,13 +53,13 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           )}
         >
           <Icon className="size-4 shrink-0" aria-hidden="true" />
-          <span className="max-w-full truncate text-center leading-tight xl:hidden">{item.shortTitle}</span>
-          <span className="hidden min-w-0 flex-1 truncate xl:inline">{item.title}</span>
+          <span className="max-w-full truncate text-center leading-tight xl:hidden">{text.shortTitle}</span>
+          <span className="hidden min-w-0 flex-1 truncate xl:inline">{text.title}</span>
         </Link>
       </TooltipTrigger>
       <TooltipContent side="right">
-        <p className="font-medium text-foreground">{item.title}</p>
-        <p className="text-muted-foreground">{item.description}</p>
+        <p className="font-medium text-foreground">{text.title}</p>
+        <p className="text-muted-foreground">{text.description}</p>
       </TooltipContent>
     </Tooltip>
   );

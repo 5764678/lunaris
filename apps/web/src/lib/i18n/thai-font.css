@@ -1,0 +1,20 @@
+/*
+ * Thai web font, self-hosted (no request to a font CDN, which a school network may block).
+ * Geist stays first so Latin text and numbers look as before; the browser falls back to Noto
+ * Sans Thai per glyph for Thai characters. Imported once, from the root layout.
+ */
+@import "@fontsource-variable/noto-sans-thai/wght.css";
+
+body {
+  font-family:
+    var(--font-geist-sans), "Noto Sans Thai Variable", ui-sans-serif, system-ui, "Sarabun", "Tahoma",
+    sans-serif;
+}
+
+/* Thai has no word spaces; let the browser break at word boundaries, and give stacked
+   vowels and tone marks room. */
+html[lang="th"] body {
+  line-height: 1.6;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
