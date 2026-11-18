@@ -221,3 +221,16 @@ Status values: `Proposed`, `Accepted`, `Superseded by D<n>`.
   whole interface with an English switch, evidence detail text excepted (D11); Moon phases
   are geocentric and labelled as such (D12); the entry claims only what the software does
   (D13); a light, roomier theme with the 3D views kept dark (D14).
+
+## D15 — The web globe texture is committed
+
+- **Status:** accepted (2026-11-18).
+- **Context:** the Render build fetches the NASA SVS CGI Moon Kit image to build the globe
+  texture. On 18 November that request failed certificate verification in the build
+  container, and the live site fell back to the labelled placeholder surface.
+- **Decision:** commit the two built files (`apps/web/public/textures/moon/moon-color.jpg`,
+  1.8 MB, and its `manifest.json`). They are a derived, public-domain web asset with full
+  provenance, like the lesson pack, not a science dataset. The build stage is kept and
+  overwrites them when it succeeds.
+- **Rejected:** disabling certificate verification in the downloader.
+
