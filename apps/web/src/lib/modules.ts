@@ -1,6 +1,7 @@
 import {
   Database,
   Earth,
+  GraduationCap,
   Info,
   LayoutDashboard,
   Mountain,
@@ -29,6 +30,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
     id: "overview",
     href: "/",
     icon: LayoutDashboard,
+  },
+  {
+    id: "learn",
+    href: "/learn",
+    icon: GraduationCap,
   },
   {
     id: "illumination",

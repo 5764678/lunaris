@@ -4,6 +4,7 @@ import { expect, test } from "@playwright/test";
 
 const NAV = [
   ["overview", "/"],
+  ["learn", "/learn"],
   ["illumination", "/illumination"],
   ["terrain", "/terrain"],
   ["compare", "/compare"],

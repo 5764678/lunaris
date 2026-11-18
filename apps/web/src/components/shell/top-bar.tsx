@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { useT } from "@/lib/i18n";
+import { isLessonRoute } from "@/lib/lesson/route";
 
 import { BrandMark } from "./brand-mark";
 import { ConnectionStatus } from "./connection-status";
@@ -12,6 +14,8 @@ import { UtcClock } from "./utc-clock";
 
 export function TopBar() {
   const t = useT();
+  // The lesson route reads static data only (decision D10): no API status polling there.
+  const lesson = isLessonRoute(usePathname());
   return (
     <header className="col-span-2 flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
       <Link
@@ -31,8 +35,12 @@ export function TopBar() {
 
       <div className="ml-auto flex items-center gap-2">
         <LanguageSwitch />
-        <DataStatusIndicator />
-        <ConnectionStatus />
+        {!lesson && (
+          <>
+            <DataStatusIndicator />
+            <ConnectionStatus />
+          </>
+        )}
         <span className="hidden h-4 w-px bg-border md:block" aria-hidden="true" />
         <UtcClock />
       </div>
