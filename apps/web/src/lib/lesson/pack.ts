@@ -1,4 +1,13 @@
-import type { LessonPack, MoonPhaseSeries, SunDirectionSeries } from "./types";
+import type {
+  HorizonMask,
+  LessonPack,
+  LessonSite,
+  MoonPhaseSeries,
+  PackManifest,
+  SiteComparison,
+  SunDirectionSeries,
+  TimelineAnalysis,
+} from "./types";
 
 /**
  * The only door to the numbers the lesson route shows (contract L3, decision D10).
@@ -128,4 +137,102 @@ export function getLessonPack(): Promise<LessonPack> {
 /** Test helper. */
 export function resetLessonPackCache(): void {
   cached = null;
+  cacheByKey.clear();
+}
+
+function isManifest(v: unknown): v is PackManifest {
+  return (
+    isObject(v) &&
+    isObject(v.lunation) &&
+    Array.isArray(v.demo_trio) &&
+    Array.isArray(v.comparisons) &&
+    isObject(v.shadowed_scan) &&
+    Array.isArray(v.shadowed_scan.sites)
+  );
+}
+
+/** Reads one pack file, with the same error rules as the rest of the loader. */
+async function readFile(fetchImpl: Fetch, path: string): Promise<unknown> {
+  const result = await getJson(fetchImpl, path);
+  if (!result.ok) throw new LessonPackError(`${path} answered HTTP ${result.status}.`);
+  return result.body;
+}
+
+/** `manifest.json`, checked for the parts the steps use. */
+export async function loadManifest(fetchImpl: Fetch = (url) => fetch(url)): Promise<PackManifest> {
+  const body = await readFile(fetchImpl, PACK_FILES.manifest);
+  if (!isManifest(body))
+    throw new LessonPackError("manifest.json is missing the lunation, demo trio, comparisons or scan.");
+  return body;
+}
+
+/** A demo-trio site: horizon mask and timeline, found through the manifest (catalogue id → files). */
+export async function loadSite(
+  catalogSiteId: string,
+  fetchImpl: Fetch = (url) => fetch(url),
+): Promise<LessonSite> {
+  const manifest = await loadManifest(fetchImpl);
+  const entry = manifest.demo_trio.find((s) => s.catalog_site_id === catalogSiteId);
+  if (!entry) throw new LessonPackError(`${catalogSiteId} is not in the pack's demo trio.`);
+  const pathOf = (name: string) => entry.files.find((f) => f.endsWith(`/${name}`));
+  const horizonPath = pathOf("horizon.json");
+  const timelinePath = pathOf("timeline.json");
+  if (!horizonPath || !timelinePath)
+    throw new LessonPackError(`${catalogSiteId} has no horizon or timeline file in the manifest.`);
+  const [horizon, timeline] = await Promise.all([
+    readFile(fetchImpl, horizonPath),
+    readFile(fetchImpl, timelinePath),
+  ]);
+  if (
+    !isObject(horizon) ||
+    !Array.isArray(horizon.azimuth_deg) ||
+    !Array.isArray(horizon.elevation_deg) ||
+    !Array.isArray(horizon.truncated)
+  ) {
+    throw new LessonPackError(`${horizonPath} is not a horizon mask.`);
+  }
+  if (!isObject(timeline) || !isObject(timeline.illumination) || !isObject(timeline.earth_visibility)) {
+    throw new LessonPackError(`${timelinePath} is not a timeline analysis.`);
+  }
+  return {
+    name: entry.name,
+    catalogSiteId,
+    horizon: horizon as unknown as HorizonMask,
+    timeline: timeline as unknown as TimelineAnalysis,
+  };
+}
+
+/** One of the four packed comparisons ("default", "power-critical", "comms-critical", "landing-critical"). */
+export async function loadComparison(
+  variant: string,
+  fetchImpl: Fetch = (url) => fetch(url),
+): Promise<SiteComparison> {
+  const manifest = await loadManifest(fetchImpl);
+  const entry = manifest.comparisons.find((c) => c.variant === variant);
+  if (!entry) throw new LessonPackError(`The pack has no comparison named ${variant}.`);
+  const body = await readFile(fetchImpl, entry.file);
+  if (
+    !isObject(body) ||
+    !Array.isArray(body.rows) ||
+    !Array.isArray(body.columns) ||
+    !isObject(body.summary)
+  ) {
+    throw new LessonPackError(`${entry.file} is not a site comparison.`);
+  }
+  return body as unknown as SiteComparison;
+}
+
+const cacheByKey = new Map<string, Promise<unknown>>();
+
+/** One load per key per page visit; a failed load is not cached. */
+export function cachedPackLoad<T>(key: string, load: () => Promise<T>): Promise<T> {
+  let hit = cacheByKey.get(key) as Promise<T> | undefined;
+  if (!hit) {
+    hit = load().catch((error: unknown) => {
+      cacheByKey.delete(key);
+      throw error;
+    });
+    cacheByKey.set(key, hit);
+  }
+  return hit;
 }

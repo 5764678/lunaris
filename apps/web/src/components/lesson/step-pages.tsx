@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
-
 import { useT } from "@/lib/i18n";
 
+import { CompareStep } from "./compare-step";
 import { EarthViewStep } from "./earth-view-step";
 import { StepList, StepPager } from "./lesson-nav";
+import { SkyStep } from "./sky-step";
 import { stepKey, type Period } from "./steps";
 
 type GuidancePeriod = 1 | 3 | 6;
@@ -35,26 +35,6 @@ function Guidance({ period }: { period: GuidancePeriod }) {
   );
 }
 
-/** Periods 4 and 5 are not built yet: say so, and point to the Explorer page that exists. */
-function ComingSoon({ period }: { period: 4 | 5 }) {
-  const t = useT().learn.comingSoon;
-  return (
-    <div
-      data-testid={`coming-soon-${period}`}
-      className="space-y-3 rounded-md border border-border bg-panel p-4 text-sm leading-relaxed"
-    >
-      <h3 className="font-semibold text-foreground">{t.heading}</h3>
-      <p className="text-muted-foreground">{t.body}</p>
-      <Link
-        href={period === 4 ? "/illumination" : "/compare"}
-        className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-foreground hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring/60"
-      >
-        {period === 4 ? t.p4Link : t.p5Link}
-      </Link>
-    </div>
-  );
-}
-
 /** One period of the unit: heading, the step navigation, the step's content, previous/next. */
 export function LearnStepPage({ period }: { period: Period }) {
   const t = useT().learn;
@@ -74,8 +54,10 @@ export function LearnStepPage({ period }: { period: Period }) {
       </header>
       {period === 2 ? (
         <EarthViewStep />
-      ) : period === 4 || period === 5 ? (
-        <ComingSoon period={period} />
+      ) : period === 4 ? (
+        <SkyStep />
+      ) : period === 5 ? (
+        <CompareStep />
       ) : (
         <Guidance period={period as GuidancePeriod} />
       )}
