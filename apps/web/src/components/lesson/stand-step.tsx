@@ -144,21 +144,30 @@ function StandLesson({ data }: { data: StandData }) {
             </tr>
           </thead>
           <tbody>
-            {timelines.map(({ catalogSiteId, name, timeline }) => (
-              <tr key={catalogSiteId} className="border-t border-border align-top" data-site={catalogSiteId}>
-                <th scope="row" className="py-2 pr-2 text-left font-normal text-foreground">
-                  {names[name] ?? name}
-                </th>
-                <td className="numeric py-2 pr-2 font-mono" data-testid={`flat-${catalogSiteId}`}>
-                  {t.percent(timeline.illumination.astronomical.illuminated_fraction)}
-                </td>
-                <td className="numeric py-2 font-mono" data-testid={`terrain-${catalogSiteId}`}>
-                  {timeline.illumination.terrain
-                    ? t.percent(timeline.illumination.terrain.illuminated_fraction)
-                    : t.terrainMissing}
-                </td>
-              </tr>
-            ))}
+            {[...timelines]
+              .sort(
+                (a, b) =>
+                  Number(b.catalogSiteId === STAND_SITE_ID) - Number(a.catalogSiteId === STAND_SITE_ID),
+              )
+              .map(({ catalogSiteId, name, timeline }) => (
+                <tr
+                  key={catalogSiteId}
+                  className="border-t border-border align-top"
+                  data-site={catalogSiteId}
+                >
+                  <th scope="row" className="py-2 pr-2 text-left font-normal text-foreground">
+                    {names[name] ?? name}
+                  </th>
+                  <td className="numeric py-2 pr-2 font-mono" data-testid={`flat-${catalogSiteId}`}>
+                    {t.percent(timeline.illumination.astronomical.illuminated_fraction)}
+                  </td>
+                  <td className="numeric py-2 font-mono" data-testid={`terrain-${catalogSiteId}`}>
+                    {timeline.illumination.terrain
+                      ? t.percent(timeline.illumination.terrain.illuminated_fraction)
+                      : t.terrainMissing}
+                  </td>
+                </tr>
+              ))}
             {darkest && (
               <tr className="border-t border-border align-top" data-site={darkest.catalogSiteId}>
                 <th scope="row" className="py-2 pr-2 text-left font-normal text-foreground">
@@ -178,6 +187,7 @@ function StandLesson({ data }: { data: StandData }) {
           title={t.evidenceFor}
           testId="stand-evidence"
           kindTestId="stand-evidence-kind"
+          kindLabel={`${messages.learn.compare.evidenceKinds[stand.timeline.illumination.evidence.kind] ?? ""} (${stand.timeline.illumination.evidence.kind})`}
         />
       </section>
 

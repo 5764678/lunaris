@@ -50,6 +50,7 @@ export function EvidenceFold({
   title,
   testId = "evidence-fold",
   kindTestId = "evidence-kind",
+  kindLabel,
 }: {
   evidence: Evidence;
   limitations: string[];
@@ -57,6 +58,8 @@ export function EvidenceFold({
   title?: string;
   testId?: string;
   kindTestId?: string;
+  /** Shown instead of the raw kind code. */
+  kindLabel?: string;
 }) {
   const t = useT().learn.earth;
   const c = useT().learn.compare;
@@ -65,7 +68,7 @@ export function EvidenceFold({
       <summary className="cursor-pointer font-medium text-foreground">
         {title ?? t.evidenceHeading}:{" "}
         <span data-testid={kindTestId} className={KIND_COLOUR[evidence.kind]}>
-          {evidence.kind}
+          {kindLabel ?? evidence.kind}
         </span>
       </summary>
       <div className="mt-2 space-y-2 leading-relaxed text-muted-foreground">

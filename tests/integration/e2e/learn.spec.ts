@@ -120,12 +120,94 @@ test("when the pack cannot be loaded the lesson says so and shows no numbers", a
   await expect(page.getByTestId("earth-view-canvas")).toHaveCount(0);
 });
 
-test("periods 4 and 5 say they are not built yet and link to the Explorer page", async ({ page }) => {
-  await watchRequests(page);
+test("period 4: sky chart from the pack, sunlit fractions with and without terrain, the near-dark example", async ({
+  page,
+}) => {
+  const { apiRequests } = await watchRequests(page);
   await page.goto("/learn/4");
-  await expect(page.getByTestId("coming-soon-4").getByRole("link")).toHaveAttribute("href", "/illumination");
+  await expect(page.getByTestId("stand-site")).toContainText("Peak near Shackleton");
+  await expect(page.getByTestId("synthetic-banner")).toHaveCount(0);
+  await expect(page.getByTestId("lesson-sky-chart")).toHaveAttribute("data-plot-state", "ready");
+  // Sun and Earth tracks are both drawn.
+  await expect(page.getByTestId("lesson-sky-chart")).toHaveAttribute("data-track-count", "2");
+
+  // Values are the pack's own (manifest terrain_sunlit_fraction 0.9623 for Peak near Shackleton).
+  await expect(page.getByTestId("flat-pgda78-site07")).toHaveText("67.7 %");
+  await expect(page.getByTestId("terrain-pgda78-site07")).toHaveText("96.2 %");
+  await expect(page.getByTestId("terrain-pgda78-site01")).toHaveText("91.5 %");
+  await expect(page.getByTestId("terrain-pgda78-site23")).toHaveText("65.8 %");
+
+  // No 0 % site exists: the near-dark example is Amundsen 1, with its source.
+  await expect(page.getByTestId("darkest-terrain")).toHaveText("1.4 %");
+  await expect(page.getByTestId("no-zero-site")).toBeVisible();
+  await expect(page.getByTestId("near-dark")).toContainText("Amundsen 1");
+  await expect(page.getByTestId("near-dark-source")).toContainText("shadowed_scan");
+
+  // The evidence label folds away; the answers to the reading questions are folded too.
+  await expect(page.getByTestId("stand-evidence-kind")).toContainText("calculation");
+  await expect(page.getByTestId("stand-check")).not.toHaveAttribute("open", "");
+
+  await page.waitForTimeout(300);
+  expect(apiRequests, "requests to the API host").toEqual([]);
+});
+
+test("period 5: mission answers pick a packed variant; the recommendation is a claim to examine", async ({
+  page,
+}) => {
+  const { apiRequests } = await watchRequests(page);
   await page.goto("/learn/5");
-  await expect(page.getByTestId("coming-soon-5").getByRole("link")).toHaveAttribute("href", "/compare");
+  await expect(page.getByTestId("claim-site")).toContainText("Peak near Shackleton");
+  await expect(page.getByTestId("default-note")).toBeVisible();
+  await expect(page.getByTestId("claim-score")).toContainText("71.3");
+  await expect(page.getByTestId("claim-weights")).toContainText("33 %");
+  // What the pick gives up is shown without using weights: Peak trails on roughness only.
+  await expect(page.getByTestId("claim-trails")).toContainText("ความขรุขระ");
+  await expect(page.getByTestId("compare-window")).toContainText("2570");
+
+  // Every number carries its evidence kind; pressing one opens its evidence.
+  await expect(page.getByTestId("kind-ad7f90fc-52e7-48b1-81fe-013d22e9d772-slope_at_site_deg")).toContainText(
+    "การคำนวณ",
+  );
+  await expect(page.getByTestId("evidence-panel")).toContainText("ยังไม่ได้เลือกค่า");
+  await page.getByTestId("cell-69e2d498-39a4-4c62-8ff5-10665dc865a0-sun_illuminated_fraction").click();
+  await expect(page.getByTestId("panel-kind")).toContainText("การคำนวณ");
+  await expect(page.getByTestId("panel-sources")).not.toBeEmpty();
+
+  // Landing first: the claim changes to Malapert massif, with a narrow lead and what would flip it.
+  await page.getByTestId("variant-landing-critical").check();
+  await expect(page.getByTestId("answer-landing")).toHaveText("สำคัญมาก");
+  await expect(page.getByTestId("claim-site")).toContainText("Malapert massif");
+  await expect(page.getByTestId("claim")).toHaveAttribute("data-confidence", "narrow");
+  await expect(page.getByTestId("claim-robustness")).toHaveAttribute("data-stable", "false");
+  await expect(page.getByTestId("default-note")).toHaveCount(0);
+
+  // Power first keeps Peak near Shackleton.
+  await page.getByTestId("variant-power-critical").check();
+  await expect(page.getByTestId("claim-site")).toContainText("Peak near Shackleton");
+  await expect(page.getByTestId("claim-score")).toContainText("8");
+
+  // English switch.
+  await page.getByTestId("lang-en").click();
+  await expect(page.getByTestId("answer-power")).toHaveText("Critical");
+
+  await page.waitForTimeout(300);
+  expect(apiRequests, "requests to the API host").toEqual([]);
+});
+
+test("periods 4 and 5 report a missing pack file and show no numbers", async ({ page }) => {
+  await watchRequests(page);
+  await page.route("**/lesson-pack/v1/compare/default.json", (route) =>
+    route.fulfill({ status: 404, body: "gone" }),
+  );
+  await page.route("**/lesson-pack/v1/sites/pgda78-site07/timeline.json", (route) =>
+    route.fulfill({ status: 404, body: "gone" }),
+  );
+  await page.goto("/learn/5");
+  await expect(page.getByTestId("learn-step").getByRole("alert")).toContainText("โหลดข้อมูลบทเรียนไม่สำเร็จ");
+  await expect(page.getByTestId("claim")).toHaveCount(0);
+  await page.goto("/learn/4");
+  await expect(page.getByTestId("learn-step").getByRole("alert")).toContainText("โหลดข้อมูลบทเรียนไม่สำเร็จ");
+  await expect(page.getByTestId("sunlit-table")).toHaveCount(0);
 });
 
 for (const size of [
@@ -141,6 +223,9 @@ for (const size of [
       await page.goto(`/learn/${period}`);
       await expect(page.getByTestId("learn-step")).toBeVisible();
       if (period === 2) await expect(page.getByTestId("phase-readout")).toBeVisible();
+      if (period === 4)
+        await expect(page.getByTestId("lesson-sky-chart")).toHaveAttribute("data-plot-state", "ready");
+      if (period === 5) await expect(page.getByTestId("claim")).toBeVisible();
       // Measure after the Thai web font has loaded: it is wider than the fallback.
       await page.evaluate(() => document.fonts.ready);
       const report = await page.evaluate(() => {
