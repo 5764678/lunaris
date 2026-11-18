@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "lunar-color-equirectangular",
+  "file": "moon-color.jpg",
+  "width": 4096,
+  "height": 2048,
+  "projection": "equirectangular",
+  "longitude_min_deg": -180.0,
+  "longitude_max_deg": 180.0,
+  "latitude_max_deg": 90.0,
+  "latitude_min_deg": -90.0,
+  "source": {
+    "dataset_id": "nasa-svs-cgi-moon-kit",
+    "dataset_title": "NASA SVS CGI Moon Kit \u2014 global color map (visualization only)",
+    "file": "lroc_color_poles_4k.tif",
+    "source_url": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_4k.tif",
+    "sha256": "918649a7f8ed2f1329b2cd95bb0d25483befdcb60ae1a66db681a637cc21344f",
+    "retrieved_at_utc": "2026-11-11T13:47:32.779159Z"
+  },
+  "credit": "NASA's Scientific Visualization Studio. CGI Moon Kit, SVS visualization 4720 (https://svs.gsfc.nasa.gov/4720).",
+  "usage": "Visualization only \u2014 not an analysis input.",
+  "assumptions": [
+    "Projection: Global 2:1 map 'centered on 0\u00b0 longitude' (SVS page). The page names no projection and no numeric longitude range; LUNARIS ASSUMES simple cylindrical (equirectangular) spanning \u2212180\u00b0..+180\u00b0 longitude and +90\u00b0..\u221290\u00b0 latitude"
+  ],
+  "generated_at_utc": "2026-11-18T13:51:34.408764Z",
+  "generator": "lunaris-data 0.1.0"
+}
