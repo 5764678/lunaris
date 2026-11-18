@@ -11,8 +11,6 @@
 **/playwright-report
 **/test-results
 data
-apps/web/public/textures/moon/*.jpg
-apps/web/public/textures/moon/manifest.json
 .env
 .env.*
 !.env.example
