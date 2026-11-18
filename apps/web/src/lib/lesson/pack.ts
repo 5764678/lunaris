@@ -1,4 +1,15 @@
-import type { LessonPack, MoonPhaseSeries, SunDirectionSeries } from "./types";
+import {
+  COMPARE_VARIANTS,
+  type CompareVariant,
+  type HorizonMaskResponse,
+  type LessonPack,
+  type MoonPhaseSeries,
+  type PackIndex,
+  type SiteBundle,
+  type SiteComparison,
+  type SunDirectionSeries,
+  type TimelineAnalysis,
+} from "./types";
 
 /**
  * The only door to the numbers the lesson route shows (contract L3, decision D10).
@@ -128,4 +139,170 @@ export function getLessonPack(): Promise<LessonPack> {
 /** Test helper. */
 export function resetLessonPackCache(): void {
   cached = null;
+}
+
+// ── Periods 4 and 5: the demo trio and the comparison variants ─────────────
+
+function isHorizonMaskResponse(v: unknown): v is HorizonMaskResponse {
+  return (
+    isObject(v) &&
+    Array.isArray(v.azimuth_deg) &&
+    Array.isArray(v.elevation_deg) &&
+    Array.isArray(v.truncated) &&
+    v.azimuth_deg.length > 0 &&
+    v.azimuth_deg.length === v.elevation_deg.length &&
+    v.azimuth_deg.length === v.truncated.length &&
+    isObject(v.evidence)
+  );
+}
+
+function isTimelineAnalysis(v: unknown): v is TimelineAnalysis {
+  return (
+    isObject(v) &&
+    typeof v.site_name === "string" &&
+    isObject(v.illumination) &&
+    isObject(v.illumination.astronomical) &&
+    isObject(v.illumination.terrain) &&
+    Array.isArray(v.illumination.samples) &&
+    isObject(v.illumination.evidence) &&
+    isObject(v.earth_visibility) &&
+    Array.isArray(v.earth_visibility.samples)
+  );
+}
+
+function isSiteComparison(v: unknown): v is SiteComparison {
+  return (
+    isObject(v) &&
+    Array.isArray(v.rows) &&
+    Array.isArray(v.columns) &&
+    isObject(v.summary) &&
+    isObject(v.summary.recommendation) &&
+    Array.isArray(v.summary.recommendation.ranking) &&
+    Array.isArray(v.summary.recommendation.needs) &&
+    isObject(v.summary.recommendation.evidence)
+  );
+}
+
+/** A path read from the manifest must stay inside the pack. */
+function safePath(v: unknown): string | null {
+  return typeof v === "string" && /^[A-Za-z0-9._/-]+$/.test(v) && !v.includes("..") ? v : null;
+}
+
+async function getPackJson(file: string): Promise<unknown> {
+  const result = await getJson((url) => fetch(url), file);
+  if (!result.ok) throw new LessonPackError(`${file} answered HTTP ${result.status}.`);
+  return result.body;
+}
+
+/** Reads what periods 4 and 5 need from `manifest.json`: which files, and the shadowed-site scan. */
+export function parsePackIndex(manifest: unknown): PackIndex {
+  if (!isObject(manifest)) throw new LessonPackError("manifest.json is not an object.");
+  const m = manifest;
+  const lun = isObject(m.lunation) ? m.lunation : {};
+  const win = isObject(lun.window) ? lun.window : {};
+  const trio = Array.isArray(m.demo_trio) ? m.demo_trio : [];
+  const demoTrio: PackIndex["demoTrio"] = [];
+  for (const entry of trio) {
+    if (!isObject(entry) || !Array.isArray(entry.files)) continue;
+    const files = entry.files.map(safePath);
+    const horizonFile = files.find((f) => f?.endsWith("/horizon.json"));
+    const timelineFile = files.find((f) => f?.endsWith("/timeline.json"));
+    if (
+      typeof entry.catalog_site_id === "string" &&
+      typeof entry.name === "string" &&
+      typeof entry.terrain_sunlit_fraction === "number" &&
+      horizonFile &&
+      timelineFile
+    ) {
+      demoTrio.push({
+        catalogSiteId: entry.catalog_site_id,
+        name: entry.name,
+        horizonFile,
+        timelineFile,
+        terrainSunlitFraction: entry.terrain_sunlit_fraction,
+      });
+    }
+  }
+  const comparisons: PackIndex["comparisons"] = [];
+  for (const entry of Array.isArray(m.comparisons) ? m.comparisons : []) {
+    if (!isObject(entry)) continue;
+    const file = safePath(entry.file);
+    const variant = (COMPARE_VARIANTS as readonly unknown[]).includes(entry.variant)
+      ? (entry.variant as CompareVariant)
+      : null;
+    if (file && variant) comparisons.push({ variant, file });
+  }
+  const scan = isObject(m.shadowed_scan) ? m.shadowed_scan : {};
+  const scanWindow = isObject(scan.window) ? scan.window : {};
+  const scanSites = (Array.isArray(scan.sites) ? scan.sites : []).flatMap((s) =>
+    isObject(s) && typeof s.catalog_site_id === "string" && typeof s.sunlit_fraction === "number"
+      ? [{ catalogSiteId: s.catalog_site_id, sunlitFraction: s.sunlit_fraction }]
+      : [],
+  );
+  const str = (v: unknown) => (typeof v === "string" ? v : "");
+  if (demoTrio.length === 0) throw new LessonPackError("manifest.json lists no demo sites.");
+  return {
+    lunation: {
+      newMoonUtc: str(lun.new_moon_utc),
+      nextNewMoonUtc: str(lun.next_new_moon_utc),
+      startUtc: str(win.start_utc),
+      endUtc: str(win.end_utc),
+    },
+    demoTrio,
+    comparisons,
+    shadowed: {
+      ran: scan.ran === true,
+      permanentlyShadowedExample:
+        typeof m.permanently_shadowed_example === "string" ? m.permanently_shadowed_example : null,
+      criterion: str(scan.criterion),
+      windowStartUtc: str(scanWindow.start_utc),
+      windowEndUtc: str(scanWindow.end_utc),
+      sites: scanSites,
+    },
+    provenance: {
+      kind: "pack",
+      version: typeof m.pack_version === "string" ? m.pack_version : "1",
+      generatedAtUtc: typeof m.generated_at_utc === "string" ? m.generated_at_utc : null,
+      codeCommit: isObject(m.code) && typeof m.code.commit === "string" ? m.code.commit : null,
+    },
+  };
+}
+
+export async function loadPackIndex(): Promise<PackIndex> {
+  return parsePackIndex(await getPackJson(PACK_FILES.manifest));
+}
+
+function demoSite(index: PackIndex, catalogSiteId: string) {
+  const entry = index.demoTrio.find((s) => s.catalogSiteId === catalogSiteId);
+  if (!entry) throw new LessonPackError(`The pack has no demo site ${catalogSiteId}.`);
+  return entry;
+}
+
+/** The timeline of one demo site, found through the manifest. */
+export async function loadSiteTimeline(index: PackIndex, catalogSiteId: string): Promise<TimelineAnalysis> {
+  const entry = demoSite(index, catalogSiteId);
+  const timeline = await getPackJson(entry.timelineFile);
+  if (!isTimelineAnalysis(timeline)) throw new LessonPackError(`${entry.timelineFile} is not a timeline.`);
+  return timeline;
+}
+
+/** The horizon mask and the timeline of one demo site, found through the manifest. */
+export async function loadSiteBundle(index: PackIndex, catalogSiteId: string): Promise<SiteBundle> {
+  const entry = demoSite(index, catalogSiteId);
+  const [horizon, timeline] = await Promise.all([
+    getPackJson(entry.horizonFile),
+    loadSiteTimeline(index, catalogSiteId),
+  ]);
+  if (!isHorizonMaskResponse(horizon))
+    throw new LessonPackError(`${entry.horizonFile} is not a horizon mask.`);
+  return { catalogSiteId, name: entry.name, horizon, timeline };
+}
+
+/** One of the four packed comparisons. */
+export async function loadComparison(index: PackIndex, variant: CompareVariant): Promise<SiteComparison> {
+  const entry = index.comparisons.find((c) => c.variant === variant);
+  if (!entry) throw new LessonPackError(`The pack has no comparison variant ${variant}.`);
+  const body = await getPackJson(entry.file);
+  if (!isSiteComparison(body)) throw new LessonPackError(`${entry.file} is not a site comparison.`);
+  return body;
 }

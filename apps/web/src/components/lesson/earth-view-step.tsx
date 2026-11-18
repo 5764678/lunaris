@@ -83,7 +83,7 @@ function EarthViewLesson({ pack }: { pack: LessonPack }) {
         <div className="space-y-3">
           <div
             data-testid="earth-view"
-            className="relative mx-auto aspect-square w-full max-w-[min(100%,30rem)] overflow-hidden rounded-md border border-border bg-panel-sunken"
+            className="space relative mx-auto aspect-square w-full max-w-[min(100%,30rem)] overflow-hidden rounded-md border border-border bg-background"
           >
             {surface.kind !== "resolving" && (
               <EarthViewCanvas
