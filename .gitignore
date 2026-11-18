@@ -18,6 +18,9 @@
 # Web-ready textures generated from acquired NASA products
 /apps/web/public/textures/moon/*
 !/apps/web/public/textures/moon/README.md
+# The built texture is committed (D15): the Render build cannot download the NASA source.
+!/apps/web/public/textures/moon/moon-color.jpg
+!/apps/web/public/textures/moon/manifest.json
 
 # Raster / kernel formats as a safety net (large binaries never belong in git)
 *.IMG

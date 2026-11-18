@@ -284,7 +284,7 @@ export const en: Messages = {
     },
     illumination: {
       title: "Illumination & Earth",
-      shortTitle: "Sun/Earth",
+      shortTitle: "Sunlight",
       description: "Sun and Earth geometry, illumination and direct-to-Earth line of sight per site.",
     },
     terrain: {
