@@ -13,7 +13,13 @@ export function StepList({ current, wrap = false }: { current: Period | null; wr
   const t = useT().learn;
   return (
     <nav aria-label={t.stepNavLabel} data-testid="step-nav">
-      <ol className={wrap ? "grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-6" : "grid grid-cols-3 gap-2 sm:grid-cols-6"}>
+      <ol
+        className={
+          wrap
+            ? "grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-6"
+            : "grid grid-cols-3 gap-2 sm:grid-cols-6"
+        }
+      >
         {PERIODS.map((p) => {
           const step = t.steps[stepKey(p)];
           const active = p === current;
