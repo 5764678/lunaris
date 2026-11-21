@@ -105,7 +105,7 @@ export function SkyChart({ profile, tracks }: { profile: HorizonProfile | null; 
               gridcolor: readToken("chart-grid", node),
               zeroline: false,
               fixedrange: true,
-              title: { text: "Azimuth (° clockwise from north)", standoff: 4 },
+              title: { text: "Azimuth (°, from north)", font: { size: 11 }, standoff: 4 },
             },
             yaxis: {
               range: [yMin, yMax],

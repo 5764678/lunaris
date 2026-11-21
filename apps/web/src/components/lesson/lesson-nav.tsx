@@ -9,11 +9,17 @@ import { cn } from "@/lib/utils";
 import { PERIODS, stepHref, stepKey, type Period } from "./steps";
 
 /** The six-step navigation: one link per period, the current one marked. */
-export function StepList({ current }: { current: Period | null }) {
+export function StepList({ current, wrap = false }: { current: Period | null; wrap?: boolean }) {
   const t = useT().learn;
   return (
     <nav aria-label={t.stepNavLabel} data-testid="step-nav">
-      <ol className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <ol
+        className={
+          wrap
+            ? "grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-6"
+            : "grid grid-cols-3 gap-2 sm:grid-cols-6"
+        }
+      >
         {PERIODS.map((p) => {
           const step = t.steps[stepKey(p)];
           const active = p === current;
@@ -32,7 +38,7 @@ export function StepList({ current }: { current: Period | null }) {
                 )}
               >
                 <span className="font-semibold">{t.period(p)}</span>
-                <span className="truncate text-sm">{step.phase}</span>
+                <span className={cn("text-sm", wrap ? "lg:truncate" : "truncate")}>{step.phase}</span>
               </Link>
             </li>
           );

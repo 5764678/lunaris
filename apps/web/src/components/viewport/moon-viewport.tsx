@@ -64,6 +64,9 @@ class RendererBoundary extends Component<{ children: ReactNode }, { error: Error
   }
 }
 
+// Site labels pile up on a phone-sized globe: default them off below md, once per page load.
+let narrowLabelDefaultApplied = false;
+
 export function MoonViewport() {
   const scene = useMissionStore((s) => s.scene);
   const descending = useMissionStore((s) => s.sceneTransition === "descending");
@@ -72,6 +75,13 @@ export function MoonViewport() {
   const gridSize = useTerrainGridSize();
   // Start downloading the terrain while the globe flies down, so the handover is quick.
   useTerrainScene(TERRAIN_SCENE_ID, gridSize ?? 0, gridSize !== null && (descending || scene === "terrain"));
+
+  useEffect(() => {
+    if (narrowLabelDefaultApplied) return;
+    narrowLabelDefaultApplied = true;
+    const { layers, toggleLayer } = useMissionStore.getState();
+    if (layers.labels && window.matchMedia("(max-width: 767px)").matches) toggleLayer("labels");
+  }, []);
 
   useEffect(() => {
     if (!descending) return;
