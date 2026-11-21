@@ -76,7 +76,7 @@ export function LearnIndexPage() {
         <h1 className="text-2xl font-semibold text-foreground">{t.title}</h1>
         <p className="text-sm leading-relaxed text-muted-foreground">{t.intro}</p>
       </header>
-      <StepList current={null} />
+      <StepList current={null} wrap />
       <p className="text-sm text-dim">{t.draftNote}</p>
     </div>
   );
