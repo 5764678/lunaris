@@ -199,7 +199,8 @@ Status values: `Proposed`, `Accepted`, `Superseded by D<n>`.
     profile there is no score.
 - **Rejected:** a default "suitability score". It is easy to read, and nobody can defend
   its weights.
-- **Amended (2026-11-14, at the owner's request; ported from the `lunarseye` repository):** the
+- **Amended (2026-11-14, at the owner's request; ported from the `lunarseye` repository, the
+  owner's own separate project built for NASA Space Apps 2026):** the
   optional profile score is replaced by a mission recommendation. The Compare page asks what the
   mission needs (power, comms, landing: not needed / nice to have / important / critical) and
   four optional hard limits (steepest slope, longest darkness, longest Earth outage, unbroken
