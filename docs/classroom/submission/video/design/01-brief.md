@@ -68,3 +68,15 @@ captures, which look like a screen recording and break the poster look. OK to go
 Visual direction: up to 3 written directions, then 2–3 HTML styleframes at 1920×1080 (cold open
 mid-tilt, the P2 app shot with overlay, end card), screenshotted with Playwright, committed under
 `video/design/styleframes/`.
+
+## 5. TD decisions, 22 Nov (checkpoint 1 closed)
+
+- Everything listed as decided is approved.
+- **Q1:** no bundled track. A quiet ambient or piano bed, supplied by the team with a written free
+  licence at assembly, is cued by duration only: in at §1, under §3, low under §4 (about −24 dB
+  relative to the voice), out before §5's honesty line, back for §6 and the end card. If no track
+  arrives, the video ships with SFX only. At most 4 soft SFX, from ATTRIBUTION entries with URLs.
+- **Q2:** approved. The globe canvas from `/` with the HUD hidden, South polar → Pole over about
+  6 s, then the `/learn/4` chart cropped to the plot for about 10 s. No English UI text in either.
+  The chart's axis labels are already Thai in the app (checked in the 22 Nov capture).
+- **Q3:** approved. Light app UI kept exactly as captured, in a floating frame, no recolouring.
