@@ -4,11 +4,11 @@
   "private": true,
   "description": "Graphics timeline for the LUNARIS presentation video (Remotion).",
   "scripts": {
-    "prep": "node scripts/fetch-fonts.js && node scripts/copy-assets.js && node scripts/extract-diagram.js && node scripts/build-data.js && node scripts/capture.js",
+    "prep": "node scripts/fetch-fonts.js && node scripts/copy-assets.js && node scripts/extract-diagram.js && node scripts/build-data.js && node scripts/capture.js && node scripts/orbit-count.js && node scripts/copy-assets.js",
     "check-diagram": "node scripts/extract-diagram.js --check",
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts Graphics out/graphics-1080p.mp4 --codec h264 --crf 20 --muted --timeout 180000 --concurrency 3",
-    "animatic": "remotion render src/index.ts Animatic out/animatic-720p.mp4 --codec h264 --crf 26 --scale 0.6666666666666666 --muted --timeout 180000 --concurrency 3",
+    "render": "remotion render src/index.ts Graphics out/graphics-1080p.mp4 --codec h264 --crf 20 --muted --timeout 180000 --concurrency 1",
+    "animatic": "remotion render src/index.ts Animatic out/animatic-720p.mp4 --codec h264 --crf 26 --scale 0.6666666666666666 --muted --timeout 180000 --concurrency 1",
     "still": "remotion still src/index.ts Graphics"
   },
   "dependencies": {
