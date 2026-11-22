@@ -8,7 +8,7 @@
     "check-diagram": "node scripts/extract-diagram.js --check",
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts Graphics out/graphics-1080p.mp4 --codec h264 --crf 20",
-    "animatic": "remotion render src/index.ts Animatic out/animatic-720p.mp4 --codec h264 --crf 26 --scale 0.6667",
+    "animatic": "remotion render src/index.ts Animatic out/animatic-720p.mp4 --codec h264 --crf 26 --scale 0.6666666666666666",
     "still": "remotion still src/index.ts Graphics"
   },
   "dependencies": {
