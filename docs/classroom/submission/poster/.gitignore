@@ -1,0 +1,8 @@
+# raw Playwright captures (large); prep.py turns them into img/
+captures/
+# SIL OFL fonts, downloaded by render.js
+fonts/
+# extracted from ../poster-template-students.pdf by render.js
+img/template.png
+# full-size screenshot used for checking
+*-full.png
