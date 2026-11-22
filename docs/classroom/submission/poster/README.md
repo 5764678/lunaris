@@ -11,9 +11,9 @@ organisers' student template (`../poster-template-students.pdf`).
 ## Fill in before submitting
 
 The names and contacts are placeholders and must not be committed: `{{INVENTORS}}`,
-`{{ADVISOR}}`, `{{PHONE}}`, `{{EMAIL}}`. `{{STUDENT_VOICE}}` is the students' own first-person
-line (30–40 words, supplied by the TD); its box holds about 240 Thai characters, tested with a
-filler line of that length. Replace them in a local copy of `poster.html`, run
+`{{ADVISOR}}`, `{{PHONE}}`, `{{EMAIL}}`. The student line under
+the headline is the team lead's own words, translated (`docs/classroom/submission/team-story.md`
+on branch `claude/laughing-einstein-jc00pz`), as supplied by the TD. Replace them in a local copy of `poster.html`, run
 `render.js`, and upload that PDF. Scan the QR code with two phones first.
 
 ## Rebuild
@@ -67,5 +67,7 @@ everywhere and at least 6:1 for body text.
 | ≤ 2 s on 49 principal phases                                     | `docs/SCIENCE.md`, phase validation table (max 1.98 s)                 |
 | ≤ 0.002″ Sun and Earth direction                                 | `docs/SCIENCE.md` §5.2 (Earth 0.0017″; one site, 25 samples)           |
 | No tides; phases geocentric; not yet tried with students         | `docs/classroom/kit/README.md`, `../poster-content.md`                 |
+| "ภาพจาก LUNARIS คำนวณจากข้อมูลนาซา" (renders, not photographs)     | the app renders the Moon from NASA SVS texture and SPICE geometry |
+| "Light is 1 of 7 criteria; no site is best on every count"       | `/learn/5` table (7 rows), `kit/teacher-guide.md` ("ค่าทั้ง 7 ค่า"); `compare/default.json` leaders differ by criterion |
 | "Textbooks teach a 3D system with flat 2D pictures"               | the students' account, via the TD (22 Nov 2026)                |
 | Highlights 1–4, users, use and benefits                          | `../entry-form-part2.md` sections 5–7                                  |
