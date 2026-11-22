@@ -34,7 +34,7 @@ the white panel, any box whose content overflows, and a word count.
 | ------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Moon globe (hero, top right)   | LUNARIS Overview page, "South polar" view, labels, sites and grid off; NASA SVS surface         |
 | Pole terrain (hero background) | LUNARIS Overview page, "Pole terrain" view; NASA LRO LOLA relief                                |
-| Eight Moon phases (step 2)     | `/learn/2`, Moon canvas; six of the eight captures (days 1, 8, 12, 16, 23, 27) are used; the % is the app's own readout     |
+| Six Moon phases (step 2)       | `/learn/2`, Moon canvas; six of the eight captures (days 1, 8, 12, 16, 23, 27) are used; the % is the app's own readout     |
 | Sky chart (step 4)             | `/learn/4`, the chart itself; the app's axis text is cropped and re-labelled at a readable size |
 | Sunlight bars (step 5)         | drawn from `apps/web/public/lesson-pack/v1/compare/default.json` (`sun_illuminated_fraction`)   |
 | "Textbook" phase diagram       | drawn: flat 2D diagram in textbook style (the poster's 2D → 3D idea); phases checked by hand    |
