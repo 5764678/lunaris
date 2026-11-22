@@ -29,8 +29,8 @@ export const P2: React.FC = () => {
   const f = useCurrentFrame();
   const W = 1240, H = 942; // frame; capture crop is 1000 x 760 CSS
   const base = W / 1000;
-  const z = ramp(f, 0, 420, base, base * 1.2, E.linear);
-  const c = { cx: ramp(f, 0, 420, 500, 470, E.linear), cy: ramp(f, 0, 420, 380, 360, E.linear), z };
+  const z = ramp(f, 0, 420, base, base * 1.12, E.linear);
+  const c = { cx: ramp(f, 0, 420, 500, 445, E.linear), cy: ramp(f, 0, 420, 380, 352, E.linear), z }; // keeps % (y~25) and slider (y~660) in view
   const dayF = (d: number) => 24 + d * 19; // one day every 19 f from 0.8 s; full Moon (index 15) lands at 10.3 s
   const inP = ramp(f, 0, 16, 0, 1, E.outCubic);
   return (
@@ -96,9 +96,9 @@ export const P5: React.FC = () => {
   const t = p5.target; const tx = t.x + t.w / 2, ty = t.y + t.h / 2;
   const evY = p5.evidence.y;
   const keys: Key[] = [
-    { f: 0, cx: 1080, cy: p5.table.y + 300, z: 1.12 },
-    { f: 100, cx: 1110, cy: p5.table.y + 290, z: 1.22 },
-    { f: 150, cx: 1110, cy: p5.table.y + 290, z: 1.22 }, // freeze: camera holds
+    { f: 0, cx: 1030, cy: p5.table.y + 300, z: 1.1 },
+    { f: 100, cx: 1090, cy: p5.table.y + 290, z: 1.2 },
+    { f: 150, cx: 1090, cy: p5.table.y + 290, z: 1.2 }, // freeze: camera holds
     { f: 225, cx: 1080, cy: evY - 20, z: 1.26 },
     { f: 360, cx: 1080, cy: evY - 20, z: 1.26 },
     { f: 440, cx: 1080, cy: p5.table.y + 330, z: 1.12 },

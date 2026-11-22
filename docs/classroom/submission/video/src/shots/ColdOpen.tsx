@@ -46,8 +46,8 @@ export const ColdOpen: React.FC = () => {
         <path d="M 240 44 L 284 40 L 282 86" fill="none" stroke={C.sun} strokeWidth={10} strokeLinecap="round" strokeLinejoin="round" opacity={arrow > 0.95 ? 1 : 0} />
       </svg>
       <div style={{ position: 'absolute', left: 1000, top: 790, width: 860, fontFamily: HEAD, fontWeight: 600, color: '#fff', lineHeight: 1.12 }}>
-        <BlurLine words={['หนังสือ', 'สอนระบบ', <span style={{ color: C.sun }}>3 มิติ</span>]} from={30} size={66} style={{ columnGap: 0 }} />
-        <BlurLine words={['ด้วยภาพแบน', '2 มิติ']} from={52} size={66} style={{ columnGap: '0.28em' }} />
+        <BlurLine words={['หนังสือ', 'สอนระบบ ', <span style={{ color: C.sun }}>3 มิติ</span>]} from={30} size={66} />
+        <BlurLine words={['ด้วยภาพแบน ', '2 มิติ']} from={52} size={66} />
       </div>
     </AbsoluteFill>
   );

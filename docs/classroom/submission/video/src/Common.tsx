@@ -31,7 +31,7 @@ export const BlurLine: React.FC<{
   const g = gap ?? (sub ? 0.04 : words.length > 8 ? 0.035 : 0.055);
   const dy = (sub ? 0.93 : 40 / 34) * size; // sub: demo 26/14 em halved, it reads as a slide at 1080p
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '0.28em', fontSize: size, ...style }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 0, whiteSpace: 'pre', fontSize: size, ...style }}>
       {words.map((w, i) => {
         const p = seg(tLine, i * g, i * g + 0.32, E.outCubic);
         return (
@@ -65,8 +65,8 @@ export const PeriodTag: React.FC<{ n: number; label: string; title?: string; fro
         fontSize: 64, lineHeight: '96px', textAlign: 'center', boxShadow: '0 0 0 9px rgba(242,180,58,.22), 0 10px 30px rgba(0,0,0,.45)',
         transform: `scale(${lerp(p, 0.6, 1)})`, opacity: p }}>{n}</div>
       <div style={{ opacity: labelOut, textShadow: '0 2px 12px rgba(0,0,0,.6)' }}>
-        <BlurLine words={label.split(' ')} from={from + 6} span={40} size={34} style={{ fontFamily: HEAD, fontWeight: 500, color: C.sun, lineHeight: 1.15 }} />
-        {title ? <BlurLine words={title.split('|')} from={from + 16} span={44} size={40} style={{ fontFamily: HEAD, fontWeight: 600, color: '#fff', lineHeight: 1.2, whiteSpace: 'nowrap', columnGap: 0 }} /> : null}
+        <BlurLine words={label.split(/(?<= )/)} from={from + 6} span={40} size={34} style={{ fontFamily: HEAD, fontWeight: 500, color: C.sun, lineHeight: 1.15 }} />
+        {title ? title.split('|').map((t, i) => <BlurLine key={i} words={[t]} from={from + 16 + i * 6} span={40} size={40} style={{ fontFamily: HEAD, fontWeight: 600, color: '#fff', lineHeight: 1.2 }} />) : null}
       </div>
     </div>
   );

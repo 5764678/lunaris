@@ -27,9 +27,9 @@ export const Hook: React.FC = () => {
         <span style={{ display: 'inline-block', fontFamily: HEAD, fontWeight: 500, fontSize: 38, lineHeight: 1, padding: '12px 26px 14px', borderRadius: 40,
           background: C.sun, color: '#201505', opacity: chip, transform: `translateY(${(1 - chip) * 20}px)` }}>โจทย์จริงจากอวกาศ</span>
         <BlurLine words={['ฉางเอ๋อ 7']} from={14} span={40} size={124} style={{ fontFamily: HEAD, fontWeight: 600, color: '#fff', lineHeight: 1.1, marginTop: 26 }} />
-        <BlurLine words={['เลื่อนไป', 'ปี 2570']} from={30} span={44} size={124} style={{ fontFamily: HEAD, fontWeight: 600, color: C.sun, lineHeight: 1.1, columnGap: '0.2em' }} />
-        <BlurLine sub words={['อุปกรณ์ชิ้นแรกของไทย', 'ที่จะไปดวงจันทร์', 'ต้องรอ']} from={60} span={50} size={42} style={{ fontFamily: BODY, color: C.soft, lineHeight: 1.4, marginTop: 30 }} />
-        <BlurLine sub words={['เพราะเงื่อนไขแสงอาทิตย์', 'ที่จุดลงจอด', 'ไม่เป็นไปตามที่กำหนด']} from={74} span={50} size={42} style={{ fontFamily: BODY, color: C.soft, lineHeight: 1.4 }} />
+        <BlurLine words={['เลื่อนไป', 'ปี 2570']} from={30} span={44} size={124} style={{ fontFamily: HEAD, fontWeight: 600, color: C.sun, lineHeight: 1.1 }} />
+        <BlurLine sub words={['อุปกรณ์ชิ้นแรกของไทย', 'ที่จะไปดวงจันทร์ ', 'ต้องรอ']} from={60} span={50} size={42} style={{ fontFamily: BODY, color: C.soft, lineHeight: 1.4, marginTop: 30 }} />
+        <BlurLine sub words={['เพราะเงื่อนไข', 'แสงอาทิตย์ที่จุดลงจอด', 'ไม่เป็นไปตามที่กำหนด']} from={74} span={50} size={42} style={{ fontFamily: BODY, color: C.soft, lineHeight: 1.4 }} />
         <BlurLine sub words={['ที่มา: สดร. 24 ส.ค. 2569']} from={100} span={30} size={34} style={{ fontFamily: BODY, color: C.cap, marginTop: 22 }} />
       </div>
       <div style={{ position: 'absolute', left: 0, right: 0, top: 360, textAlign: 'center' }}>
