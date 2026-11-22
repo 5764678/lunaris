@@ -1,6 +1,6 @@
 // Captures real LUNARIS output from the live demo for the video (1920x1080 viewport, deviceScaleFactor 2).
 // Run from the repo root:  node docs/classroom/submission/video/scripts/capture.js [what...]
-//   what: stills | p2 | globe | sky | p5   (default: all)
+//   what: stills | p2 | globe | sky | p5 | orbit   (default: all)
 // Output: docs/classroom/submission/video/public/captures/ (not committed; regenerate with this script).
 // The free host sleeps: the first page load can take a minute; the script waits for the API.
 const { chromium } = require('playwright');
@@ -73,12 +73,11 @@ const hideChrome = (p) =>
     await hideHud(); await p.waitForTimeout(800);
     await canvas.screenshot({ path: path.join(OUT, 'globe-southpolar.png') });
     if (want('globe')) {
-      // the camera eases between presets; sample it at ~10 fps (frames are retimed in Remotion)
+      // the preset switch is instant (no eased camera), so P4's motion comes from 'orbit' below
       await showHud();
       await p.getByRole('radio', { name: 'Pole', exact: true }).click();
-      await hideHud();
-      for (let i = 0; i < 60; i++) { await canvas.screenshot({ path: path.join(OUT, `globe-move-${pad(i)}.png`) }); }
-      await p.waitForTimeout(4000);
+      await p.waitForTimeout(6000);
+      await hideHud(); await p.waitForTimeout(800);
       await canvas.screenshot({ path: path.join(OUT, 'globe-pole.png') });
     }
     await p.context().close();
@@ -93,21 +92,58 @@ const hideChrome = (p) =>
     await p.context().close();
   }
 
-  // /learn/5: the table, then one number's evidence opened.
+  // /learn/5: full-page captures (scroll container unlocked) before and after tapping 88.3 %,
+  // plus the button and evidence-panel boxes in page coordinates for the PageCam keys.
   if (want('p5')) {
     const p = await newPage(b);
     await open(p, '/learn/5');
     await hideChrome(p);
-    const table = p.locator('main table').first();
-    await table.scrollIntoViewIfNeeded();
-    await p.waitForTimeout(800);
-    await p.screenshot({ path: path.join(OUT, 'p5-table.png'), fullPage: false });
+    await p.addStyleTag({ content: 'html, body, body * { height: auto !important; max-height: none !important; overflow: visible !important; } aside { display: none !important; }' });
+    await p.waitForTimeout(1500);
     const num = p.getByRole('button', { name: '88.3 %' }).first();
-    const bb = await num.boundingBox();
-    fs.writeFileSync(path.join(OUT, 'p5-layout.json'), JSON.stringify({ target: '88.3 %', box: bb, scrollY: await p.evaluate(() => scrollY) }, null, 2));
+    const box = async (loc) => loc.evaluate((e) => { const r = e.getBoundingClientRect(); return { x: r.x + scrollX, y: r.y + scrollY, w: r.width, h: r.height }; });
+    const table = await box(p.locator('main table').first());
+    const target = await box(num);
+    await p.screenshot({ path: path.join(OUT, 'p5-page-before.png'), fullPage: true });
     await num.click();
     await p.waitForTimeout(1500);
-    await p.screenshot({ path: path.join(OUT, 'p5-evidence.png'), fullPage: false });
+    const ev = await p.evaluate(() => {
+      const s = [...document.querySelectorAll('span')].find((e) => e.textContent.trim() === 'ชนิด:');
+      let el = s; while (el && el.parentElement && el.getBoundingClientRect().width < 900) el = el.parentElement;
+      const r = el.getBoundingClientRect(); return { x: r.x + scrollX, y: r.y + scrollY, w: r.width, h: r.height };
+    });
+    await p.screenshot({ path: path.join(OUT, 'p5-page-after.png'), fullPage: true });
+    const pageH = await p.evaluate(() => document.documentElement.scrollHeight);
+    fs.writeFileSync(path.join(OUT, 'p5-layout.json'), JSON.stringify({ pageW: 1920, pageH, table, target, evidence: ev }, null, 2));
+    await p.context().close();
+  }
+
+  // /: orbit the globe with real mouse drags from the South polar view toward the pole.
+  if (want('orbit')) {
+    const p = await newPage(b);
+    await open(p, '/');
+    for (const lab of ['Labels', 'Sites', 'Graticule', 'Grid']) {
+      const bt = p.getByRole('button', { name: lab, exact: true }).first();
+      if ((await bt.count()) && (await bt.getAttribute('data-state')) === 'on') await bt.click();
+    }
+    await p.getByRole('radio', { name: 'South polar', exact: true }).click();
+    await p.waitForTimeout(8000);
+    const canvas = p.locator('canvas').first();
+    const bb = await canvas.boundingBox();
+    const cx = bb.x + bb.width / 2, cy = bb.y + bb.height / 2;
+    await p.evaluate(() => {
+      const c = document.querySelector('canvas'); const sec = c.closest('section');
+      const keep = new Set(); let q = c; while (q && q !== sec) { keep.add(q); q = q.parentElement; }
+      sec.querySelectorAll('*').forEach((e) => { if (!keep.has(e) && !e.contains(c) && !c.contains(e)) e.style.visibility = 'hidden'; });
+    });
+    const steps = Number(process.env.ORBIT_STEPS || 48), dy = Number(process.env.ORBIT_DY || 5);
+    await p.mouse.move(cx, cy); await p.mouse.down();
+    for (let i = 0; i <= steps; i++) {
+      if (i > 0) await p.mouse.move(cx, cy - i * dy, { steps: 2 });
+      await p.waitForTimeout(250);
+      await canvas.screenshot({ path: path.join(OUT, `globe-orbit-${pad(i)}.png`) });
+    }
+    await p.mouse.up();
     await p.context().close();
   }
 

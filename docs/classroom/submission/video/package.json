@@ -1,0 +1,24 @@
+{
+  "name": "lunaris-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Graphics timeline for the LUNARIS presentation video (Remotion).",
+  "scripts": {
+    "prep": "node scripts/fetch-fonts.js && node scripts/copy-assets.js && node scripts/extract-diagram.js && node scripts/build-data.js && node scripts/capture.js",
+    "check-diagram": "node scripts/extract-diagram.js --check",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Graphics out/graphics-1080p.mp4 --codec h264 --crf 20",
+    "animatic": "remotion render src/index.ts Animatic out/animatic-720p.mp4 --codec h264 --crf 26 --scale 0.6667",
+    "still": "remotion still src/index.ts Graphics"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.484",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "remotion": "4.0.484"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "typescript": "6.0.3"
+  }
+}

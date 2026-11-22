@@ -3,3 +3,6 @@ out/
 fonts/
 public/captures/
 .remotion/
+public/*.png
+public/*.jpg
+public/fonts/
