@@ -8,7 +8,7 @@ TOTAL=4950; STEP=900
 DIR=out/chunks-$COMP; mkdir -p "$DIR"; : > "$DIR/list.txt"
 for ((s=0; s<TOTAL; s+=STEP)); do
   e=$(( s+STEP-1 < TOTAL-1 ? s+STEP-1 : TOTAL-1 ))
-  f="$DIR/part-$(printf %05d $s).mp4"
+  f="$DIR/part-$(printf %05d $s).${OUT##*.}"
   if [ ! -s "$f" ]; then
     for try in 1 2 3; do
       if npx remotion render src/index.ts "$COMP" "$f" --frames=$s-$e --muted --concurrency 1 --timeout 120000 --log error "$@" 2>&1 | grep -v -i "memory\|docker\|lower amount"; then :; fi
@@ -20,5 +20,6 @@ for ((s=0; s<TOTAL; s+=STEP)); do
   echo "file '$(basename "$f")'" >> "$DIR/list.txt"
   echo "chunk $s-$e ok"
 done
-ffmpeg -v error -f concat -safe 0 -i "$DIR/list.txt" -c copy -movflags +faststart -y "$OUT"
+if [ "${OUT##*.}" = mp4 ]; then MF=(-movflags +faststart); else MF=(); fi
+ffmpeg -v error -f concat -safe 0 -i "$DIR/list.txt" -c copy "${MF[@]}" -y "$OUT"
 ffprobe -v error -show_entries stream=width,height,r_frame_rate,nb_frames:format=duration,size -of compact "$OUT"
