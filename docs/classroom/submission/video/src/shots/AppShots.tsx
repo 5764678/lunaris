@@ -76,7 +76,7 @@ export const P4: React.FC<{ orbitFrames: number }> = ({ orbitFrames }) => {
             <Img src={staticFile('captures/sky-chart.png')} style={{ position: 'absolute', width: 976, height: 320 }} />
           </PageView>
         </Frame>
-        <div style={{ position: 'absolute', right: 180, top: 872, display: 'flex', gap: 44, fontFamily: BODY, fontSize: 34, color: C.cap }}>
+        <div style={{ position: 'absolute', right: 180, top: 264, display: 'flex', gap: 44, fontFamily: BODY, fontSize: 34, color: C.cap }}>
           {[['ดวงอาทิตย์', C.sun], ['โลก', C.earth], ['ขอบฟ้าจริง (1 เดือน)', '#8b96a3']].map(([t, col]) => (
             <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 14 }}><i style={{ width: 20, height: 20, borderRadius: 10, background: col, display: 'inline-block' }} />{t}</span>
           ))}
