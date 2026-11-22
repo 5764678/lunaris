@@ -34,7 +34,7 @@ the white panel, any box whose content overflows, and a word count.
 | ------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Moon globe (hero, top right)   | LUNARIS Overview page, "South polar" view, labels, sites and grid off; NASA SVS surface         |
 | Pole terrain (hero background) | LUNARIS Overview page, "Pole terrain" view; NASA LRO LOLA relief                                |
-| Eight Moon phases (step 2)     | `/learn/2`, Moon canvas at days 1, 5, 8, 12, 16, 19, 23, 27; the % is the app's own readout     |
+| Eight Moon phases (step 2)     | `/learn/2`, Moon canvas; six of the eight captures (days 1, 8, 12, 16, 23, 27) are used; the % is the app's own readout     |
 | Sky chart (step 4)             | `/learn/4`, the chart itself; the app's axis text is cropped and re-labelled at a readable size |
 | Sunlight bars (step 5)         | drawn from `apps/web/public/lesson-pack/v1/compare/default.json` (`sun_illuminated_fraction`)   |
 | "Textbook" phase diagram       | drawn: flat 2D diagram in textbook style (the poster's 2D → 3D idea); phases checked by hand    |
@@ -46,6 +46,12 @@ the white panel, any box whose content overflows, and a word count.
 
 All app captures were taken from https://lunaris-demo.onrender.com on 22 November 2026 with
 Playwright at device scale factor 3 (the Overview page at 2). No stock or AI-generated images.
+
+## Text sizes
+
+Minimums at A0, set by the TD after the user's review (1 template px = 0.613 pt): body and labels
+28 pt, captions, legends and chart axes 24 pt, the contact line 26 pt, footer small print 20 pt.
+`render.js` measures every text run (SVG labels at their rendered scale) and prints the smallest.
 
 ## Pre-print checks
 

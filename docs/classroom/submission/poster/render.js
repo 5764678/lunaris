@@ -56,6 +56,21 @@ if (need.some((n) => !fs.existsSync(path.join(fdir, n + '.ttf')))) {
     const txt = [...document.querySelectorAll('#sheet > *:not(#foot):not(#level)')].map((e) => e.innerText).join(' ');
     const words = [...seg.segment(txt)].filter((s) => s.isWordLike).length;
     out.push(`WORDS (excl. footer, Intl.Segmenter th): ${words}`);
+    // smallest text actually set, in pt at A0 (1 template px = 0.6127 pt); SVG text at its rendered scale
+    const PT = (841 / 3889) * 72 / 25.4, sheetScale = 3178.583 / 3889, sizes = [];
+    const walker = document.createTreeWalker(document.getElementById('sheet'), NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const n = walker.currentNode, el = n.parentElement;
+      if (!n.textContent.trim() || el.closest('#stars')) continue;
+      let px = parseFloat(getComputedStyle(el).fontSize);
+      const svgText = el.closest('text');
+      if (svgText) px = px * svgText.getScreenCTM().a / sheetScale;
+      sizes.push({ pt: px * PT, where: (el.closest('#foot') ? 'footer: ' : '') + n.textContent.trim().slice(0, 28) });
+    }
+    sizes.sort((a, b) => a.pt - b.pt);
+    const nonFoot = sizes.filter((x) => !x.where.startsWith('footer'));
+    out.push('SMALLEST overall: ' + sizes.slice(0, 3).map((x) => x.pt.toFixed(1) + 'pt "' + x.where + '"').join(' | '));
+    out.push('SMALLEST outside footer: ' + nonFoot.slice(0, 4).map((x) => x.pt.toFixed(1) + 'pt "' + x.where + '"').join(' | '));
     // effective resolution of each raster at A0 (1 template px = 841/3889 mm)
     const mmPerCss = 841 / 3178.583;
     document.querySelectorAll('#sheet img').forEach((im) => {
