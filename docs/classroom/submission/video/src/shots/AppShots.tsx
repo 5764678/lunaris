@@ -99,8 +99,10 @@ export const P5: React.FC = () => {
     { f: 0, cx: 1030, cy: p5.table.y + 300, z: 1.1 },
     { f: 100, cx: 1090, cy: p5.table.y + 290, z: 1.2 },
     { f: 150, cx: 1090, cy: p5.table.y + 290, z: 1.2 }, // freeze: camera holds
-    { f: 225, cx: 1080, cy: evY - 20, z: 1.26 },
-    { f: 360, cx: 1080, cy: evY - 20, z: 1.26 },
+    // TD 22 Nov: stop above the engine's English text. Frame bottom edge at ~evY + 80 CSS px, which cuts
+    // the first English line; above it: panel title, value, "ชนิด: การคำนวณ" and the app's Thai note.
+    { f: 225, cx: 1065, cy: evY + 80 - H / 2 / 1.3, z: 1.3 },
+    { f: 360, cx: 1065, cy: evY + 80 - H / 2 / 1.3, z: 1.3 },
     { f: 440, cx: 1080, cy: p5.table.y + 330, z: 1.12 },
   ];
   const c = cam(f, keys);
