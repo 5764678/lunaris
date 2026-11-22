@@ -25,7 +25,6 @@ export const en: Messages = {
     next: "Next step",
     allSteps: "All steps",
     open: "Open",
-    draftNote: "The Thai text is a draft waiting for the team and the advisor teacher to review.",
     steps: {
       p1: { phase: "Engage", title: "Why does the Moon change shape?" },
       p2: { phase: "Explore", title: "One lunation of phases" },
