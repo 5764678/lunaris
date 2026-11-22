@@ -11,7 +11,9 @@ organisers' student template (`../poster-template-students.pdf`).
 ## Fill in before submitting
 
 The names and contacts are placeholders and must not be committed: `{{INVENTORS}}`,
-`{{ADVISOR}}`, `{{PHONE}}`, `{{EMAIL}}`. Replace them in a local copy of `poster.html`, run
+`{{ADVISOR}}`, `{{PHONE}}`, `{{EMAIL}}`. `{{STUDENT_VOICE}}` is the students' own first-person
+line (30–40 words, supplied by the TD); its box holds about 240 Thai characters, tested with a
+filler line of that length. Replace them in a local copy of `poster.html`, run
 `render.js`, and upload that PDF. Scan the QR code with two phones first.
 
 ## Rebuild
@@ -35,6 +37,7 @@ the white panel, any box whose content overflows, and a word count.
 | Eight Moon phases (step 2)     | `/learn/2`, Moon canvas at days 1, 5, 8, 12, 16, 19, 23, 27; the % is the app's own readout     |
 | Sky chart (step 4)             | `/learn/4`, the chart itself; the app's axis text is cropped and re-labelled at a readable size |
 | Sunlight bars (step 5)         | drawn from `apps/web/public/lesson-pack/v1/compare/default.json` (`sun_illuminated_fraction`)   |
+| "Textbook" phase diagram       | drawn: flat 2D diagram in textbook style (the poster's 2D → 3D idea); phases checked by hand    |
 | Bulb-and-ball model (step 1)   | drawn                                                                                           |
 | Lit-half diagram (step 3)      | drawn: each Moon lit on the Sun side; the "Earth's shadow" idea crossed out                     |
 | Icons, star dots               | drawn (stars are decoration only)                                                               |
@@ -43,6 +46,12 @@ the white panel, any box whose content overflows, and a word count.
 
 All app captures were taken from https://lunaris-demo.onrender.com on 22 November 2026 with
 Playwright at device scale factor 3 (the Overview page at 2). No stock or AI-generated images.
+
+## Pre-print checks
+
+`render.js` also prints the effective resolution of every image at A0 (lowest: terrain at about
+150 PPI; the template raster itself is about 117 PPI). Text contrast (WCAG) is at least 4.5:1
+everywhere and at least 6:1 for body text.
 
 ## Claims and numbers
 
@@ -58,4 +67,5 @@ Playwright at device scale factor 3 (the Overview page at 2). No stock or AI-gen
 | ≤ 2 s on 49 principal phases                                     | `docs/SCIENCE.md`, phase validation table (max 1.98 s)                 |
 | ≤ 0.002″ Sun and Earth direction                                 | `docs/SCIENCE.md` §5.2 (Earth 0.0017″; one site, 25 samples)           |
 | No tides; phases geocentric; not yet tried with students         | `docs/classroom/kit/README.md`, `../poster-content.md`                 |
+| "Textbooks teach a 3D system with flat 2D pictures"               | the students' account, via the TD (22 Nov 2026)                |
 | Highlights 1–4, users, use and benefits                          | `../entry-form-part2.md` sections 5–7                                  |

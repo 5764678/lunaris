@@ -59,20 +59,32 @@ html, body { width: 841mm; height: 1189mm; overflow: hidden; background: #fff; }
 #hero .terrain { position: absolute; left: -60px; top: 1225px; width: 3210px;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 100%);
           mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 100%); }
-#hero .globe { position: absolute; left: 1905px; top: 40px; width: 1080px; height: 1080px; }
+#hero .globe { position: absolute; left: 2030px; top: 90px; width: 960px; height: 960px; }
 #stars { position: absolute; inset: 0; }
 
-#hook { position: absolute; left: 90px; top: 80px; width: 1720px; }
+#hook { position: absolute; left: 90px; top: 1745px; width: 2000px; }
 .chip { display: inline-block; font-family: var(--head); font-weight: 500; font-size: 40px; line-height: 1;
   padding: 14px 26px 16px; border-radius: 40px; }
 #hook .chip { background: var(--sun); color: #201505; }
-#hook .big { margin-top: 34px; font-family: var(--head); font-weight: 600; font-size: 168px; line-height: 1.02; color: #fff; }
+#hook .big { margin-top: 22px; font-family: var(--head); font-weight: 600; font-size: 128px; line-height: 1.02; color: #fff; }
 #hook .big span { color: var(--sun); }
-#hook .txt { margin-top: 30px; font-size: 50px; line-height: 1.42; color: #cfd6de; width: 1640px; }
+#hook .txt { margin-top: 20px; font-size: 46px; line-height: 1.4; color: #dde3e9; width: 1860px; }
 #hook .src { margin-top: 16px; font-size: 34px; color: #8b96a3; }
 #hook .ask { margin-top: 40px; font-family: var(--head); font-weight: 500; font-size: 62px; line-height: 1.2; color: #fff; }
 #hook .ask em { font-style: normal; color: var(--sun); }
 
+.scrim { position: absolute; left: 0; top: 1700px; width: 2400px; height: 560px;
+  background: linear-gradient(90deg, rgba(6,8,11,.92) 0%, rgba(6,8,11,.8) 55%, rgba(6,8,11,0) 100%); }
+#paper { position: absolute; left: 110px; top: 70px; width: 900px; height: 960px; background: #f4eddd; border-radius: 18px;
+  transform: rotate(-3deg); box-shadow: 0 30px 60px rgba(0,0,0,.55); padding: 34px 50px; }
+#paper .pl { font-family: var(--head); font-weight: 600; font-size: 44px; color: #2a2622; margin-bottom: 14px; }
+#idea { position: absolute; left: 1090px; top: 90px; width: 900px; }
+#idea .big { font-family: var(--head); font-weight: 600; font-size: 96px; line-height: 1.08; color: #fff; }
+#idea .big span { color: var(--sun); }
+#idea .txt { margin-top: 26px; font-size: 48px; line-height: 1.4; color: #dde3e9; }
+#voice { margin-top: 30px; height: 440px; border-left: 10px solid var(--sun); padding: 6px 0 0 34px; overflow: hidden; }
+#voice p { font-size: 42px; line-height: 1.4; color: #fff; }
+#voice cite { display: block; margin-top: 10px; font-style: normal; font-size: 34px; color: var(--sun); }
 .globe-tag { position: absolute; font-size: 34px; color: #8b96a3; text-align: right; line-height: 1.3; }
 
 .zone { position: absolute; font-family: var(--head); font-weight: 500; font-size: 46px; color: #fff;
@@ -187,22 +199,66 @@ html, body { width: 841mm; height: 1189mm; overflow: hidden; background: #fff; }
     <img class="terrain" src="img/terrain.jpg" alt="">
     <img class="globe" src="img/globe.png" alt="">
     
+
+    <!-- centrepiece: textbook 2D -> LUNARIS 3D -->
+    <div id="paper">
+      <p class="pl">ในหนังสือเรียน · ภาพแบน 2 มิติ</p>
+      <svg viewBox="0 0 800 800" width="800" height="800">
+<line x1="8" y1="150" x2="70" y2="150" stroke="#c98a12" stroke-width="5"/><path d="M58 139 L72 150 L58 161" fill="none" stroke="#c98a12" stroke-width="5"/>
+<line x1="8" y1="280" x2="70" y2="280" stroke="#c98a12" stroke-width="5"/><path d="M58 269 L72 280 L58 291" fill="none" stroke="#c98a12" stroke-width="5"/>
+<line x1="8" y1="520" x2="70" y2="520" stroke="#c98a12" stroke-width="5"/><path d="M58 509 L72 520 L58 531" fill="none" stroke="#c98a12" stroke-width="5"/>
+<line x1="8" y1="650" x2="70" y2="650" stroke="#c98a12" stroke-width="5"/><path d="M58 639 L72 650 L58 661" fill="none" stroke="#c98a12" stroke-width="5"/>
+<text x="8" y="100" font-family="Kanit" font-weight="500" font-size="34" fill="#a06a08">แสงอาทิตย์</text>
+<circle cx="430" cy="400" r="225" fill="none" stroke="#2a2622" stroke-width="3" stroke-dasharray="10 9"/>
+<circle cx="430" cy="400" r="46" fill="#fff" stroke="#2a2622" stroke-width="4"/><path d="M430 354 A46 46 0 0 1 430 446 Z" fill="#2a2622"/>
+<text x="430" y="482" text-anchor="middle" font-family="Kanit" font-weight="500" font-size="32" fill="#2a2622">โลก</text>
+<circle cx="655.0" cy="400.0" r="28" fill="#2a2622"/><path d="M655.0 372.0 A28 28 0 0 0 655.0 428.0 Z" fill="#fff"/><circle cx="655.0" cy="400.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(765.0,400.0)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A30.00 30 0 0 1 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="589.1" cy="240.9" r="28" fill="#2a2622"/><path d="M589.1 212.9 A28 28 0 0 0 589.1 268.9 Z" fill="#fff"/><circle cx="589.1" cy="240.9" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(666.9,163.1)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 1 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="430.0" cy="175.0" r="28" fill="#2a2622"/><path d="M430.0 147.0 A28 28 0 0 0 430.0 203.0 Z" fill="#fff"/><circle cx="430.0" cy="175.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(430.0,65.0)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A0.00 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="270.9" cy="240.9" r="28" fill="#2a2622"/><path d="M270.9 212.9 A28 28 0 0 0 270.9 268.9 Z" fill="#fff"/><circle cx="270.9" cy="240.9" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(193.1,163.1)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="205.0" cy="400.0" r="28" fill="#2a2622"/><path d="M205.0 372.0 A28 28 0 0 0 205.0 428.0 Z" fill="#fff"/><circle cx="205.0" cy="400.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(95.0,400.0)"><circle r="30" fill="#2a2622"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="270.9" cy="559.1" r="28" fill="#2a2622"/><path d="M270.9 531.1 A28 28 0 0 0 270.9 587.1 Z" fill="#fff"/><circle cx="270.9" cy="559.1" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(193.1,636.9)"><circle r="30" fill="#2a2622"/><path d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="430.0" cy="625.0" r="28" fill="#2a2622"/><path d="M430.0 597.0 A28 28 0 0 0 430.0 653.0 Z" fill="#fff"/><circle cx="430.0" cy="625.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(430.0,735.0)"><circle r="30" fill="#2a2622"/><path d="M0 -30 A30 30 0 0 1 0 30 A0.00 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="589.1" cy="559.1" r="28" fill="#2a2622"/><path d="M589.1 531.1 A28 28 0 0 0 589.1 587.1 Z" fill="#fff"/><circle cx="589.1" cy="559.1" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(666.9,636.9)"><circle r="30" fill="#2a2622"/><path d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 1 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+</svg>
+    </div>
+    <div id="idea">
+      <p class="big">หนังสือสอนระบบ <span>3 มิติ</span><br>ด้วยภาพแบน 2 มิติ</p>
+      <p class="txt">LUNARIS ให้นักเรียนสร้างระบบขึ้นใหม่<br>แล้วหมุนดูเอง</p>
+      <blockquote id="voice"><p>“{{STUDENT_VOICE}}”</p><cite>คณะผู้ประดิษฐ์</cite></blockquote>
+    </div>
+    <svg class="abs" style="left:1760px; top:900px" width="420" height="200" viewBox="0 0 420 200">
+      <path d="M 10 150 C 140 190, 300 150, 380 50" fill="none" stroke="#f2b43a" stroke-width="10" stroke-linecap="round"/>
+      <path d="M 340 48 L 384 44 L 382 92" fill="none" stroke="#f2b43a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="globe-tag" style="left:2090px; top:30px; width:900px; text-align:right">ใน LUNARIS · 3 มิติ แสงจากตำแหน่งดวงอาทิตย์จริง</p>
+
+    <!-- hook, standing on the real south-pole terrain -->
+    <div class="scrim"></div>
     <div id="hook">
       <span class="chip">โจทย์จริงจากอวกาศ</span>
-      <div class="big">ฉางเอ๋อ 7<br><span>เลื่อนไปปี 2570</span></div>
+      <div class="big">ฉางเอ๋อ 7 <span>เลื่อนไปปี 2570</span></div>
       <p class="txt">อุปกรณ์ชิ้นแรกของไทยที่จะไปดวงจันทร์ (CE-7 MATCH) ต้องรอ เพราะเงื่อนไขแสงอาทิตย์ที่จุดลงจอดใกล้ปล่องแชคเคิลตันไม่เป็นไปตามที่กำหนด</p>
       <p class="src">ที่มา: สดร. 24 ส.ค. 2569</p>
-      <p class="ask">แสงอาทิตย์ส่องดวงจันทร์อย่างไร? <em>นักเรียนหาคำตอบเองใน 6 คาบ</em></p>
     </div>
 
     <!-- path linking the six steps -->
     <svg class="abs" style="left:0;top:0" width="3090" height="2650" viewBox="0 0 3090 2650">
-      <path d="M 182 1236 L 2492 1236 M 2700 1690 C 2720 1960, 1600 1900, 1100 2030 S 700 2150 700 2300"
+      <path d="M 182 1236 L 2492 1236 M 2700 1690 C 2750 2000, 2900 2200, 2500 2245 L 900 2255 C 760 2258, 700 2270, 700 2300"
             fill="none" stroke="#f2b43a" stroke-width="7" stroke-dasharray="2 24" stroke-linecap="round" opacity=".85"/>
     </svg>
 
-    <div class="zone" style="left:90px; top:1060px; color:#cfe0ff"><i></i>มองจากโลก</div>
-    <div class="zone" style="left:90px; top:2200px; color:#ffe2a8"><i></i>ไปยืนบนดวงจันทร์ · ภูมิประเทศขั้วใต้จริง (LRO LOLA)</div>
+    <div class="zone" style="left:90px; top:1070px; color:#cfe0ff"><i></i>มองจากโลก</div>
+    <div class="zone" style="right:90px; top:1745px; color:#ffe2a8; text-align:right">ไปยืนบนดวงจันทร์<i></i></div>
+    <p class="globe-tag" style="right:90px; top:1815px; width:700px">ภูมิประเทศขั้วใต้จริง (LRO LOLA)</p>
 
     <!-- 1 -->
     <div class="card" style="left:90px; top:1140px; width:690px; height:550px;">
@@ -243,7 +299,7 @@ html, body { width: 841mm; height: 1189mm; overflow: hidden; background: #fff; }
         <figure><img src="img/phase-22.png" alt=""><figcaption>46%</figcaption></figure>
         <figure><img src="img/phase-26.png" alt=""><figcaption>13%</figcaption></figure>
       </div>
-      <p class="cap" style="margin-top:8px">ภาพจริงจาก LUNARIS · ตัวเลข = ส่วนสว่าง</p>
+      <p class="cap" style="margin-top:8px">ภาพจริงจาก LUNARIS · % = ส่วนสว่าง</p>
     </div>
 
     <!-- 3 -->
@@ -288,7 +344,6 @@ html, body { width: 841mm; height: 1189mm; overflow: hidden; background: #fff; }
         <div class="bar"><div class="lb">ยอดเขาใกล้แชคเคิลตัน</div><div class="tr"><div class="fl" style="width:88.3%"></div></div><div class="v">88%</div></div>
         <div class="bar"><div class="lb">สันเขาเชื่อมต่อ</div><div class="tr"><div class="fl dim" style="width:73.5%"></div></div><div class="v">74%</div></div>
         <div class="bar"><div class="lb">เทือกเขามาลาเพิร์ต</div><div class="tr"><div class="fl dim" style="width:46.4%"></div></div><div class="v">46%</div></div>
-        <div class="cap" style="margin-top:4px">+ การมองเห็นโลก · ความลาดชัน</div>
       </div>
     </div>
 
@@ -308,7 +363,7 @@ html, body { width: 841mm; height: 1189mm; overflow: hidden; background: #fff; }
     <div class="kicker">ที่มาของผลงาน</div>
     <div class="ico-row">
       <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="44" fill="#f6f1e7"/><path d="M24 34h20c4 0 4 4 4 4v28s0-4-4-4H24zM72 34H52c-4 0-4 4-4 4v28s0-4 4-4h20z" fill="none" stroke="#a0461e" stroke-width="4" stroke-linejoin="round"/></svg>
-      <p>ข้างขึ้นข้างแรม ม.3 ต้องนึกภาพ 3 ดวงพร้อมกัน</p>
+      <p>ข้างขึ้นข้างแรม ม.3: ระบบ 3 มิติ แต่เรียนจากภาพ 2 มิติ</p>
     </div>
     <div class="ico-row">
       <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="44" fill="#f6f1e7"/><path d="M32 32l32 32M64 32L32 64" stroke="#c0392b" stroke-width="7" stroke-linecap="round"/></svg>
@@ -335,7 +390,7 @@ html, body { width: 841mm; height: 1189mm; overflow: hidden; background: #fff; }
       <div class="part">
         <svg viewBox="0 0 92 92"><rect x="18" y="10" width="56" height="72" rx="6" fill="none" stroke="#a0461e" stroke-width="4"/><path d="M30 30h32M30 44h32M30 58h20" stroke="#a0461e" stroke-width="4" stroke-linecap="round"/></svg>
         <h4><small>ชุดกิจกรรม</small>แผน 6 คาบ</h4>
-        <p>ใบงาน 3 ชุด · <span class="nw">แบบทดสอบ 20 ข้อ</span><br>รูบริก CER · คู่มือครู</p>
+        <p>ใบงาน 3 ชุด<br>แบบทดสอบ 20 ข้อ<br>รูบริก CER · คู่มือครู</p>
       </div>
       <div class="part">
         <svg viewBox="0 0 92 92"><rect x="8" y="16" width="76" height="54" rx="6" fill="none" stroke="#a0461e" stroke-width="4"/><path d="M8 28h76" stroke="#a0461e" stroke-width="4"/><circle cx="46" cy="50" r="12" fill="#f2b43a"/><path d="M34 82h24" stroke="#a0461e" stroke-width="4" stroke-linecap="round"/></svg>

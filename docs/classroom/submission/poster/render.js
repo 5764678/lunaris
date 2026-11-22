@@ -56,6 +56,12 @@ if (need.some((n) => !fs.existsSync(path.join(fdir, n + '.ttf')))) {
     const txt = [...document.querySelectorAll('#sheet > *:not(#foot):not(#level)')].map((e) => e.innerText).join(' ');
     const words = [...seg.segment(txt)].filter((s) => s.isWordLike).length;
     out.push(`WORDS (excl. footer, Intl.Segmenter th): ${words}`);
+    // effective resolution of each raster at A0 (1 template px = 841/3889 mm)
+    const mmPerCss = 841 / 3178.583;
+    document.querySelectorAll('#sheet img').forEach((im) => {
+      const w = im.getBoundingClientRect().width * mmPerCss / 25.4;
+      out.push(`PPI ${im.getAttribute('src')}: ${Math.round(im.naturalWidth / w)}`);
+    });
     return out;
   });
   console.log(report.join('\n'));
