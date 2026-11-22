@@ -1,35 +1,73 @@
-"""Contact sheet: one frame per shot (graphics shots and team slots) with its time range.
-Run from video/: python3 scripts/contact-sheet.py   (renders stills via scripts/stills.mjs first)"""
-import json, subprocess, os
+"""Storyboard contact sheet: one frame per shot (graphics shots and team slots) with its time range.
+
+Run from video/:  python3 scripts/contact-sheet.py   (renders the frames via scripts/stills.mjs)
+"""
+
+import json
+import subprocess
+from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
-tl = json.load(open('timeline.json'))
-rows = []
-for s in tl['segments']:
-    if s['type'] == 'graphics':
-        for sh in s['shots']:
-            pick = sh.get('pick', sh['start'] + 0.62 * (sh['end'] - sh['start']))
-            rows.append((sh['id'], sh['start'], sh['end'], pick, sh['what']))
-    else:
-        rows.append((s['id'], s['start'], s['end'], s['start'] + 0.6 * (s['end'] - s['start']), 'TEAM: ' + s['file']))
-frames = [round(r[3] * 30) for r in rows]
-subprocess.run(['node', 'scripts/stills.mjs', 'Animatic', 'out/sheet'] + [str(f) for f in frames], check=True, stdout=subprocess.DEVNULL)
-font = ImageFont.truetype('fonts/NotoSansThai-500.ttf', 22)
-fontb = ImageFont.truetype('fonts/Kanit-600.ttf', 26)
+
+FPS = 30
 W, H, PAD, LAB, COLS = 480, 270, 16, 74, 4
-n = len(rows); R = (n + COLS - 1) // COLS
-sheet = Image.new('RGB', (COLS * (W + PAD) + PAD, 90 + R * (H + LAB + PAD) + PAD), '#101317')
-d = ImageDraw.Draw(sheet)
-d.text((PAD, 24), 'LUNARIS · storyboard contact sheet · one frame per shot · 2:45 · captions shown as planned', font=fontb, fill='#f2b43a')
-fmt = lambda t: f"{int(t // 60)}:{t % 60:04.1f}"
-for i, (sid, a, b, pick, what) in enumerate(rows):
-    x = PAD + (i % COLS) * (W + PAD); y = 90 + (i // COLS) * (H + LAB + PAD)
-    im = Image.open(f"out/sheet/Animatic-{round(pick * 30):05d}.jpg").resize((W, H))
-    sheet.paste(im, (x, y))
-    d.text((x, y + H + 6), f"{sid}   {fmt(a)}–{fmt(b)}", font=fontb, fill='#ffffff')
-    t = what
-    while font.getlength(t) > W and len(t) > 4: t = t[:-2]
-    if t != what: t = t[:-1] + '…'
-    d.text((x, y + H + 40), t, font=font, fill='#aab4bf')
-os.makedirs('design', exist_ok=True)
-sheet.save('design/storyboard-contact-sheet.jpg', quality=86)
-print('design/storyboard-contact-sheet.jpg', sheet.size, n, 'shots')
+MIN_CHARS = 4
+OUT = Path("design/storyboard-contact-sheet.jpg")
+
+
+def fmt(t: float) -> str:
+    return f"{int(t // 60)}:{t % 60:04.1f}"
+
+
+def shot_rows(tl: dict) -> list[tuple[str, float, float, float, str]]:
+    rows = []
+    for s in tl["segments"]:
+        if s["type"] == "graphics":
+            for sh in s["shots"]:
+                pick = sh.get("pick", sh["start"] + 0.62 * (sh["end"] - sh["start"]))
+                rows.append((sh["id"], sh["start"], sh["end"], pick, sh["what"]))
+        else:
+            pick = s["start"] + 0.6 * (s["end"] - s["start"])
+            rows.append((s["id"], s["start"], s["end"], pick, "TEAM: " + s["file"]))
+    return rows
+
+
+def fit(text: str, font: ImageFont.FreeTypeFont, width: int) -> str:
+    t = text
+    while font.getlength(t) > width and len(t) > MIN_CHARS:
+        t = t[:-2]
+    return t if t == text else t[:-1] + "…"
+
+
+def main() -> None:
+    tl = json.loads(Path("timeline.json").read_text(encoding="utf-8"))
+    rows = shot_rows(tl)
+    frames = [str(round(r[3] * FPS)) for r in rows]
+    # fixed argv, no shell: renders the listed frames of the Animatic composition
+    subprocess.run(  # noqa: S603
+        ["node", "scripts/stills.mjs", "Animatic", "out/sheet", *frames],  # noqa: S607
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+    font = ImageFont.truetype("fonts/NotoSansThai-500.ttf", 22)
+    fontb = ImageFont.truetype("fonts/Kanit-600.ttf", 26)
+    n_rows = (len(rows) + COLS - 1) // COLS
+    size = (COLS * (W + PAD) + PAD, 90 + n_rows * (H + LAB + PAD) + PAD)
+    sheet = Image.new("RGB", size, "#101317")
+    d = ImageDraw.Draw(sheet)
+    title = "LUNARIS · storyboard contact sheet · one frame per shot · 2:45 · captions as planned"
+    d.text((PAD, 24), title, font=fontb, fill="#f2b43a")
+    for i, (sid, a, b, pick, what) in enumerate(rows):
+        x = PAD + (i % COLS) * (W + PAD)
+        y = 90 + (i // COLS) * (H + LAB + PAD)
+        im = Image.open(f"out/sheet/Animatic-{round(pick * FPS):05d}.jpg").resize((W, H))
+        sheet.paste(im, (x, y))
+        d.text((x, y + H + 6), f"{sid}   {fmt(a)}–{fmt(b)}", font=fontb, fill="#ffffff")
+        d.text((x, y + H + 40), fit(what, font, W), font=font, fill="#aab4bf")
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(OUT, quality=86)
+    print(OUT, sheet.size, len(rows), "shots")
+
+
+if __name__ == "__main__":
+    main()
