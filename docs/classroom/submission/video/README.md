@@ -47,8 +47,10 @@ npx remotion render src/index.ts Overlays out/overlays-alpha.webm --codec vp9 --
 npm run studio        # interactive preview
 ```
 
-Renders run at `--concurrency 1`: with several tabs at 1080p the large page captures stall a tab
-and the font loader times out. One tab takes a few minutes for the whole film.
+`npm run render` and `npm run animatic` call `scripts/render-chunks.sh`: 900-frame chunks, each in
+a fresh process at `--concurrency 1` with up to 3 retries, joined with ffmpeg's concat demuxer
+(no re-encode). A single long render stalls when Remotion recycles its tab mid-render (around
+frame 1800 here) and the new tab's font load never returns.
 
 QA: `node scripts/stills.mjs Graphics out/qa <frame> ...` renders single frames;
 `python3 scripts/contact-sheet.py` rebuilds `design/storyboard-contact-sheet.jpg`.
