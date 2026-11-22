@@ -61,7 +61,6 @@ export function LearnStepPage({ period }: { period: Period }) {
       ) : (
         <Guidance period={period as GuidancePeriod} />
       )}
-      <p className="text-sm text-dim">{t.draftNote}</p>
       <StepPager period={period} />
     </div>
   );
@@ -77,7 +76,6 @@ export function LearnIndexPage() {
         <p className="text-sm leading-relaxed text-muted-foreground">{t.intro}</p>
       </header>
       <StepList current={null} wrap />
-      <p className="text-sm text-dim">{t.draftNote}</p>
     </div>
   );
 }
