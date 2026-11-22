@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>LUNARIS poster</title>
+<!--
+  LUNARIS: A0 poster on the organisers' student template.
+  Coordinates are template raster pixels (3889 × 5500); the whole sheet is scaled to 841 × 1189 mm.
+  White content panel: x 344–3545, y 348–5137. Content stays inside x 400–3490.
+  Personal details are placeholders: {{INVENTORS}} {{ADVISOR}} {{PHONE}} {{EMAIL}}.
+-->
+<style>
+@font-face { font-family: Kanit; font-weight: 300; src: url(fonts/Kanit-300.ttf); }
+@font-face { font-family: Kanit; font-weight: 500; src: url(fonts/Kanit-500.ttf); }
+@font-face { font-family: Kanit; font-weight: 600; src: url(fonts/Kanit-600.ttf); }
+@font-face { font-family: Kanit; font-weight: 700; src: url(fonts/Kanit-700.ttf); }
+@font-face { font-family: NotoThai; font-weight: 400; src: url(fonts/NotoSansThai-400.ttf); }
+@font-face { font-family: NotoThai; font-weight: 500; src: url(fonts/NotoSansThai-500.ttf); }
+@font-face { font-family: NotoThai; font-weight: 700; src: url(fonts/NotoSansThai-700.ttf); }
+
+/* Size floor at A0 (1 template px = 841/3889 mm = 0.613 pt):
+   body/labels >= 46px (28pt) · captions/legends/axes >= 40px (24pt)
+   footer small print >= 33px (20pt) · contact line >= 43px (26pt) */
+@page { size: 841mm 1189mm; margin: 0; }
+:root {
+  --ink: #1c1a17; --ink2: #4a443d; --cream: #f6f1e7; --line: #e4dccd;
+  --rust: #a0461e; --sun: #f2b43a; --earth: #7db3ff; --space: #06080b;
+  --magenta: #e01d61; --cap: #aab4bf;
+  --head: Kanit, NotoThai, sans-serif; --body: NotoThai, Kanit, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 841mm; height: 1189mm; overflow: hidden; background: #fff; }
+#page { position: relative; width: 841mm; height: 1188.8mm; overflow: hidden; }
+#sheet { position: absolute; left: 0; top: 0; width: 3889px; height: 5500px;
+  transform: scale(calc(3178.583 / 3889)); transform-origin: 0 0;
+  background: url(img/template.png) 0 0 / 3889px 5500px no-repeat;
+  font-family: var(--body); color: var(--ink); font-size: 46px; line-height: 1.36; }
+.abs { position: absolute; }
+.nw { white-space: nowrap; }
+
+#level { left: 2935px; top: 196px; width: 510px; text-align: center; font-family: var(--head);
+  font-weight: 600; font-size: 62px; line-height: 1; color: var(--magenta); }
+
+/* title band */
+#title { left: 420px; top: 400px; }
+#title .name { font-family: var(--head); font-weight: 700; font-size: 330px; line-height: .92; letter-spacing: 6px; }
+#title .name b { color: var(--rust); font-weight: 700; }
+#sub { left: 1830px; top: 430px; width: 1050px; }
+#sub .th { white-space: nowrap; font-family: var(--head); font-weight: 600; font-size: 94px; line-height: 1.08; }
+#sub .line { margin-top: 14px; font-size: 46px; line-height: 1.32; color: var(--ink2); }
+#logo { left: 2900px; top: 470px; width: 580px; }
+#logo img { width: 100%; display: block; }
+
+/* hero */
+#hero { left: 400px; top: 790px; width: 3090px; height: 3010px; border-radius: 56px; overflow: hidden;
+  background: var(--space); color: #e9edf2; }
+#stars { position: absolute; inset: 0; }
+#hero .terrain { position: absolute; left: -60px; top: 1290px; width: 3210px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 22%); }
+#hero .globe { position: absolute; left: 2100px; top: 110px; width: 890px; height: 890px; }
+.tag { position: absolute; font-size: 40px; line-height: 1.25; color: var(--cap); }
+
+#paper { position: absolute; left: 100px; top: 60px; width: 910px; height: 990px; background: #f4eddd; border-radius: 18px;
+  transform: rotate(-3deg); box-shadow: 0 30px 60px rgba(0,0,0,.55); padding: 30px 46px; }
+#paper .pl { font-family: var(--head); font-weight: 600; font-size: 54px; line-height: 1.1; color: #2a2622; margin-bottom: 10px; }
+#idea { position: absolute; left: 1080px; top: 80px; width: 960px; }
+#idea .big { font-family: var(--head); font-weight: 600; font-size: 100px; line-height: 1.06; color: #fff; }
+#idea .big .hl { color: var(--sun); }
+#idea .txt { margin-top: 22px; font-size: 54px; line-height: 1.32; color: #dde3e9; }
+#voice { margin-top: 30px; border-left: 10px solid var(--sun); padding: 4px 0 0 34px; }
+#voice p { font-size: 48px; line-height: 1.38; color: #fff; }
+#voice cite { display: block; margin-top: 8px; font-style: normal; font-size: 42px; color: var(--sun); }
+
+.zone { position: absolute; font-family: var(--head); font-weight: 500; font-size: 52px; line-height: 1.1;
+  display: flex; align-items: center; gap: 20px; letter-spacing: 1px; }
+.zone i { display: block; height: 3px; width: 140px; background: currentColor; opacity: .5; }
+
+.card { position: absolute; background: rgba(13,17,23,.88); border: 2px solid rgba(255,255,255,.13);
+  border-radius: 34px; padding: 30px 36px 26px; }
+.card .hd { display: flex; align-items: center; gap: 22px; }
+.num { flex: none; width: 112px; height: 112px; border-radius: 50%; background: var(--sun); color: #1d1405;
+  font-family: var(--head); font-weight: 700; font-size: 76px; line-height: 112px; text-align: center;
+  box-shadow: 0 0 0 10px rgba(242,180,58,.22); }
+.card .st { font-family: var(--head); font-weight: 500; font-size: 46px; color: var(--sun); line-height: 1.08; }
+.card .t { font-family: var(--head); font-weight: 600; font-size: 58px; color: #fff; line-height: 1.1; margin-top: 2px; white-space: nowrap; }
+.card .d { font-size: 46px; line-height: 1.34; color: #dde3e9; }
+.card .cap { font-size: 40px; line-height: 1.28; color: var(--cap); }
+
+.phases { display: flex; gap: 22px; margin-top: 22px; }
+.phases figure { width: 178px; text-align: center; }
+.phases img { width: 178px; height: 178px; display: block; }
+.phases figcaption { font-family: var(--head); font-weight: 500; font-size: 46px; line-height: 1.2; color: #fff; margin-top: 4px; }
+
+.axis { position: relative; height: 54px; font-size: 40px; color: var(--cap); }
+.axis span { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; }
+.axis span:first-child { transform: none; } .axis span:last-child { transform: translateX(-100%); }
+.legend { display: flex; gap: 40px; font-size: 40px; line-height: 1.2; color: var(--cap); margin-top: 6px; }
+.legend span::before { content: ""; display: inline-block; width: 30px; height: 30px; border-radius: 50%;
+  margin-right: 12px; vertical-align: -3px; background: var(--c); }
+
+.bars .ttl { font-size: 40px; color: var(--cap); margin: 18px 0 14px; line-height: 1.2; }
+.bar { display: grid; grid-template-columns: 470px 1fr 110px; align-items: center; gap: 18px; margin-bottom: 16px; }
+.bar .lb { font-size: 46px; line-height: 1.1; color: #fff; white-space: nowrap; }
+.bar .tr { height: 62px; background: rgba(255,255,255,.09); border-radius: 12px; position: relative; }
+.bar .fl { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 12px; background: var(--sun); }
+.bar .fl.dim { background: rgba(242,180,58,.55); }
+.bar .v { text-align: right; font-family: var(--head); font-weight: 600; font-size: 50px; color: #fff; }
+
+.cer { margin-top: 20px; display: grid; gap: 10px; }
+.cer div { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 18px;
+  border: 3px solid rgba(242,180,58,.6); border-radius: 18px; padding: 4px 18px; font-size: 46px; line-height: 1.3; color: #fff; }
+.cer b { font-family: var(--head); font-weight: 700; font-size: 64px; color: var(--sun); line-height: 1.05; text-align: center; }
+
+#hook { position: absolute; left: 90px; top: 1800px; width: 2050px; }
+.chip { display: inline-block; font-family: var(--head); font-weight: 500; font-size: 46px; line-height: 1;
+  padding: 14px 28px 16px; border-radius: 44px; background: var(--sun); color: #201505; }
+#hook .big { margin-top: 18px; font-family: var(--head); font-weight: 600; font-size: 132px; line-height: 1.02; color: #fff; }
+#hook .big span { color: var(--sun); }
+#hook .txt { margin-top: 14px; font-size: 50px; line-height: 1.36; color: #e3e8ed; }
+#hook .src { margin-top: 8px; font-size: 40px; color: var(--cap); }
+.scrim { position: absolute; left: 0; top: 1770px; width: 2500px; height: 520px;
+  background: linear-gradient(90deg, rgba(6,8,11,.93) 0%, rgba(6,8,11,.84) 60%, rgba(6,8,11,0) 100%); }
+
+/* lower sections */
+.blk { position: absolute; }
+.kicker { font-family: var(--head); font-weight: 600; font-size: 66px; line-height: 1.05; color: var(--rust); margin-bottom: 20px; }
+.ico-row { display: grid; grid-template-columns: 100px 1fr; gap: 26px; align-items: center; margin-bottom: 18px; }
+.ico-row svg { width: 100px; height: 100px; }
+.ico-row p { font-size: 46px; line-height: 1.3; }
+.olist { counter-reset: o; }
+.olist p { counter-increment: o; position: relative; padding-left: 90px; font-size: 46px; line-height: 1.3; margin-bottom: 14px; }
+.olist p::before { content: counter(o); position: absolute; left: 0; top: 0; width: 64px; height: 64px; border-radius: 50%;
+  background: var(--rust); color: #fff; font-family: var(--head); font-weight: 600; font-size: 44px; line-height: 64px; text-align: center; }
+.kit { margin-top: 14px; display: flex; align-items: center; gap: 22px; background: var(--cream); border-radius: 22px; padding: 12px 26px; }
+.kit svg { width: 70px; height: 70px; flex: none; }
+.kit p { font-size: 46px; line-height: 1.3; }
+.kit b { font-family: var(--head); font-weight: 600; color: var(--rust); }
+
+#hl { left: 400px; top: 4290px; width: 3090px; height: 372px; background: var(--cream); border-radius: 44px; padding: 26px 50px; }
+#hl .kicker { margin-bottom: 18px; font-size: 62px; }
+#hl .grid { display: grid; grid-template-columns: 1fr 1fr 1fr 2.1fr; gap: 36px; align-items: start; }
+.hi { position: relative; padding-left: 96px; }
+.hi b { position: absolute; left: 0; top: -12px; font-family: var(--head); font-weight: 700; font-size: 112px; line-height: 1; color: var(--rust); }
+.hi h5 { font-family: var(--head); font-weight: 600; font-size: 56px; line-height: 1.1; }
+.acc { margin-top: 10px; display: grid; gap: 8px; }
+.acc div { display: grid; grid-template-columns: 290px 1fr; align-items: center; gap: 20px; background: #fff; border-radius: 18px; padding: 4px 22px; }
+.acc strong { font-family: var(--head); font-weight: 700; font-size: 66px; line-height: 1.15; color: var(--ink); white-space: nowrap; }
+.acc strong small { font-size: 46px; font-weight: 600; }
+.acc span { font-size: 40px; line-height: 1.2; color: var(--ink2); }
+
+#use { left: 400px; top: 4690px; width: 3090px; height: 236px; }
+#use .kicker { position: absolute; left: 20px; top: 4px; width: 300px; font-size: 54px; }
+#use .icons { position: absolute; left: 310px; top: 0; width: 2370px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+#use .ic { text-align: center; padding-bottom: 10px; }
+#use .ic svg { width: 96px; height: 96px; display: block; margin: 0 auto 4px; }
+#use .ic p { font-size: 46px; line-height: 1.2; }
+#qr { position: absolute; right: 0; top: 0; width: 400px; height: 236px; display: grid; grid-template-columns: 236px 1fr; gap: 18px; align-items: center; }
+#qr img { width: 236px; height: 236px; display: block; }
+#qr p { font-family: var(--head); font-weight: 600; font-size: 50px; line-height: 1.1; color: var(--rust); }
+
+#foot { left: 400px; top: 4940px; width: 3090px; border-top: 3px solid var(--line); padding-top: 12px; }
+#foot .who { font-size: 44px; line-height: 1.28; }
+#foot .who b { font-family: var(--head); font-weight: 600; color: var(--rust); }
+#foot .fine { margin-top: 4px; font-size: 33px; line-height: 1.28; color: var(--ink2); }
+</style>
+</head>
+<body>
+<div id="page"><div id="sheet">
+
+  <div id="level" class="abs">มัธยมศึกษา</div>
+
+  <div id="title" class="abs"><div class="name">LUNAR<b>IS</b></div></div>
+  <div id="sub" class="abs">
+    <div class="th">ห้องเรียนภารกิจดวงจันทร์</div>
+    <div class="line">ชุดกิจกรรมการเรียนรู้ระบบโลก–ดวงจันทร์–ดวงอาทิตย์<br>ด้วยข้อมูลจริงจากนาซา สำหรับนักเรียน ม.3</div>
+  </div>
+  <div id="logo" class="abs"><img src="../assets/school-logo.png" alt="โรงเรียนสาธิตมหาวิทยาลัยศรีนครินทรวิโรฒ ปทุมวัน"></div>
+
+  <div id="hero" class="abs">
+    <svg id="stars" viewBox="0 0 3090 3010"></svg>
+    <img class="terrain" src="img/terrain.jpg" alt="">
+    <img class="globe" src="img/globe.png" alt="">
+
+    <!-- centrepiece: textbook 2D -> LUNARIS 3D -->
+    <div id="paper">
+      <p class="pl">ในหนังสือเรียน · ภาพแบน 2 มิติ</p>
+      <svg viewBox="0 0 800 800" width="790" height="790">
+<line x1="8" y1="150" x2="70" y2="150" stroke="#c98a12" stroke-width="5"/><path d="M58 139 L72 150 L58 161" fill="none" stroke="#c98a12" stroke-width="5"/>
+<line x1="8" y1="280" x2="70" y2="280" stroke="#c98a12" stroke-width="5"/><path d="M58 269 L72 280 L58 291" fill="none" stroke="#c98a12" stroke-width="5"/>
+<line x1="8" y1="520" x2="70" y2="520" stroke="#c98a12" stroke-width="5"/><path d="M58 509 L72 520 L58 531" fill="none" stroke="#c98a12" stroke-width="5"/>
+<line x1="8" y1="650" x2="70" y2="650" stroke="#c98a12" stroke-width="5"/><path d="M58 639 L72 650 L58 661" fill="none" stroke="#c98a12" stroke-width="5"/>
+<text x="4" y="96" font-family="Kanit" font-weight="500" font-size="48" fill="#8a5a06">แสงอาทิตย์</text>
+<circle cx="430" cy="400" r="225" fill="none" stroke="#2a2622" stroke-width="3" stroke-dasharray="10 9"/>
+<circle cx="430" cy="400" r="46" fill="#fff" stroke="#2a2622" stroke-width="4"/><path d="M430 354 A46 46 0 0 1 430 446 Z" fill="#2a2622"/>
+<text x="430" y="500" text-anchor="middle" font-family="Kanit" font-weight="600" font-size="48" fill="#2a2622">โลก</text>
+<circle cx="655.0" cy="400.0" r="28" fill="#2a2622"/><path d="M655.0 372.0 A28 28 0 0 0 655.0 428.0 Z" fill="#fff"/><circle cx="655.0" cy="400.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(765.0,400.0)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A30.00 30 0 0 1 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="589.1" cy="240.9" r="28" fill="#2a2622"/><path d="M589.1 212.9 A28 28 0 0 0 589.1 268.9 Z" fill="#fff"/><circle cx="589.1" cy="240.9" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(666.9,163.1)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 1 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="430.0" cy="175.0" r="28" fill="#2a2622"/><path d="M430.0 147.0 A28 28 0 0 0 430.0 203.0 Z" fill="#fff"/><circle cx="430.0" cy="175.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(430.0,65.0)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A0.00 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="270.9" cy="240.9" r="28" fill="#2a2622"/><path d="M270.9 212.9 A28 28 0 0 0 270.9 268.9 Z" fill="#fff"/><circle cx="270.9" cy="240.9" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(193.1,163.1)"><circle r="30" fill="#2a2622"/><path transform="scale(-1,1)" d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="205.0" cy="400.0" r="28" fill="#2a2622"/><path d="M205.0 372.0 A28 28 0 0 0 205.0 428.0 Z" fill="#fff"/><circle cx="205.0" cy="400.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(95.0,400.0)"><circle r="30" fill="#2a2622"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="270.9" cy="559.1" r="28" fill="#2a2622"/><path d="M270.9 531.1 A28 28 0 0 0 270.9 587.1 Z" fill="#fff"/><circle cx="270.9" cy="559.1" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(193.1,636.9)"><circle r="30" fill="#2a2622"/><path d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="430.0" cy="625.0" r="28" fill="#2a2622"/><path d="M430.0 597.0 A28 28 0 0 0 430.0 653.0 Z" fill="#fff"/><circle cx="430.0" cy="625.0" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(430.0,735.0)"><circle r="30" fill="#2a2622"/><path d="M0 -30 A30 30 0 0 1 0 30 A0.00 30 0 0 0 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+<circle cx="589.1" cy="559.1" r="28" fill="#2a2622"/><path d="M589.1 531.1 A28 28 0 0 0 589.1 587.1 Z" fill="#fff"/><circle cx="589.1" cy="559.1" r="28" fill="none" stroke="#2a2622" stroke-width="3"/>
+<g transform="translate(666.9,636.9)"><circle r="30" fill="#2a2622"/><path d="M0 -30 A30 30 0 0 1 0 30 A21.21 30 0 0 1 0 -30 Z" fill="#fff"/><circle r="30" fill="none" stroke="#2a2622" stroke-width="3"/></g>
+</svg>
+    </div>
+    <div id="idea">
+      <p class="big"><span class="nw">หนังสือสอนระบบ <span class="hl">3 มิติ</span></span><br><span class="nw">ด้วยภาพแบน 2 มิติ</span></p>
+      <p class="txt">LUNARIS ให้นักเรียนสร้างระบบขึ้นใหม่<br>แล้วหมุนดูเอง</p>
+      <blockquote id="voice"><p>“ตอน ม.3 เรื่องนี้ไม่ได้ยาก แต่ใช้เวลานานมาก เพราะต้องนึกภาพ 3 มิติจากรูป 2 มิติในหนังสือ เราเข้าใจจริงก็ตอนที่ได้สร้างกระบวนการนั้นขึ้นเองในหัว”</p><cite>คณะผู้ประดิษฐ์</cite></blockquote>
+    </div>
+    <svg class="abs" style="left:1960px; top:930px" width="300" height="170" viewBox="0 0 300 170">
+      <path d="M 10 140 C 110 170, 220 130, 280 46" fill="none" stroke="#f2b43a" stroke-width="10" stroke-linecap="round"/>
+      <path d="M 240 44 L 284 40 L 282 86" fill="none" stroke="#f2b43a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="tag" style="left:2100px; top:36px; width:890px; text-align:right">ใน LUNARIS · 3 มิติ แสงจากตำแหน่งดวงอาทิตย์จริง</p>
+
+    <div class="scrim"></div>
+    <div id="hook">
+      <span class="chip">โจทย์จริงจากอวกาศ</span>
+      <div class="big">ฉางเอ๋อ 7 <span>เลื่อนไปปี 2570</span></div>
+      <p class="txt">อุปกรณ์ชิ้นแรกของไทยที่จะไปดวงจันทร์ (CE-7 MATCH) ต้องรอ เพราะเงื่อนไขแสงอาทิตย์ที่จุดลงจอดใกล้ปล่องแชคเคิลตันไม่เป็นไปตามที่กำหนด</p>
+      <p class="src">ที่มา: สดร. 24 ส.ค. 2569</p>
+    </div>
+
+    <svg class="abs" style="left:0;top:0" width="3090" height="3010" viewBox="0 0 3090 3010">
+      <path d="M 182 1244 L 2332 1244 M 2620 1760 C 2700 2050, 2930 2260, 2500 2296 L 900 2304 C 760 2306, 700 2316, 700 2330"
+            fill="none" stroke="#f2b43a" stroke-width="8" stroke-dasharray="2 26" stroke-linecap="round" opacity=".85"/>
+    </svg>
+
+    <div class="zone" style="left:90px; top:1074px; color:#cfe0ff"><i></i>มองจากโลก</div>
+    <div class="zone" style="right:90px; top:1800px; color:#ffe2a8">ไปยืนบนดวงจันทร์<i></i></div>
+    <p class="tag" style="right:90px; top:1872px; width:760px; text-align:right">ภูมิประเทศขั้วใต้จริง (LRO LOLA)</p>
+
+    <div class="card" style="left:90px; top:1150px; width:800px; height:610px;">
+      <div class="hd"><div class="num">1</div><div><div class="st">คาบ 1 · สร้างความสนใจ</div><div class="t">สร้างแบบจำลอง</div></div></div>
+      <svg viewBox="0 0 560 300" width="728" height="390" style="margin-top:6px">
+        <g transform="translate(10,8) scale(.86)">
+
+        <!-- bulb -->
+        <g stroke="#f2b43a" stroke-width="5" stroke-linecap="round">
+          <line x1="70" y1="55" x2="70" y2="25"/><line x1="70" y1="175" x2="70" y2="205"/>
+          <line x1="10" y1="115" x2="30" y2="115"/><line x1="28" y1="73" x2="40" y2="85"/><line x1="28" y1="157" x2="40" y2="145"/>
+        </g>
+        <circle cx="70" cy="115" r="38" fill="#f2b43a"/>
+        <rect x="56" y="150" width="28" height="22" rx="4" fill="#8b96a3"/>
+        <!-- light beam -->
+        <path d="M 110 95 L 300 60 L 300 170 L 110 135 Z" fill="#f2b43a" opacity=".12"/>
+        <!-- head = observer -->
+        <circle cx="400" cy="120" r="42" fill="none" stroke="#cfe0ff" stroke-width="5"/>
+        <circle cx="414" cy="110" r="5" fill="#cfe0ff"/>
+        <path d="M 360 210 Q 400 160 440 210" fill="none" stroke="#cfe0ff" stroke-width="5"/>
+        <!-- ball orbit -->
+        <circle cx="400" cy="120" r="110" fill="none" stroke="#8b96a3" stroke-width="3" stroke-dasharray="8 10"/>
+        <g transform="translate(400,10)"><circle r="30" fill="#2b313a"/><path d="M 0 -30 A 30 30 0 0 0 0 30 Z" fill="#e9edf2"/></g>
+        <g transform="translate(510,120)"><circle r="30" fill="#2b313a"/><path d="M 0 -30 A 30 30 0 0 0 0 30 Z" fill="#e9edf2"/></g>
+        <g transform="translate(290,120)"><circle r="30" fill="#e9edf2"/></g>
+        </g>
+        <g font-family="NotoThai, Kanit" font-size="36" fill="#dde3e9" text-anchor="middle"><text x="104" y="288">ดวงอาทิตย์</text><text x="330" y="288">โลก</text><text x="470" y="288">ดวงจันทร์</text></g>
+      </svg>
+    </div>
+
+    <div class="card" style="left:930px; top:1150px; width:1270px; height:610px;">
+      <div class="hd"><div class="num">2</div><div><div class="st">คาบ 2 · สำรวจ</div><div class="t">ไล่ดู 1 รอบเดือน ทดสอบ “เงาโลก”</div></div></div>
+      <div class="phases"><figure><img src="img/phase-00.png" alt=""><figcaption>0%</figcaption></figure><figure><img src="img/phase-07.png" alt=""><figcaption>39%</figcaption></figure><figure><img src="img/phase-11.png" alt=""><figcaption>81%</figcaption></figure><figure><img src="img/phase-15.png" alt=""><figcaption>100%</figcaption></figure><figure><img src="img/phase-22.png" alt=""><figcaption>46%</figcaption></figure><figure><img src="img/phase-26.png" alt=""><figcaption>13%</figcaption></figure></div>
+      <p class="cap" style="margin-top:10px">ภาพจาก LUNARIS คำนวณจากข้อมูลนาซา · % = ส่วนสว่าง</p>
+    </div>
+
+    <div class="card" style="left:2240px; top:1150px; width:760px; height:610px;">
+      <div class="hd"><div class="num">3</div><div><div class="st">คาบ 3 · อธิบาย</div><div class="t">เขียน CER</div></div></div>
+      <svg viewBox="0 0 600 330" width="688" height="378" style="margin-top:8px">
+        <g stroke="#f2b43a" stroke-width="5" fill="none" stroke-linecap="round">
+          <path d="M4 70 H58 M46 58 L60 70 L46 82"/><path d="M4 165 H58 M46 153 L60 165 L46 177"/><path d="M4 260 H58 M46 248 L60 260 L46 272"/>
+        </g>
+        <path d="M 290 142 L 596 152 L 596 178 L 290 188 Z" fill="#000" stroke="#ff6a4d" stroke-width="3" stroke-dasharray="8 7"/>
+        <circle cx="290" cy="165" r="100" fill="none" stroke="#8b96a3" stroke-width="3" stroke-dasharray="7 9"/>
+        <circle cx="290" cy="165" r="28" fill="#7db3ff"/><path d="M 290 137 A 28 28 0 0 1 290 193 Z" fill="#1d3557" opacity=".75"/>
+        <g transform="translate(290,65)"><circle r="24" fill="#2b313a"/><path d="M 0 -24 A 24 24 0 0 0 0 24 Z" fill="#e9edf2"/></g><g transform="translate(290,265)"><circle r="24" fill="#2b313a"/><path d="M 0 -24 A 24 24 0 0 0 0 24 Z" fill="#e9edf2"/></g><g transform="translate(190,165)"><circle r="24" fill="#2b313a"/><path d="M 0 -24 A 24 24 0 0 0 0 24 Z" fill="#e9edf2"/></g><g transform="translate(390,165)"><circle r="24" fill="#2b313a"/><path d="M 0 -24 A 24 24 0 0 0 0 24 Z" fill="#e9edf2"/></g>
+        <path d="M 420 74 l 22 22 M 442 74 l -22 22" stroke="#ff6a4d" stroke-width="6" stroke-linecap="round"/>
+        <text x="454" y="100" font-family="Kanit" font-weight="600" font-size="42" fill="#ff6a4d">เงาโลก</text>
+        <path d="M 6 312 l 10 11 l 20 -24" fill="none" stroke="#9be59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="46" y="324" font-family="Kanit" font-weight="500" font-size="36" fill="#9be59b">ครึ่งสว่างหันมาหาโลกมากหรือน้อย</text>
+      </svg>
+    </div>
+
+    <div class="card" style="left:90px; top:2330px; width:1240px; height:640px;">
+      <div class="hd"><div class="num">4</div><div><div class="st">คาบ 4 · ขยายความรู้ (1)</div><div class="t">ดวงอาทิตย์เลียดขอบฟ้าที่ขั้วใต้</div></div></div>
+      <div style="position:relative; width:1168px; margin-top:18px;"><img src="img/sky.jpg" alt="" style="display:block; width:1168px; border-radius:16px;">
+        <div class="axis"><span style="left:0.6%">เหนือ</span><span style="left:25.2%">ตะวันออก</span><span style="left:49.7%">ใต้</span><span style="left:74.3%">ตะวันตก</span><span style="left:98.9%">เหนือ</span></div></div>
+      <div class="legend"><span style="--c:#f2b43a">ดวงอาทิตย์</span><span style="--c:#7db3ff">โลก</span><span style="--c:#8b96a3">ขอบฟ้าจริง (1 เดือน)</span></div>
+    </div>
+
+    <div class="card" style="left:1370px; top:2330px; width:970px; height:640px;">
+      <div class="hd"><div class="num">5</div><div><div class="st">คาบ 5 · ขยายความรู้ (2)</div><div class="t">ทีมภารกิจเทียบ 3 จุด</div></div></div>
+      <div class="bars">
+        <p class="ttl">ได้รับแสงอาทิตย์ตลอดปี 2570</p>
+        <div class="bar"><div class="lb">ยอดเขาใกล้แชคเคิลตัน</div><div class="tr"><div class="fl" style="width:88.3%"></div></div><div class="v">88%</div></div>
+        <div class="bar"><div class="lb">สันเขาเชื่อมต่อ</div><div class="tr"><div class="fl dim" style="width:73.5%"></div></div><div class="v">74%</div></div>
+        <div class="bar"><div class="lb">เทือกเขามาลาเพิร์ต</div><div class="tr"><div class="fl dim" style="width:46.4%"></div></div><div class="v">46%</div></div>
+        <p class="cap" style="color:#dde3e9">แสงเป็นเพียง 1 ใน 7 เกณฑ์ · ไม่มีจุดที่ดีที่สุดทุกด้าน</p>
+      </div>
+    </div>
+
+    <div class="card" style="left:2380px; top:2330px; width:620px; height:640px;">
+      <div class="hd"><div class="num">6</div><div><div class="st">คาบ 6 · ประเมิน</div><div class="t">นำเสนอข้อเสนอ</div></div></div>
+      <div class="cer"><div><b>C</b>ข้อกล่าวอ้าง</div><div><b>E</b>หลักฐาน</div><div><b>R</b>เหตุผล</div></div>
+      <p class="d" style="margin-top:12px">ยืนยันด้วยหลักฐาน<br>แล้วทดสอบหลังเรียน</p>
+    </div>
+  </div>
+
+  <div class="blk" style="left:420px; top:3840px; width:1320px;">
+    <div class="kicker">ที่มาของผลงาน</div>
+    <div class="ico-row">
+      <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="44" fill="#f6f1e7"/><path d="M24 34h20c4 0 4 4 4 4v28s0-4-4-4H24zM72 34H52c-4 0-4 4-4 4v28s0-4 4-4h20z" fill="none" stroke="#a0461e" stroke-width="4" stroke-linejoin="round"/></svg>
+      <p>ข้างขึ้นข้างแรม ม.3:<br>ระบบ 3 มิติ แต่เรียนจากภาพ 2 มิติ</p>
+    </div>
+    <div class="ico-row">
+      <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="44" fill="#f6f1e7"/><path d="M32 32l32 32M64 32L32 64" stroke="#c0392b" stroke-width="7" stroke-linecap="round"/></svg>
+      <p>เข้าใจผิดบ่อย: “เงาโลกทำให้เกิดข้างขึ้นข้างแรม”</p>
+    </div>
+  </div>
+
+  <div class="blk" style="left:1800px; top:3840px; width:1690px;">
+    <div class="kicker">วัตถุประสงค์</div>
+    <div class="olist">
+      <p>ชุดกิจกรรมสืบเสาะ 5E 6 คาบ สำหรับ ม.3</p>
+      <p>สร้างและใช้แบบจำลองอธิบายข้างขึ้นข้างแรม จาก 2 มุมมอง</p>
+      <p>ตัดสินใจจากข้อมูลจริง ผ่านภารกิจเลือกจุดลงจอด</p>
+    </div>
+    <div class="kit">
+      <svg viewBox="0 0 92 92"><rect x="18" y="10" width="56" height="72" rx="6" fill="none" stroke="#a0461e" stroke-width="5"/><path d="M30 30h32M30 44h32M30 58h20" stroke="#a0461e" stroke-width="5" stroke-linecap="round"/></svg>
+      <p><b>ชุดกิจกรรม</b> 6 คาบ · ใบงาน 3 · แบบทดสอบ 20 ข้อ</p>
+    </div>
+  </div>
+
+  <div id="hl" class="abs">
+    <div class="kicker">จุดเด่นและความแปลกใหม่</div>
+    <div class="grid">
+      <div class="hi"><b>1</b><h5>สองมุมมอง</h5></div>
+      <div class="hi"><b>2</b><h5>ข้อมูลจริง</h5></div>
+      <div class="hi"><b>3</b><h5>ไม่มีคำตอบสำเร็จรูป</h5></div>
+      <div class="hi"><b>4</b><h5>ตรวจเทียบ JPL Horizons ของนาซา</h5>
+        <div class="acc">
+          <div><strong>≤ 2 <small>วินาที</small></strong><span>เวลาข้างขึ้นข้างแรมหลัก 49 ครั้ง</span></div>
+          <div><strong>≤ 0.002″</strong><span>ทิศดวงอาทิตย์และโลก (ฟิลิปดา)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="use" class="abs">
+    <div class="kicker">การนำไปใช้<br>ประโยชน์</div>
+    <div class="icons">
+      <div class="ic">
+        <svg viewBox="0 0 130 130"><circle cx="65" cy="65" r="62" fill="#f6f1e7"/><path d="M25 52l40-18 40 18-40 18z" fill="none" stroke="#a0461e" stroke-width="5" stroke-linejoin="round"/><path d="M42 60v20c0 8 46 8 46 0V60M105 52v26" fill="none" stroke="#a0461e" stroke-width="5" stroke-linecap="round"/></svg>
+        <p>นักเรียน ม.3 และ<br>ครูวิทยาศาสตร์ ม.ต้น</p>
+      </div>
+      <div class="ic">
+        <svg viewBox="0 0 130 130"><circle cx="65" cy="65" r="62" fill="#f6f1e7"/><circle cx="65" cy="62" r="26" fill="none" stroke="#a0461e" stroke-width="5"/><ellipse cx="65" cy="62" rx="46" ry="12" fill="none" stroke="#f2b43a" stroke-width="5" transform="rotate(-18 65 62)"/></svg>
+        <p>ต่อยอดรายวิชา<br>โลกและอวกาศ ม.ปลาย</p>
+      </div>
+      <div class="ic">
+        <svg viewBox="0 0 130 130"><circle cx="65" cy="65" r="62" fill="#f6f1e7"/><text x="65" y="87" text-anchor="middle" font-family="Kanit" font-weight="700" font-size="64" fill="#a0461e">฿0</text></svg>
+        <p>ใช้ฟรีผ่านเว็บ<br>ไม่ต้องซื้ออุปกรณ์</p>
+      </div>
+      <div class="ic">
+        <svg viewBox="0 0 130 130"><circle cx="65" cy="65" r="62" fill="#f6f1e7"/><rect x="22" y="40" width="60" height="40" rx="5" fill="none" stroke="#a0461e" stroke-width="5"/><path d="M16 88h72" stroke="#a0461e" stroke-width="5" stroke-linecap="round"/><rect x="88" y="46" width="24" height="42" rx="5" fill="none" stroke="#a0461e" stroke-width="5"/></svg>
+        <p>คอมพิวเตอร์<br>โทรศัพท์ โปรเจกเตอร์</p>
+      </div>
+      <div class="ic">
+        <svg viewBox="0 0 130 130"><circle cx="65" cy="65" r="62" fill="#f6f1e7"/><path d="M28 90l26-26 16 14 32-36" fill="none" stroke="#a0461e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M86 42h16v16" fill="none" stroke="#a0461e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p>อบรมครู<br>ขยายสู่โรงเรียนอื่น</p>
+      </div>
+    </div>
+    <div id="qr"><img src="img/qr.png" alt="QR"><p>ลองใช้<br>ได้เลย</p></div>
+  </div>
+
+  <div id="foot" class="abs">
+    <p class="who"><b>คณะผู้ประดิษฐ์</b> {{INVENTORS}} &nbsp;·&nbsp; <b>ครูที่ปรึกษา</b> {{ADVISOR}} &nbsp;·&nbsp; <b>โทร</b> {{PHONE}} &nbsp;·&nbsp; <b>อีเมล</b> {{EMAIL}}</p>
+    <p class="fine">ข้อจำกัด: ไม่จำลองน้ำขึ้นน้ำลง · ภาพข้างขึ้นข้างแรมมองจากศูนย์กลางโลก · ยังไม่ได้ทดลองใช้กับนักเรียน &nbsp;|&nbsp; พัฒนาโดยใช้ปัญญาประดิษฐ์ช่วยเขียนโปรแกรม ภายใต้การกำกับและตรวจสอบของคณะผู้ประดิษฐ์ &nbsp;|&nbsp; ภาพทั้งหมดจับจากแอป LUNARIS · พื้นผิวดวงจันทร์: NASA SVS · ภูมิประเทศ: NASA LRO LOLA</p>
+  </div>
+
+</div></div>
+<script>
+// deterministic star field (decoration only), in the dark sky above the terrain
+(function () {
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const svg = document.getElementById('stars'); let h = '';
+  for (let i = 0; i < 260; i++) {
+    const x = r() * 3090, y = r() * 1150, rad = 0.8 + r() * 2.6, o = 0.25 + r() * 0.6;
+    h += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad.toFixed(2)}" fill="#fff" opacity="${o.toFixed(2)}"/>`;
+  }
+  svg.innerHTML = h;
+})();
+</script>
+</body>
+</html>
