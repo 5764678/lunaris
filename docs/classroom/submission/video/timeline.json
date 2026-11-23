@@ -267,7 +267,7 @@
       "id": "s5-proof-B1",
       "section": 5,
       "start": 141.0,
-      "end": 144.0,
+      "end": 143.5,
       "type": "team",
       "file": "05-proof-B.mp4",
       "picture": "B on camera (05-proof-B.mp4 from 0.0 s)"
@@ -275,14 +275,14 @@
     {
       "id": "s5-card-limits",
       "section": 5,
-      "start": 144.0,
+      "start": 143.5,
       "end": 147.0,
       "type": "graphics",
       "picture": "Proof card 2 on paper: 'ยังไม่จำลองน้ำขึ้นน้ำลง · ยังไม่ได้ทดลองกับนักเรียนในห้องเรียนจริง'. B's voice continues underneath.",
       "shots": [
         {
           "id": "5b",
-          "start": 144.0,
+          "start": 143.5,
           "end": 147.0,
           "what": "Paper card, same recipe as 5a",
           "card": "paper-title-card"
