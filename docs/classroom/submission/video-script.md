@@ -87,10 +87,11 @@ word sounds read. Keep the facts in each line exactly as they are (numbers, name
 > **A:** เราตรวจผลคำนวณเทียบกับระบบ JPL Horizons ของนาซา เวลาข้างขึ้นข้างแรมต่างกันไม่เกินสองวินาที
 > เราใช้ AI ช่วยเขียนโปรแกรม แต่เราเป็นคนกำหนดทิศทาง ตัดสินใจ และตรวจสอบเอง
 >
-> **B:** และเราบอกตรง ๆ ว่า แอปยังไม่จำลองน้ำขึ้นน้ำลง และยังไม่ได้ทดลองกับนักเรียน
+> **B:** และเราบอกตรง ๆ ว่า แอปยังไม่จำลองน้ำขึ้นน้ำลง และยังไม่ได้ทดลองกับนักเรียนในห้องเรียนจริง
 > ซึ่งเป็นขั้นต่อไปของเราครับ
 
-If the misconception survey has run, add one line from B before "และเราบอกตรง ๆ", with the
+Decided on 23 November: no classroom trial will happen before submission. The video says so
+in B's line above and claims nothing beyond it. If the misconception survey has run, add one line from B before "และเราบอกตรง ๆ", with the
 real number, for example: "จากแบบสำรวจนักเรียน ม.3 [จำนวน] คน [ร้อยละ] เข้าใจว่าเงาโลกทำให้เกิดข้างขึ้นข้างแรม".
 Use the real figures only.
 
