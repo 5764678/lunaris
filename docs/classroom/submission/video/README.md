@@ -17,7 +17,7 @@ mixes from `audio-cues.json`.
 | `design/` | Design spec: `01-brief.md`, `02-direction.md`, `03-storyboard.md`, styleframes, the storyboard contact sheet. |
 | `src/` | Remotion compositions: `Graphics` (1080p, no captions), `Animatic` (captions burned in), `Overlays` (period numbers and QR tile on transparency). |
 | `src/generated/diagram.ts` | The poster's textbook diagram, copied verbatim from `../poster/poster.html` (`#paper` svg). |
-| `scripts/` | Capture, fonts, asset copy, data build, stills and contact sheet. |
+| `scripts/` | Capture, fonts, asset copy, worksheet page render (`render-worksheet.js`), data build, stills, contact sheet, chunked render. |
 
 Renders live only on the branch `claude/video-renders` (never merged). `node_modules/`, `out/`,
 fonts and captures are gitignored.

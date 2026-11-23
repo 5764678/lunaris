@@ -86,3 +86,32 @@ animatic 54 px (≥ 5 %).
 
 Production: full `Graphics` render (H.264, CRF 20), `Animatic` at 720p with captions, the overlay
 layer, frame extraction QA, then the renders branch and the draft PR. Animatic first.
+
+## Change, 23 Nov (TD, from the team)
+
+- No team live-action slots any more. Three graphics replace them, made only from the project's
+  own material:
+  - **P1 0:58–1:06, lamp-ball model.** Drawn in the poster's period-1 style and colours. A lamp
+    (Sun) on the left, the head (observer) in the middle facing the ball, and the ball (Moon)
+    circling once from new Moon. The ball's lit hemisphere always faces the lamp (vector ball →
+    lamp, finite distance). The inset shows what the observer sees: lit fraction (1 + cos α)/2,
+    with α the angle between ball → lamp and ball → head. The lit limb sits on the observer's
+    right when the lamp is to the right of the line of sight.
+    - Note: the poster's own drawing shows the ball between the bulb and the head as a full white
+      disc. Seen from above, only its lamp-facing half is lit, so the video draws that half. The
+      poster may want the same fix.
+  - **P3 1:20–1:26, worksheet.** The top of `docs/classroom/kit/worksheet-1.md`, rendered as a
+    printed A4 page by `scripts/render-worksheet.js`. Slow push-in; abstract scribble lines draw
+    into three answer cells of the first table. Nothing readable is written.
+  - **P6 1:58–2:08, C/E/R then poster.** The poster's C/E/R list built as three cards. Then a slow
+    pan over `poster/lunaris-poster-A0-preview.jpg`, cropped at y = 2150, above the placeholder
+    footer, which starts at about 2160.
+- Face clips are one person per file:
+  - §2: `02-intro-B.mp4` 0:15–0:23, then `02-intro-A.mp4` 0:23–0:40.
+  - §5: `05-proof-A.mp4` 2:08–2:23, with card 1 at 2:12–2:17; then `05-proof-B.mp4` 2:23–2:33,
+    with card 2 at 2:25–2:30.
+  - §6: `06-close-A.mp4` 2:33–2:37, with the QR tile from 2:34.6; then the 2-up slot `06-close-AB`
+    2:37–2:39; then the end card.
+- B's §5 line now ends "…และยังไม่ได้ทดลองกับนักเรียนในห้องเรียนจริง ซึ่งเป็นขั้นต่อไปของเราครับ"
+  (script commit 46fa79b). Card 2 reads "ยังไม่จำลองน้ำขึ้นน้ำลง / ยังไม่ได้ทดลองกับนักเรียนในห้องเรียนจริง".
+- Captions for §2 and §5 are re-timed to the new clip boundaries. The total is still 2:45.
