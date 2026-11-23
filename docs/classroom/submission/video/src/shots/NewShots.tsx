@@ -13,7 +13,7 @@ import ws from '../generated/worksheet-layout.json';
 // phase angle alpha between (ball -> lamp) and (ball -> head): lit fraction (1 + cos alpha) / 2; the lit limb is on the
 // observer's right when the lamp lies to the right of the line of sight.
 const S = 2.2; // poster svg units -> px
-const HEAD_X = 1000, HEAD_Y = 560;
+const HEAD_X = 1000, HEAD_Y = 490;
 const LAMP_X = HEAD_X - 330 * S, LAMP_Y = HEAD_Y;
 const ORBIT = 110 * S, BALL = 30 * S;
 const MOON_LIT = '#e9edf2', MOON_DARK = '#2b313a', HEAD_COL = '#cfe0ff', ORBIT_COL = '#8b96a3';
@@ -70,19 +70,19 @@ export const LampBall: React.FC = () => {
           <path d={`M 0 ${-BALL} A ${BALL} ${BALL} 0 0 1 0 ${BALL} Z`} fill={MOON_LIT} />
         </g>
         <g fontFamily="NotoThai, Kanit" fontSize={34} fill={C.soft} textAnchor="middle">
-          <text x={LAMP_X} y={HEAD_Y + 390}>หลอดไฟ = ดวงอาทิตย์</text>
-          <text x={HEAD_X - 60} y={HEAD_Y + 390}>ศีรษะ = ผู้สังเกตบนโลก</text>
+          <text x={LAMP_X} y={HEAD_Y + 350}>หลอดไฟ = ดวงอาทิตย์</text>
+          <text x={HEAD_X - 60} y={HEAD_Y + 350}>ศีรษะ = ผู้สังเกตบนโลก</text>
         </g>
-        <text x={HEAD_X + ORBIT + 40} y={HEAD_Y + 390} fontFamily="NotoThai, Kanit" fontSize={34} fill={C.soft} textAnchor="middle">ลูกบอล = ดวงจันทร์</text>
+        <text x={HEAD_X + ORBIT + 40} y={HEAD_Y + 350} fontFamily="NotoThai, Kanit" fontSize={34} fill={C.soft} textAnchor="middle">ลูกบอล = ดวงจันทร์</text>
         {/* observer's view */}
-        <g transform="translate(1610,520)">
+        <g transform="translate(1610,470)">
           <circle r={150} fill={MOON_DARK} />
           <path d={phasePath(150, cosA, side)} fill={MOON_LIT} />
           <circle r={150} fill="none" stroke="rgba(255,255,255,.18)" strokeWidth={2} />
         </g>
         <g fontFamily="Kanit, NotoThai" textAnchor="middle">
-          <text x={1610} y={300} fontSize={36} fontWeight={500} fill={C.sun}>ผู้สังเกตเห็นแบบนี้</text>
-          <text x={1610} y={740} fontSize={34} fill={C.soft} fontFamily="NotoThai, Kanit">ครึ่งสว่างหันมาหาเรามากหรือน้อย</text>
+          <text x={1610} y={250} fontSize={36} fontWeight={500} fill={C.sun}>ผู้สังเกตเห็นแบบนี้</text>
+          <text x={1610} y={690} fontSize={34} fill={C.soft} fontFamily="NotoThai, Kanit">ครึ่งสว่างหันมาหาเรามากหรือน้อย</text>
         </g>
       </svg>
     </AbsoluteFill>
