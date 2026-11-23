@@ -9,6 +9,7 @@ import { ColdOpen } from './shots/ColdOpen';
 import { Hook } from './shots/Hook';
 import { P2, P4, P5 } from './shots/AppShots';
 import { EndCard, ProofCard, QrTile } from './shots/Cards';
+import { CerPoster, LampBall, SplitSlate, Worksheet } from './shots/NewShots';
 import orbit from './generated/orbit.json';
 
 type Seg = (typeof tl.segments)[number];
@@ -16,6 +17,9 @@ type Seg = (typeof tl.segments)[number];
 const graphicsFor: Record<string, React.ReactNode> = {
   's1-cold-open': <ColdOpen />,
   's3-hook': <Hook />,
+  'p1-model': <LampBall />,
+  'p3-worksheet': <Worksheet />,
+  'p6-cer': <CerPoster />,
   'p2-app': <P2 />,
   'p4-app': <P4 orbitFrames={orbit.frames} />,
   'p5-app': <P5 />,
@@ -32,6 +36,9 @@ const slateLines = (s: Seg) => {
 };
 
 const PERIOD_TITLES: Record<string, string | undefined> = {
+  'period-1': 'สร้าง|แบบจำลอง',
+  'period-3': 'เขียนคำอธิบาย|พร้อมหลักฐาน',
+  'period-6': 'นำเสนอ|ข้อเสนอ',
   'period-2': 'ข้างขึ้นข้างแรม|หนึ่งรอบเดือน',
   'period-4': 'ยืนที่ขั้วใต้|ของดวงจันทร์',
   'period-5': 'เปรียบเทียบ|สามจุดลงจอด',
@@ -54,7 +61,7 @@ export const Main: React.FC<{ captions?: boolean; overlaysOnly?: boolean }> = ({
   <AbsoluteFill style={{ background: overlaysOnly ? 'transparent' : '#000' }}>
     {!overlaysOnly && tl.segments.map((s) => (
       <Sequence key={s.id} from={sec(s.start)} durationInFrames={sec(s.end) - sec(s.start)} name={s.id}>
-        {s.type === 'graphics' ? graphicsFor[s.id] : <Slate file={(s as { file: string }).file} section={`ส่วน ${s.section}${'period' in s ? ` · คาบ ${s.period}` : ''}`} lines={slateLines(s)} />}
+        {s.type === 'graphics' ? graphicsFor[s.id] : s.id === 's6-close-AB' ? <SplitSlate file="06-close-AB" lines={slateLines(s).slice(1)} /> : <Slate file={(s as { file: string }).file} section={`ส่วน ${s.section}${'period' in s ? ` · คาบ ${s.period}` : ''}`} lines={slateLines(s)} />}
       </Sequence>
     ))}
     {tl.overlays.map((o) => (

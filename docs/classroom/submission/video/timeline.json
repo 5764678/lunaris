@@ -4,9 +4,9 @@
   "width": 1920,
   "height": 1080,
   "duration_s": 165.0,
-  "plan": "docs/classroom/submission/video-script.md v2 (commit 8567738)",
+  "plan": "docs/classroom/submission/video-script.md v2 (commits 8567738, 46fa79b on claude/laughing-einstein-jc00pz) + TD plan change 23 Nov",
   "notes": [
-    "Times are seconds from 0:00. Segments tile 0-165 s with no gaps. 'graphics' = rendered by this project; 'team' = the team's recording, placed by the TD; graphics.mp4 shows a grey slate there.",
+    "Times are seconds from 0:00. Segments tile 0-165 s with no gaps. 'graphics' = rendered by this project; 'team' = the team's recording, placed by the TD; graphics.mp4 shows a grey slate there. Face clips are one person per file (TD, 23 Nov); 06-close-AB is a 2-up split screen.",
     "Team slots keep their planned length; if a take runs long or short the TD trims inside the slot or shifts later segments, and re-times captions from the same file.",
     "Overlays (period numbers, the QR tile in 06) ride on top of team footage; they are also rendered on their own with alpha (see README)."
   ],
@@ -44,13 +44,22 @@
       ]
     },
     {
-      "id": "s2-intro",
+      "id": "s2-intro-B",
       "section": 2,
       "start": 15.0,
+      "end": 23.0,
+      "type": "team",
+      "file": "02-intro-B.mp4",
+      "picture": "B on camera, chest up, looking at the lens"
+    },
+    {
+      "id": "s2-intro-A",
+      "section": 2,
+      "start": 23.0,
       "end": 40.0,
       "type": "team",
-      "file": "02-intro.mp4",
-      "picture": "Both students on camera, side by side"
+      "file": "02-intro-A.mp4",
+      "picture": "A on camera, same framing"
     },
     {
       "id": "s3-hook",
@@ -78,15 +87,23 @@
       ]
     },
     {
-      "id": "p1-lamp-ball",
+      "id": "p1-model",
       "section": 4,
-      "period": 1,
       "start": 58.0,
       "end": 66.0,
-      "type": "team",
-      "file": "p1-lamp-ball.mp4",
-      "overlay": "period-1",
-      "picture": "Hands: lamp, ball on a stick, the lit half turning"
+      "type": "graphics",
+      "picture": "Animated lamp-ball model in the poster's period-1 style: lamp (Sun), head (observer), ball (Moon) circling; lit half always toward the lamp; an inset shows the phase the observer sees.",
+      "shots": [
+        {
+          "id": "p1",
+          "start": 58.0,
+          "end": 66.0,
+          "what": "Top view, one orbit from new Moon; observer's view updates with the phase angle",
+          "card": "drawn (poster period-1 style)"
+        }
+      ],
+      "period": 1,
+      "overlay": "period-1"
     },
     {
       "id": "p2-app",
@@ -110,13 +127,21 @@
     {
       "id": "p3-worksheet",
       "section": 4,
-      "period": 3,
       "start": 80.0,
       "end": 86.0,
-      "type": "team",
-      "file": "p3-worksheet.mp4",
-      "overlay": "period-3",
-      "picture": "A worksheet being filled in by hand, from above"
+      "type": "graphics",
+      "picture": "The kit's worksheet 1 (docs/classroom/kit/worksheet-1.md) as a printed A4 page; slow push; abstract scribbles in three answer cells.",
+      "shots": [
+        {
+          "id": "p3",
+          "start": 80.0,
+          "end": 86.0,
+          "what": "Worksheet 1 page, push-in, scribbles in answer cells",
+          "card": "PageCam-style push"
+        }
+      ],
+      "period": 3,
+      "overlay": "period-3"
     },
     {
       "id": "p4-app",
@@ -178,24 +203,39 @@
       ]
     },
     {
-      "id": "p6-present",
+      "id": "p6-cer",
       "section": 4,
-      "period": 6,
       "start": 118.0,
       "end": 128.0,
-      "type": "team",
-      "file": "p6-present.mp4",
-      "overlay": "period-6",
-      "picture": "Both students presenting at a whiteboard or screen"
+      "type": "graphics",
+      "picture": "Claim -> Evidence -> Reasoning built as three cards (the poster's C/E/R list), then a slow pan over the poster preview, cropped above its footer.",
+      "shots": [
+        {
+          "id": "p6a",
+          "start": 118.0,
+          "end": 122.9,
+          "what": "C, E, R cards build",
+          "card": "blur-slide"
+        },
+        {
+          "id": "p6b",
+          "start": 122.9,
+          "end": 128.0,
+          "what": "Poster preview, slow pan, footer cropped",
+          "card": "PageCam-style pan"
+        }
+      ],
+      "period": 6,
+      "overlay": "period-6"
     },
     {
-      "id": "s5-proof-a",
+      "id": "s5-proof-A1",
       "section": 5,
       "start": 128.0,
       "end": 132.0,
       "type": "team",
-      "file": "05-proof.mp4",
-      "picture": "A at a laptop showing LUNARIS (05-proof.mp4 from 0.0 s)"
+      "file": "05-proof-A.mp4",
+      "picture": "A at a laptop showing LUNARIS (05-proof-A.mp4 from 0.0 s)"
     },
     {
       "id": "s5-card-horizons",
@@ -215,13 +255,22 @@
       ]
     },
     {
-      "id": "s5-proof-b",
+      "id": "s5-proof-A2",
       "section": 5,
       "start": 137.0,
+      "end": 143.0,
+      "type": "team",
+      "file": "05-proof-A.mp4",
+      "picture": "Back on A for the AI line (05-proof-A.mp4 continues)"
+    },
+    {
+      "id": "s5-proof-B1",
+      "section": 5,
+      "start": 143.0,
       "end": 145.0,
       "type": "team",
-      "file": "05-proof.mp4",
-      "picture": "Back on camera for the AI line, then B (05-proof.mp4 continues)"
+      "file": "05-proof-B.mp4",
+      "picture": "B on camera (05-proof-B.mp4 from 0.0 s)"
     },
     {
       "id": "s5-card-limits",
@@ -229,7 +278,7 @@
       "start": 145.0,
       "end": 150.0,
       "type": "graphics",
-      "picture": "Proof card 2 on paper: 'ยังไม่จำลองน้ำขึ้นน้ำลง · ยังไม่ได้ทดลองกับนักเรียน'. B's voice continues underneath.",
+      "picture": "Proof card 2 on paper: 'ยังไม่จำลองน้ำขึ้นน้ำลง · ยังไม่ได้ทดลองกับนักเรียนในห้องเรียนจริง'. B's voice continues underneath.",
       "shots": [
         {
           "id": "5b",
@@ -241,23 +290,32 @@
       ]
     },
     {
-      "id": "s5-proof-c",
+      "id": "s5-proof-B2",
       "section": 5,
       "start": 150.0,
       "end": 153.0,
       "type": "team",
-      "file": "05-proof.mp4",
-      "picture": "Back on camera: B's last line"
+      "file": "05-proof-B.mp4",
+      "picture": "Back on B for the last line (05-proof-B.mp4 continues)"
     },
     {
-      "id": "s6-close",
+      "id": "s6-close-A",
       "section": 6,
       "start": 153.0,
+      "end": 157.0,
+      "type": "team",
+      "file": "06-close-A.mp4",
+      "picture": "A on camera; a QR tile slides in bottom right at 154.6 s",
+      "overlay": "qr-tile"
+    },
+    {
+      "id": "s6-close-AB",
+      "section": 6,
+      "start": 157.0,
       "end": 159.0,
       "type": "team",
-      "file": "06-close.mp4",
-      "overlay": "qr-tile",
-      "picture": "Both on camera; a QR tile slides in bottom right at 155.0 s"
+      "file": "06-close-AB",
+      "picture": "2-up split screen: A left, B right, both saying ขอบคุณครับ"
     },
     {
       "id": "s6-end-card",
@@ -316,33 +374,33 @@
     },
     {
       "id": "qr-tile",
-      "start": 155.0,
-      "end": 159.0,
+      "start": 154.6,
+      "end": 157.0,
       "label": "QR → /learn"
     }
   ],
   "captions": [
     {
-      "start": 15.5,
-      "end": 21.0,
+      "start": 15.3,
+      "end": 22.6,
       "who": "B",
       "text": "สวัสดีครับ ผม[ชื่อ] กับ[ชื่อ]\nนักเรียน ม.4 โรงเรียนสาธิตมหาวิทยาลัยศรีนครินทรวิโรฒ ปทุมวัน"
     },
     {
-      "start": 21.5,
-      "end": 26.0,
+      "start": 23.3,
+      "end": 27.6,
       "who": "A",
       "text": "ตอน ม.3 เรื่องข้างขึ้นข้างแรมไม่ได้ยากครับ\nแต่ใช้เวลานานมากกว่าจะเข้าใจ"
     },
     {
-      "start": 26.0,
-      "end": 31.5,
+      "start": 27.6,
+      "end": 32.4,
       "who": "A",
       "text": "เพราะต้องนึกภาพสามมิติ\nจากรูปสองมิติในหนังสือ"
     },
     {
-      "start": 32.0,
-      "end": 38.5,
+      "start": 32.7,
+      "end": 39.3,
       "who": "A",
       "text": "ผมเข้าใจจริงก็ตอนที่ได้สร้างภาพนั้น\nขึ้นมาเองในหัว"
     },
@@ -444,13 +502,19 @@
     },
     {
       "start": 143.3,
-      "end": 149.0,
+      "end": 147.2,
       "who": "B",
-      "text": "และเราบอกตรง ๆ ว่า แอปยังไม่จำลองน้ำขึ้นน้ำลง\nและยังไม่ได้ทดลองกับนักเรียน"
+      "text": "และเราบอกตรง ๆ ว่า\nแอปยังไม่จำลองน้ำขึ้นน้ำลง"
     },
     {
-      "start": 149.2,
-      "end": 152.6,
+      "start": 147.2,
+      "end": 150.6,
+      "who": "B",
+      "text": "และยังไม่ได้ทดลองกับนักเรียน\nในห้องเรียนจริง"
+    },
+    {
+      "start": 150.6,
+      "end": 152.8,
       "who": "B",
       "text": "ซึ่งเป็นขั้นต่อไปของเราครับ"
     },

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Graphics timeline for the LUNARIS presentation video (Remotion).",
   "scripts": {
-    "prep": "node scripts/fetch-fonts.js && node scripts/copy-assets.js && node scripts/extract-diagram.js && node scripts/build-data.js && node scripts/capture.js && node scripts/orbit-count.js && node scripts/copy-assets.js",
+    "prep": "node scripts/fetch-fonts.js && node scripts/copy-assets.js && node scripts/extract-diagram.js && node scripts/build-data.js && node scripts/render-worksheet.js && node scripts/capture.js && node scripts/orbit-count.js && node scripts/copy-assets.js",
     "check-diagram": "node scripts/extract-diagram.js --check",
     "studio": "remotion studio src/index.ts",
     "render": "scripts/render-chunks.sh Graphics out/graphics-1080p.mp4 --codec h264 --crf 20",

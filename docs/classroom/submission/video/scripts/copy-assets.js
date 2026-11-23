@@ -3,7 +3,7 @@ const fs = require('fs'), path = require('path');
 const sub = path.join(__dirname, '../..');
 const pub = path.join(__dirname, '../public');
 fs.mkdirSync(pub, { recursive: true });
-for (const [from, to] of [['poster/img/globe.png', 'globe.png'], ['poster/img/terrain.jpg', 'terrain.jpg'], ['poster/img/qr.png', 'qr.png'], ['assets/school-logo.png', 'school-logo.png']]) {
+for (const [from, to] of [['poster/img/globe.png', 'globe.png'], ['poster/img/terrain.jpg', 'terrain.jpg'], ['poster/img/qr.png', 'qr.png'], ['assets/school-logo.png', 'school-logo.png'], ['poster/lunaris-poster-A0-preview.jpg', 'poster-preview.jpg']]) {
   fs.copyFileSync(path.join(sub, from), path.join(pub, to));
 }
 console.log('copied poster assets to public/');

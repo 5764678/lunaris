@@ -61,8 +61,8 @@ export const ProofCard: React.FC<{ kind: 'horizons' | 'limits' }> = ({ kind }) =
           </>
         ) : (
           <>
-            <Press start={0} size={96} words={[{ text: 'ยังไม่จำลอง' }, { text: 'น้ำขึ้นน้ำลง' }]} />
-            <Press start={10} size={96} words={[{ text: 'ยังไม่ได้ทดลอง' }, { text: 'กับนักเรียน' }]} />
+            <Press start={0} size={86} words={[{ text: 'ยังไม่จำลอง' }, { text: 'น้ำขึ้นน้ำลง' }]} />
+            <Press start={10} size={86} words={[{ text: 'ยังไม่ได้ทดลองกับนักเรียน' }, { text: 'ในห้องเรียนจริง' }]} />
           </>
         )}
         <div style={{ height: 8, width: 240, margin: '40px auto 0', borderRadius: 4, background: C.rust, transform: `scaleX(${underline})` }} />
