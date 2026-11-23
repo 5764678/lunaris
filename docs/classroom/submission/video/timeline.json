@@ -4,7 +4,7 @@
   "width": 1920,
   "height": 1080,
   "duration_s": 165.0,
-  "plan": "docs/classroom/submission/video-script.md v2 (commits 8567738, 46fa79b on claude/laughing-einstein-jc00pz) + TD plan change 23 Nov",
+  "plan": "docs/classroom/submission/video-script.md v2 (commits 8567738, 46fa79b on claude/laughing-einstein-jc00pz) + TD plan change 23 Nov; final beat timings from the TD, 23 Nov",
   "notes": [
     "Times are seconds from 0:00. Segments tile 0-165 s with no gaps. 'graphics' = rendered by this project; 'team' = the team's recording, placed by the TD; graphics.mp4 shows a grey slate there. Face clips are one person per file (TD, 23 Nov); 06-close-AB is a 2-up split screen.",
     "Team slots keep their planned length; if a take runs long or short the TD trims inside the slot or shifts later segments, and re-times captions from the same file.",
@@ -56,7 +56,7 @@
       "id": "s2-intro-A",
       "section": 2,
       "start": 23.0,
-      "end": 40.0,
+      "end": 39.0,
       "type": "team",
       "file": "02-intro-A.mp4",
       "picture": "A on camera, same framing"
@@ -64,21 +64,21 @@
     {
       "id": "s3-hook",
       "section": 3,
-      "start": 40.0,
+      "start": 39.0,
       "end": 58.0,
       "type": "graphics",
       "picture": "Hook card over the south-pole terrain, then the title.",
       "shots": [
         {
           "id": "3a",
-          "start": 40.0,
-          "end": 50.5,
+          "start": 39.0,
+          "end": 50.0,
           "what": "Terrain (LOLA relief from the app) with a slow push; chip, 'ฉางเอ๋อ 7', 'เลื่อนไปปี 2570', source line",
           "card": "blur-slide + PageCam"
         },
         {
           "id": "3b",
-          "start": 50.5,
+          "start": 50.0,
           "end": 58.0,
           "what": "Terrain dims; LUNARIS wordmark and ห้องเรียนภารกิจดวงจันทร์ land on A's words, hold",
           "card": "blur-slide",
@@ -241,14 +241,14 @@
       "id": "s5-card-horizons",
       "section": 5,
       "start": 132.0,
-      "end": 137.0,
+      "end": 136.0,
       "type": "graphics",
       "picture": "Proof card 1 on paper: '≤ 2 วินาที' / 'เทียบ JPL Horizons ของนาซา · 49 เหตุการณ์'. A's voice continues underneath.",
       "shots": [
         {
           "id": "5a",
           "start": 132.0,
-          "end": 137.0,
+          "end": 136.0,
           "what": "Paper card, words press in, one accent word",
           "card": "paper-title-card"
         }
@@ -257,17 +257,17 @@
     {
       "id": "s5-proof-A2",
       "section": 5,
-      "start": 137.0,
-      "end": 143.0,
+      "start": 136.0,
+      "end": 141.0,
       "type": "team",
       "file": "05-proof-A.mp4",
-      "picture": "Back on A for the AI line (05-proof-A.mp4 continues)"
+      "picture": "Back on A for the AI line (05-proof-A.mp4 continues; about 13 s in all)"
     },
     {
       "id": "s5-proof-B1",
       "section": 5,
-      "start": 143.0,
-      "end": 145.0,
+      "start": 141.0,
+      "end": 144.0,
       "type": "team",
       "file": "05-proof-B.mp4",
       "picture": "B on camera (05-proof-B.mp4 from 0.0 s)"
@@ -275,15 +275,15 @@
     {
       "id": "s5-card-limits",
       "section": 5,
-      "start": 145.0,
-      "end": 150.0,
+      "start": 144.0,
+      "end": 147.0,
       "type": "graphics",
       "picture": "Proof card 2 on paper: 'ยังไม่จำลองน้ำขึ้นน้ำลง · ยังไม่ได้ทดลองกับนักเรียนในห้องเรียนจริง'. B's voice continues underneath.",
       "shots": [
         {
           "id": "5b",
-          "start": 145.0,
-          "end": 150.0,
+          "start": 144.0,
+          "end": 147.0,
           "what": "Paper card, same recipe as 5a",
           "card": "paper-title-card"
         }
@@ -292,42 +292,42 @@
     {
       "id": "s5-proof-B2",
       "section": 5,
-      "start": 150.0,
-      "end": 153.0,
+      "start": 147.0,
+      "end": 150.0,
       "type": "team",
       "file": "05-proof-B.mp4",
-      "picture": "Back on B for the last line (05-proof-B.mp4 continues)"
+      "picture": "Back on B for the last line (05-proof-B.mp4 continues; about 9 s in all)"
     },
     {
       "id": "s6-close-A",
       "section": 6,
-      "start": 153.0,
-      "end": 157.0,
+      "start": 150.0,
+      "end": 154.0,
       "type": "team",
       "file": "06-close-A.mp4",
-      "picture": "A on camera; a QR tile slides in bottom right at 154.6 s",
+      "picture": "A on camera; a QR tile slides in bottom right from 151.0 s",
       "overlay": "qr-tile"
     },
     {
       "id": "s6-close-AB",
       "section": 6,
-      "start": 157.0,
-      "end": 159.0,
+      "start": 154.0,
+      "end": 156.0,
       "type": "team",
       "file": "06-close-AB",
-      "picture": "2-up split screen: A left, B right, both saying ขอบคุณครับ"
+      "picture": "2-up split screen: A left, B right, each saying ขอบคุณครับ with a wai"
     },
     {
       "id": "s6-end-card",
       "section": 6,
-      "start": 159.0,
+      "start": 156.0,
       "end": 165.0,
       "type": "graphics",
-      "picture": "End card: wordmark, ห้องเรียนภารกิจดวงจันทร์, ใช้ฟรีผ่านเว็บ, [ชื่อ] x2, [ครูที่ปรึกษา], school logo, QR -> /learn, AI line and credits. Fade to black from 164.4 s.",
+      "picture": "End card: wordmark, ห้องเรียนภารกิจดวงจันทร์, ใช้ฟรีผ่านเว็บ, [ชื่อ] x2, [ครูที่ปรึกษา], school logo, QR -> /learn, AI line and credits. Fade to black over the last 0.6 s.",
       "shots": [
         {
           "id": "6",
-          "start": 159.0,
+          "start": 156.0,
           "end": 165.0,
           "what": "Elements blur in, hold >= 4 s",
           "card": "blur-slide"
@@ -336,6 +336,18 @@
     }
   ],
   "overlays": [
+    {
+      "id": "name-B",
+      "start": 15.0,
+      "end": 19.0,
+      "label": "[ชื่อ] lower third, B"
+    },
+    {
+      "id": "name-A",
+      "start": 23.0,
+      "end": 27.0,
+      "label": "[ชื่อ] lower third, A"
+    },
     {
       "id": "period-1",
       "start": 58.3,
@@ -374,8 +386,8 @@
     },
     {
       "id": "qr-tile",
-      "start": 154.6,
-      "end": 157.0,
+      "start": 151.0,
+      "end": 154.0,
       "label": "QR → /learn"
     }
   ],
@@ -388,42 +400,42 @@
     },
     {
       "start": 23.3,
-      "end": 27.6,
+      "end": 27.3,
       "who": "A",
       "text": "ตอน ม.3 เรื่องข้างขึ้นข้างแรมไม่ได้ยากครับ\nแต่ใช้เวลานานมากกว่าจะเข้าใจ"
     },
     {
-      "start": 27.6,
-      "end": 32.4,
+      "start": 27.3,
+      "end": 32.0,
       "who": "A",
       "text": "เพราะต้องนึกภาพสามมิติ\nจากรูปสองมิติในหนังสือ"
     },
     {
-      "start": 32.7,
-      "end": 39.3,
+      "start": 32.3,
+      "end": 38.7,
       "who": "A",
       "text": "ผมเข้าใจจริงก็ตอนที่ได้สร้างภาพนั้น\nขึ้นมาเองในหัว"
     },
     {
-      "start": 41.0,
-      "end": 45.5,
+      "start": 39.6,
+      "end": 44.4,
       "who": "B",
       "text": "เมื่อเดือนสิงหาคม ยานฉางเอ๋อ 7\nที่มีอุปกรณ์ชิ้นแรกของไทยไปด้วย ต้องเลื่อนไปปี 2570"
     },
     {
-      "start": 45.5,
-      "end": 50.3,
+      "start": 44.4,
+      "end": 49.6,
       "who": "B",
       "text": "เพราะแสงอาทิตย์ที่จุดลงจอดใกล้ขั้วใต้ของดวงจันทร์\nไม่เป็นไปตามเงื่อนไข"
     },
     {
-      "start": 50.8,
-      "end": 54.3,
+      "start": 50.3,
+      "end": 53.8,
       "who": "A",
       "text": "แสงอาทิตย์บนดวงจันทร์\nคือเรื่องเดียวกับข้างขึ้นข้างแรม"
     },
     {
-      "start": 54.3,
+      "start": 53.8,
       "end": 57.7,
       "who": "A",
       "text": "เราจึงทำ LUNARIS ห้องเรียนภารกิจดวงจันทร์"
@@ -483,50 +495,50 @@
       "text": "คาบหก นำเสนอข้อเสนอของทีมพร้อมหลักฐาน"
     },
     {
-      "start": 128.4,
-      "end": 132.2,
+      "start": 128.3,
+      "end": 132.0,
       "who": "A",
       "text": "เราตรวจผลคำนวณเทียบกับระบบ JPL Horizons ของนาซา"
     },
     {
-      "start": 132.2,
-      "end": 136.6,
+      "start": 132.0,
+      "end": 135.8,
       "who": "A",
       "text": "เวลาข้างขึ้นข้างแรมต่างกันไม่เกินสองวินาที"
     },
     {
-      "start": 137.2,
-      "end": 142.8,
+      "start": 136.0,
+      "end": 140.7,
       "who": "A",
       "text": "เราใช้ AI ช่วยเขียนโปรแกรม แต่เราเป็นคนกำหนดทิศทาง\nตัดสินใจ และตรวจสอบเอง"
     },
     {
-      "start": 143.3,
-      "end": 147.2,
+      "start": 141.2,
+      "end": 144.3,
       "who": "B",
       "text": "และเราบอกตรง ๆ ว่า\nแอปยังไม่จำลองน้ำขึ้นน้ำลง"
     },
     {
-      "start": 147.2,
-      "end": 150.6,
+      "start": 144.3,
+      "end": 147.5,
       "who": "B",
       "text": "และยังไม่ได้ทดลองกับนักเรียน\nในห้องเรียนจริง"
     },
     {
-      "start": 150.6,
-      "end": 152.8,
+      "start": 147.5,
+      "end": 149.8,
       "who": "B",
       "text": "ซึ่งเป็นขั้นต่อไปของเราครับ"
     },
     {
-      "start": 153.3,
-      "end": 156.8,
+      "start": 150.3,
+      "end": 153.6,
       "who": "A",
       "text": "LUNARIS ใช้ได้ฟรีผ่านเว็บ สแกนลองได้เลยครับ"
     },
     {
-      "start": 157.2,
-      "end": 158.7,
+      "start": 154.2,
+      "end": 155.8,
       "who": "A+B",
       "text": "ขอบคุณครับ"
     }

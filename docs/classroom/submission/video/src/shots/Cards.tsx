@@ -43,9 +43,8 @@ const DigitRoll: React.FC<{ value: string; delay: number; size: number }> = ({ v
   );
 };
 
-export const ProofCard: React.FC<{ kind: 'horizons' | 'limits' }> = ({ kind }) => {
+export const ProofCard: React.FC<{ kind: 'horizons' | 'limits'; dur: number }> = ({ kind, dur }) => {
   const f = useCurrentFrame();
-  const dur = 150;
   const fade = ramp(f, dur - 8, dur, 1, 0, E.linear);
   const fadeIn = ramp(f, 0, 6, 0, 1, E.linear);
   const underline = ramp(f, 16, 34, 0, 1, Easing.bezier(0.3, 0, 0.2, 1));
@@ -78,13 +77,13 @@ export const ProofCard: React.FC<{ kind: 'horizons' | 'limits' }> = ({ kind }) =
   );
 };
 
-export const EndCard: React.FC = () => {
+export const EndCard: React.FC<{ dur: number }> = ({ dur }) => {
   const f = useCurrentFrame();
   const qr = ramp(f, 8, 26, 0, 1, E.outCubic);
   const slots = ramp(f, 40, 56, 0, 1, E.outCubic);
   const logo = ramp(f, 50, 66, 0, 1, E.outCubic);
   const fine = ramp(f, 60, 76, 0, 1, E.outCubic);
-  const out = ramp(f, 162, 180, 1, 0, E.linear);
+  const out = ramp(f, dur - 18, dur, 1, 0, E.linear);
   const slot = (t: string) => <div style={{ height: 60, padding: '0 28px', borderRadius: 12, background: C.slate, color: C.slateText, fontSize: 30, lineHeight: '60px', fontFamily: BODY }}>{t}</div>;
   return (
     <AbsoluteFill style={{ opacity: out, background: '#000' }}>
@@ -108,6 +107,19 @@ export const EndCard: React.FC = () => {
         พัฒนาโดยใช้ปัญญาประดิษฐ์ช่วยเขียนโปรแกรม ภายใต้การกำกับและตรวจสอบของคณะผู้ประดิษฐ์<br />ภาพทั้งหมดจับจากแอป LUNARIS · พื้นผิวดวงจันทร์: NASA SVS · ภูมิประเทศ: NASA LRO LOLA
       </p>
     </AbsoluteFill>
+  );
+};
+
+/** Lower-third name placeholder over a face clip; the TD types the real name at assembly. */
+export const NameSlot: React.FC = () => {
+  const f = useCurrentFrame();
+  const p = ramp(f, 0, 12, 0, 1, E.outCubic) * ramp(f, 108, 120, 1, 0);
+  return (
+    <div style={{ position: 'absolute', left: 96, bottom: 250, opacity: p, transform: `translateX(${(1 - Math.min(1, p * 1.5)) * -30}px)`,
+      display: 'flex', alignItems: 'stretch', boxShadow: '0 12px 30px rgba(0,0,0,.35)' }}>
+      <div style={{ width: 10, background: C.sun, borderRadius: '6px 0 0 6px' }} />
+      <div style={{ background: C.slate, color: C.slateText, fontFamily: BODY, fontSize: 40, padding: '12px 30px', borderRadius: '0 10px 10px 0' }}>[ชื่อ]</div>
+    </div>
   );
 };
 

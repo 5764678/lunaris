@@ -1,4 +1,4 @@
-// §3 hook and title, 0:40-0:58 (540 f). Shots 3a-3b. Terrain = poster/img/terrain.jpg (LUNARIS "Pole terrain", NASA LRO LOLA).
+// §3 hook and title, 0:39-0:58 (570 f). Shots 3a-3b. Terrain = poster/img/terrain.jpg (LUNARIS "Pole terrain", NASA LRO LOLA).
 // Text: chip and headline as on the poster (#hook); source line per the claims list (NARIT, 24 Aug 2026 = 24 ส.ค. 2569).
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
@@ -6,8 +6,8 @@ import { BlurLine, Push } from '../Common';
 import { BODY, C, HEAD } from '../theme';
 import { E, ramp } from '../motion';
 
-const TITLE = 315; // 50.5 s
-const WORD = 444; // 54.8 s, on "LUNARIS" in A's line
+const TITLE = 330; // 50.0 s (segment starts 39.0 s)
+const WORD = 468; // 54.6 s, on "LUNARIS" in A's line
 
 export const Hook: React.FC = () => {
   const f = useCurrentFrame();
@@ -15,11 +15,11 @@ export const Hook: React.FC = () => {
   const chip = ramp(f, 6, 20, 0, 1, E.outCubic);
   const hookOut = ramp(f, TITLE, TITLE + 15, 1, 0);
   const dim = ramp(f, TITLE, TITLE + 30, 1, 0.38);
-  const out = ramp(f, 528, 540, 1, 0, E.linear);
+  const out = ramp(f, 558, 570, 1, 0, E.linear);
   return (
     <AbsoluteFill style={{ background: C.space, opacity: out }}>
       <AbsoluteFill style={{ opacity: inP * dim }}>
-        <Push src="terrain.jpg" to={540} z0={1.0} z1={1.08} ox={60} oy={40} />
+        <Push src="terrain.jpg" to={570} z0={1.0} z1={1.08} ox={60} oy={40} />
         <AbsoluteFill style={{ background: 'linear-gradient(90deg, rgba(6,8,11,.88) 0%, rgba(6,8,11,.55) 48%, rgba(6,8,11,0) 75%)' }} />
         <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(6,8,11,.7) 0%, rgba(6,8,11,0) 30%)' }} />
       </AbsoluteFill>

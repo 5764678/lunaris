@@ -8,11 +8,13 @@ import { BODY, sec } from './theme';
 import { ColdOpen } from './shots/ColdOpen';
 import { Hook } from './shots/Hook';
 import { P2, P4, P5 } from './shots/AppShots';
-import { EndCard, ProofCard, QrTile } from './shots/Cards';
+import { EndCard, NameSlot, ProofCard, QrTile } from './shots/Cards';
 import { CerPoster, LampBall, SplitSlate, Worksheet } from './shots/NewShots';
 import orbit from './generated/orbit.json';
 
 type Seg = (typeof tl.segments)[number];
+
+const len = (id: string) => { const s = tl.segments.find((x) => x.id === id)!; return sec(s.end) - sec(s.start); };
 
 const graphicsFor: Record<string, React.ReactNode> = {
   's1-cold-open': <ColdOpen />,
@@ -23,9 +25,9 @@ const graphicsFor: Record<string, React.ReactNode> = {
   'p2-app': <P2 />,
   'p4-app': <P4 orbitFrames={orbit.frames} />,
   'p5-app': <P5 />,
-  's5-card-horizons': <ProofCard kind="horizons" />,
-  's5-card-limits': <ProofCard kind="limits" />,
-  's6-end-card': <EndCard />,
+  's5-card-horizons': <ProofCard kind="horizons" dur={len('s5-card-horizons')} />,
+  's5-card-limits': <ProofCard kind="limits" dur={len('s5-card-limits')} />,
+  's6-end-card': <EndCard dur={len('s6-end-card')} />,
 };
 
 const slateLines = (s: Seg) => {
@@ -66,7 +68,7 @@ export const Main: React.FC<{ captions?: boolean; overlaysOnly?: boolean }> = ({
     ))}
     {tl.overlays.map((o) => (
       <Sequence key={o.id} from={sec(o.start)} durationInFrames={sec(o.end) - sec(o.start)} name={o.id}>
-        {o.id === 'qr-tile' ? <QrTile /> : <PeriodTag n={Number(o.id.slice(-1))} label={o.label} title={PERIOD_TITLES[o.id]} />}
+        {o.id === 'qr-tile' ? <QrTile /> : o.id.startsWith('name-') ? <NameSlot /> : <PeriodTag n={Number(o.id.slice(-1))} label={o.label} title={PERIOD_TITLES[o.id]} />}
       </Sequence>
     ))}
     {captions ? <Captions /> : null}
