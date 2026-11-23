@@ -1,0 +1,8 @@
+node_modules/
+out/
+fonts/
+public/captures/
+.remotion/
+public/*.png
+public/*.jpg
+public/fonts/

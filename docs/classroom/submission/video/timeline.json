@@ -1,0 +1,546 @@
+{
+  "title": "LUNARIS ห้องเรียนภารกิจดวงจันทร์ - วิดีโอนำเสนอ",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "duration_s": 165.0,
+  "plan": "docs/classroom/submission/video-script.md v2 (commits 8567738, 46fa79b on claude/laughing-einstein-jc00pz) + TD plan change 23 Nov; final beat timings from the TD, 23 Nov",
+  "notes": [
+    "Times are seconds from 0:00. Segments tile 0-165 s with no gaps. 'graphics' = rendered by this project; 'team' = the team's recording, placed by the TD; graphics.mp4 shows a grey slate there. Face clips are one person per file (TD, 23 Nov); 06-close-AB is a 2-up split screen.",
+    "Team slots keep their planned length; if a take runs long or short the TD trims inside the slot or shifts later segments, and re-times captions from the same file.",
+    "Overlays (period numbers, the QR tile in 06) ride on top of team footage; they are also rendered on their own with alpha (see README)."
+  ],
+  "segments": [
+    {
+      "id": "s1-cold-open",
+      "section": 1,
+      "start": 0.0,
+      "end": 15.0,
+      "type": "graphics",
+      "picture": "The poster's textbook phase diagram (verbatim SVG) on its paper card tilts back into 3D and gives way to the real LUNARIS globe.",
+      "shots": [
+        {
+          "id": "1a",
+          "start": 0.0,
+          "end": 5.5,
+          "what": "Paper card flat to camera on the dark stage; claim line blurs in",
+          "card": "blur-slide",
+          "pick": 4.0
+        },
+        {
+          "id": "1b",
+          "start": 5.5,
+          "end": 9.5,
+          "what": "Card tilts back and recedes (tilt-reveal run in reverse); globe rises behind it",
+          "card": "overhead-camera-moves · tilt-reveal"
+        },
+        {
+          "id": "1c",
+          "start": 9.5,
+          "end": 15.0,
+          "what": "Real globe (LUNARIS, South polar) holds with a slow push; arc arrow from the page to the globe",
+          "card": "PageCam (assets/lib)"
+        }
+      ]
+    },
+    {
+      "id": "s2-intro-B",
+      "section": 2,
+      "start": 15.0,
+      "end": 23.0,
+      "type": "team",
+      "file": "02-intro-B.mp4",
+      "picture": "B on camera, chest up, looking at the lens"
+    },
+    {
+      "id": "s2-intro-A",
+      "section": 2,
+      "start": 23.0,
+      "end": 39.0,
+      "type": "team",
+      "file": "02-intro-A.mp4",
+      "picture": "A on camera, same framing"
+    },
+    {
+      "id": "s3-hook",
+      "section": 3,
+      "start": 39.0,
+      "end": 58.0,
+      "type": "graphics",
+      "picture": "Hook card over the south-pole terrain, then the title.",
+      "shots": [
+        {
+          "id": "3a",
+          "start": 39.0,
+          "end": 50.0,
+          "what": "Terrain (LOLA relief from the app) with a slow push; chip, 'ฉางเอ๋อ 7', 'เลื่อนไปปี 2570', source line",
+          "card": "blur-slide + PageCam"
+        },
+        {
+          "id": "3b",
+          "start": 50.0,
+          "end": 58.0,
+          "what": "Terrain dims; LUNARIS wordmark and ห้องเรียนภารกิจดวงจันทร์ land on A's words, hold",
+          "card": "blur-slide",
+          "pick": 57.0
+        }
+      ]
+    },
+    {
+      "id": "p1-model",
+      "section": 4,
+      "start": 58.0,
+      "end": 66.0,
+      "type": "graphics",
+      "picture": "Animated lamp-ball model in the poster's period-1 style: lamp (Sun), head (observer), ball (Moon) circling; lit half always toward the lamp; an inset shows the phase the observer sees.",
+      "shots": [
+        {
+          "id": "p1",
+          "start": 58.0,
+          "end": 66.0,
+          "what": "Top view, one orbit from new Moon; observer's view updates with the phase angle",
+          "card": "drawn (poster period-1 style)"
+        }
+      ],
+      "period": 1,
+      "overlay": "period-1"
+    },
+    {
+      "id": "p2-app",
+      "section": 4,
+      "period": 2,
+      "start": 66.0,
+      "end": 80.0,
+      "type": "graphics",
+      "picture": "/learn/2: the day advances from new Moon to full Moon; slow push-in on the Moon; % and slider stay readable.",
+      "overlay": "period-2",
+      "shots": [
+        {
+          "id": "p2",
+          "start": 66.0,
+          "end": 80.0,
+          "what": "Real capture, days 1-16 (0% -> 100%), cross-dissolved stills; push from the whole crop to Moon + % readout",
+          "card": "PageCam (assets/lib)"
+        }
+      ]
+    },
+    {
+      "id": "p3-worksheet",
+      "section": 4,
+      "start": 80.0,
+      "end": 86.0,
+      "type": "graphics",
+      "picture": "The kit's worksheet 1 (docs/classroom/kit/worksheet-1.md) as a printed A4 page; slow push; abstract scribbles in three answer cells.",
+      "shots": [
+        {
+          "id": "p3",
+          "start": 80.0,
+          "end": 86.0,
+          "what": "Worksheet 1 page, push-in, scribbles in answer cells",
+          "card": "PageCam-style push"
+        }
+      ],
+      "period": 3,
+      "overlay": "period-3"
+    },
+    {
+      "id": "p4-app",
+      "section": 4,
+      "period": 4,
+      "start": 86.0,
+      "end": 102.0,
+      "type": "graphics",
+      "picture": "Globe eases from South polar to Pole, then the /learn/4 sky chart: the Sun skimming the horizon.",
+      "overlay": "period-4",
+      "shots": [
+        {
+          "id": "p4a",
+          "start": 86.0,
+          "end": 92.0,
+          "what": "Real globe canvas from /, HUD hidden, preset South polar -> Pole",
+          "card": "captured motion"
+        },
+        {
+          "id": "p4b",
+          "start": 92.0,
+          "end": 102.0,
+          "what": "Sky chart in a floating frame; slow pan along the Sun line",
+          "card": "PageCam (assets/lib)"
+        }
+      ]
+    },
+    {
+      "id": "p5-app",
+      "section": 4,
+      "period": 5,
+      "start": 102.0,
+      "end": 118.0,
+      "type": "graphics",
+      "picture": "/learn/5: the three-site table; a cursor taps 88.3 %, freeze with a hand-drawn circle, its evidence opens.",
+      "overlay": "period-5",
+      "shots": [
+        {
+          "id": "p5a",
+          "start": 102.0,
+          "end": 106.0,
+          "what": "Table in a floating frame, slow push",
+          "card": "PageCam (assets/lib)"
+        },
+        {
+          "id": "p5b",
+          "start": 106.0,
+          "end": 108.0,
+          "what": "Cursor taps 88.3 %; freeze; sun-gold marker circle",
+          "card": "speed-ramp-freeze · freeze-annotate"
+        },
+        {
+          "id": "p5c",
+          "start": 108.0,
+          "end": 118.0,
+          "what": "Evidence panel open (real capture); hold, then ease back to the three columns",
+          "card": "PageCam (assets/lib)"
+        }
+      ]
+    },
+    {
+      "id": "p6-cer",
+      "section": 4,
+      "start": 118.0,
+      "end": 128.0,
+      "type": "graphics",
+      "picture": "Claim -> Evidence -> Reasoning built as three cards (the poster's C/E/R list), then a slow pan over the poster preview, cropped above its footer.",
+      "shots": [
+        {
+          "id": "p6a",
+          "start": 118.0,
+          "end": 122.9,
+          "what": "C, E, R cards build",
+          "card": "blur-slide"
+        },
+        {
+          "id": "p6b",
+          "start": 122.9,
+          "end": 128.0,
+          "what": "Poster preview, slow pan, footer cropped",
+          "card": "PageCam-style pan"
+        }
+      ],
+      "period": 6,
+      "overlay": "period-6"
+    },
+    {
+      "id": "s5-proof-A1",
+      "section": 5,
+      "start": 128.0,
+      "end": 132.0,
+      "type": "team",
+      "file": "05-proof-A.mp4",
+      "picture": "A at a laptop showing LUNARIS (05-proof-A.mp4 from 0.0 s)"
+    },
+    {
+      "id": "s5-card-horizons",
+      "section": 5,
+      "start": 132.0,
+      "end": 136.0,
+      "type": "graphics",
+      "picture": "Proof card 1 on paper: '≤ 2 วินาที' / 'เทียบ JPL Horizons ของนาซา · 49 เหตุการณ์'. A's voice continues underneath.",
+      "shots": [
+        {
+          "id": "5a",
+          "start": 132.0,
+          "end": 136.0,
+          "what": "Paper card, words press in, one accent word",
+          "card": "paper-title-card"
+        }
+      ]
+    },
+    {
+      "id": "s5-proof-A2",
+      "section": 5,
+      "start": 136.0,
+      "end": 141.0,
+      "type": "team",
+      "file": "05-proof-A.mp4",
+      "picture": "Back on A for the AI line (05-proof-A.mp4 continues; about 13 s in all)"
+    },
+    {
+      "id": "s5-proof-B1",
+      "section": 5,
+      "start": 141.0,
+      "end": 143.5,
+      "type": "team",
+      "file": "05-proof-B.mp4",
+      "picture": "B on camera (05-proof-B.mp4 from 0.0 s)"
+    },
+    {
+      "id": "s5-card-limits",
+      "section": 5,
+      "start": 143.5,
+      "end": 147.0,
+      "type": "graphics",
+      "picture": "Proof card 2 on paper: 'ยังไม่จำลองน้ำขึ้นน้ำลง · ยังไม่ได้ทดลองกับนักเรียนในห้องเรียนจริง'. B's voice continues underneath.",
+      "shots": [
+        {
+          "id": "5b",
+          "start": 143.5,
+          "end": 147.0,
+          "what": "Paper card, same recipe as 5a",
+          "card": "paper-title-card"
+        }
+      ]
+    },
+    {
+      "id": "s5-proof-B2",
+      "section": 5,
+      "start": 147.0,
+      "end": 150.0,
+      "type": "team",
+      "file": "05-proof-B.mp4",
+      "picture": "Back on B for the last line (05-proof-B.mp4 continues; about 9 s in all)"
+    },
+    {
+      "id": "s6-close-A",
+      "section": 6,
+      "start": 150.0,
+      "end": 154.0,
+      "type": "team",
+      "file": "06-close-A.mp4",
+      "picture": "A on camera; a QR tile slides in bottom right from 151.0 s",
+      "overlay": "qr-tile"
+    },
+    {
+      "id": "s6-close-AB",
+      "section": 6,
+      "start": 154.0,
+      "end": 156.0,
+      "type": "team",
+      "file": "06-close-AB",
+      "picture": "2-up split screen: A left, B right, each saying ขอบคุณครับ with a wai"
+    },
+    {
+      "id": "s6-end-card",
+      "section": 6,
+      "start": 156.0,
+      "end": 165.0,
+      "type": "graphics",
+      "picture": "End card: wordmark, ห้องเรียนภารกิจดวงจันทร์, ใช้ฟรีผ่านเว็บ, [ชื่อ] x2, [ครูที่ปรึกษา], school logo, QR -> /learn, AI line and credits. Fade to black over the last 0.6 s.",
+      "shots": [
+        {
+          "id": "6",
+          "start": 156.0,
+          "end": 165.0,
+          "what": "Elements blur in, hold >= 4 s",
+          "card": "blur-slide"
+        }
+      ]
+    }
+  ],
+  "overlays": [
+    {
+      "id": "name-B",
+      "start": 15.0,
+      "end": 19.0,
+      "label": "[ชื่อ] lower third, B"
+    },
+    {
+      "id": "name-A",
+      "start": 23.0,
+      "end": 27.0,
+      "label": "[ชื่อ] lower third, A"
+    },
+    {
+      "id": "period-1",
+      "start": 58.3,
+      "end": 66.0,
+      "label": "คาบที่ 1 · สร้างความสนใจ"
+    },
+    {
+      "id": "period-2",
+      "start": 66.3,
+      "end": 80.0,
+      "label": "คาบที่ 2 · สำรวจและค้นหา"
+    },
+    {
+      "id": "period-3",
+      "start": 80.3,
+      "end": 86.0,
+      "label": "คาบที่ 3 · อธิบายและลงข้อสรุป"
+    },
+    {
+      "id": "period-4",
+      "start": 86.3,
+      "end": 102.0,
+      "label": "คาบที่ 4 · ขยายความรู้ 1"
+    },
+    {
+      "id": "period-5",
+      "start": 102.3,
+      "end": 118.0,
+      "label": "คาบที่ 5 · ขยายความรู้ 2"
+    },
+    {
+      "id": "period-6",
+      "start": 118.3,
+      "end": 128.0,
+      "label": "คาบที่ 6 · ประเมิน"
+    },
+    {
+      "id": "qr-tile",
+      "start": 151.0,
+      "end": 154.0,
+      "label": "QR → /learn"
+    }
+  ],
+  "captions": [
+    {
+      "start": 15.3,
+      "end": 22.6,
+      "who": "B",
+      "text": "สวัสดีครับ ผม[ชื่อ] กับ[ชื่อ]\nนักเรียน ม.4 โรงเรียนสาธิตมหาวิทยาลัยศรีนครินทรวิโรฒ ปทุมวัน"
+    },
+    {
+      "start": 23.3,
+      "end": 27.3,
+      "who": "A",
+      "text": "ตอน ม.3 เรื่องข้างขึ้นข้างแรมไม่ได้ยากครับ\nแต่ใช้เวลานานมากกว่าจะเข้าใจ"
+    },
+    {
+      "start": 27.3,
+      "end": 32.0,
+      "who": "A",
+      "text": "เพราะต้องนึกภาพสามมิติ\nจากรูปสองมิติในหนังสือ"
+    },
+    {
+      "start": 32.3,
+      "end": 38.7,
+      "who": "A",
+      "text": "ผมเข้าใจจริงก็ตอนที่ได้สร้างภาพนั้น\nขึ้นมาเองในหัว"
+    },
+    {
+      "start": 39.6,
+      "end": 44.4,
+      "who": "B",
+      "text": "เมื่อเดือนสิงหาคม ยานฉางเอ๋อ 7\nที่มีอุปกรณ์ชิ้นแรกของไทยไปด้วย ต้องเลื่อนไปปี 2570"
+    },
+    {
+      "start": 44.4,
+      "end": 49.6,
+      "who": "B",
+      "text": "เพราะแสงอาทิตย์ที่จุดลงจอดใกล้ขั้วใต้ของดวงจันทร์\nไม่เป็นไปตามเงื่อนไข"
+    },
+    {
+      "start": 50.3,
+      "end": 53.8,
+      "who": "A",
+      "text": "แสงอาทิตย์บนดวงจันทร์\nคือเรื่องเดียวกับข้างขึ้นข้างแรม"
+    },
+    {
+      "start": 53.8,
+      "end": 57.7,
+      "who": "A",
+      "text": "เราจึงทำ LUNARIS ห้องเรียนภารกิจดวงจันทร์"
+    },
+    {
+      "start": 58.5,
+      "end": 63.0,
+      "who": "B",
+      "text": "คาบแรก นักเรียนสร้างแบบจำลองเอง\nด้วยหลอดไฟกับลูกบอล"
+    },
+    {
+      "start": 66.5,
+      "end": 72.5,
+      "who": "A",
+      "text": "คาบสอง ไล่ดูดวงจันทร์ทีละวันตลอดหนึ่งรอบเดือน\nที่คำนวณจากข้อมูลของนาซา"
+    },
+    {
+      "start": 72.8,
+      "end": 79.3,
+      "who": "A",
+      "text": "แล้วทดสอบว่า ถ้าเงาโลกทำให้เกิดข้างขึ้นข้างแรมจริง\nเราควรเห็นอะไร"
+    },
+    {
+      "start": 80.4,
+      "end": 84.5,
+      "who": "B",
+      "text": "คาบสาม เขียนคำอธิบายพร้อมหลักฐาน"
+    },
+    {
+      "start": 86.4,
+      "end": 93.8,
+      "who": "A",
+      "text": "คาบสี่ เราพาไปยืนที่ขั้วใต้ของดวงจันทร์\nที่นั่นดวงอาทิตย์ไม่ขึ้นสูง"
+    },
+    {
+      "start": 94.0,
+      "end": 100.8,
+      "who": "A",
+      "text": "แต่เลียดไปตามขอบฟ้า\nภูเขาลูกเดียวก็บังแสงได้"
+    },
+    {
+      "start": 102.4,
+      "end": 108.6,
+      "who": "B",
+      "text": "คาบห้า แต่ละทีมเปรียบเทียบจุดลงจอดสามแห่ง\nทุกตัวเลขกดดูได้ว่ามาจากไหน"
+    },
+    {
+      "start": 108.9,
+      "end": 117.0,
+      "who": "B",
+      "text": "และไม่มีจุดไหนดีที่สุดทุกด้าน\nทีมต้องตัดสินใจเอง"
+    },
+    {
+      "start": 118.4,
+      "end": 122.5,
+      "who": "A",
+      "text": "คาบหก นำเสนอข้อเสนอของทีมพร้อมหลักฐาน"
+    },
+    {
+      "start": 128.3,
+      "end": 132.0,
+      "who": "A",
+      "text": "เราตรวจผลคำนวณเทียบกับระบบ JPL Horizons ของนาซา"
+    },
+    {
+      "start": 132.0,
+      "end": 135.8,
+      "who": "A",
+      "text": "เวลาข้างขึ้นข้างแรมต่างกันไม่เกินสองวินาที"
+    },
+    {
+      "start": 136.0,
+      "end": 140.7,
+      "who": "A",
+      "text": "เราใช้ AI ช่วยเขียนโปรแกรม แต่เราเป็นคนกำหนดทิศทาง\nตัดสินใจ และตรวจสอบเอง"
+    },
+    {
+      "start": 141.2,
+      "end": 144.3,
+      "who": "B",
+      "text": "และเราบอกตรง ๆ ว่า\nแอปยังไม่จำลองน้ำขึ้นน้ำลง"
+    },
+    {
+      "start": 144.3,
+      "end": 147.5,
+      "who": "B",
+      "text": "และยังไม่ได้ทดลองกับนักเรียน\nในห้องเรียนจริง"
+    },
+    {
+      "start": 147.5,
+      "end": 149.8,
+      "who": "B",
+      "text": "ซึ่งเป็นขั้นต่อไปของเราครับ"
+    },
+    {
+      "start": 150.3,
+      "end": 153.6,
+      "who": "A",
+      "text": "LUNARIS ใช้ได้ฟรีผ่านเว็บ สแกนลองได้เลยครับ"
+    },
+    {
+      "start": 154.2,
+      "end": 155.8,
+      "who": "A+B",
+      "text": "ขอบคุณครับ"
+    }
+  ]
+}

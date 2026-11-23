@@ -1,0 +1,101 @@
+{
+  "note": "No audio is rendered by this project. The TD mixes from a local copy. Times are seconds on the timeline.json clock. Gains are relative to the voice bus (dialogue normalised first), so -20 means 20 dB under the voices.",
+  "beat_sync": "None. Cuts follow the voice lines (timeline.json captions), not a beat grid, so no BPM is assumed. The bed only has to be quiet and steady; any tempo works.",
+  "music": {
+    "track": "TEAM SUPPLIES: one quiet ambient or piano bed with a written free licence (record the licence in AUDIO.md). If none arrives, ship with SFX only and drop this block.",
+    "bundled_tracks_rejected": "cat-walk, house-vibez, tonight-hiphop (beat-driven, wrong register); bgm-tech-house (no URL); g-eazy-nba-type (excluded by the brief). TD decision 22 Nov.",
+    "cues": [
+      {
+        "start": 0.0,
+        "end": 15.0,
+        "gain_db": -6,
+        "fade_in": 2.0,
+        "note": "§1 music only; the bed carries the cold open"
+      },
+      {
+        "start": 15.0,
+        "end": 39.0,
+        "gain_db": -26,
+        "ramp": 1.0,
+        "note": "§2 students on camera: barely there"
+      },
+      {
+        "start": 39.0,
+        "end": 58.0,
+        "gain_db": -20,
+        "ramp": 0.8,
+        "note": "§3 under the hook and title"
+      },
+      {
+        "start": 58.0,
+        "end": 128.0,
+        "gain_db": -24,
+        "ramp": 0.8,
+        "note": "§4 low under the periods"
+      },
+      {
+        "start": 128.0,
+        "end": 140.0,
+        "gain_db": -26,
+        "ramp": 0.8,
+        "note": "§5 under A's proof lines"
+      },
+      {
+        "start": 140.0,
+        "end": 141.0,
+        "gain_db": -60,
+        "fade_out": 1.0,
+        "note": "out before B's honesty line at 141.2"
+      },
+      {
+        "start": 150.0,
+        "end": 155.8,
+        "gain_db": -24,
+        "fade_in": 1.0,
+        "note": "§6 back, under A's close"
+      },
+      {
+        "start": 155.8,
+        "end": 165.0,
+        "gain_db": -8,
+        "ramp": 0.6,
+        "fade_out": 2.0,
+        "note": "end card; fade to silence by 165.0"
+      }
+    ]
+  },
+  "sfx": [
+    {
+      "time_s": 5.5,
+      "file": "sfx/paper/paper-move-quick.mp3",
+      "gain_db": -14,
+      "source": "https://assets.mixkit.co/active_storage/sfx/2380/2380-preview.mp3",
+      "licence": "Mixkit Sound Effects Free License",
+      "what": "the paper card starts to tilt back (§1, no speech)"
+    },
+    {
+      "time_s": 9.6,
+      "file": "sfx/light/light-aura.mp3",
+      "gain_db": -18,
+      "source": "https://assets.mixkit.co/active_storage/sfx/2581/2581-preview.mp3",
+      "licence": "Mixkit Sound Effects Free License",
+      "what": "the real globe resolves (§1, no speech)"
+    },
+    {
+      "time_s": 39.2,
+      "file": "sfx/transition/air-woosh-quick.mp3",
+      "gain_db": -16,
+      "source": "https://assets.mixkit.co/active_storage/sfx/2605/2605-preview.mp3",
+      "licence": "Mixkit Sound Effects Free License",
+      "what": "hook card chip lands, before B starts at 39.6"
+    },
+    {
+      "time_s": 156.0,
+      "file": "sfx/paper/paper-page-turn.mp3",
+      "gain_db": -16,
+      "source": "https://assets.mixkit.co/active_storage/sfx/1104/1104-preview.mp3",
+      "licence": "Mixkit Sound Effects Free License",
+      "what": "end card in, after 'ขอบคุณครับ'"
+    }
+  ]
+}
